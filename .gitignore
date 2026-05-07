@@ -1,0 +1,16 @@
+# Docs internos da Celulose Digital — NÃO subir.
+# Esses arquivos contêm PINs reais e decisões internas do projeto.
+HANDOFF*.md
+prompts-execucao.md
+delta-do-html.md
+firebase-schema.md
+migracao-v15-para-v2.md
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Editores
+.vscode/
+.idea/
