@@ -1956,7 +1956,9 @@
     .editor-block-edit:hover { background: var(--rose-soft); color: var(--white); }
 
     .editor-block-detail {
-      padding: 0 20px 12px;
+      /* Atrito 5a: padding-top zero deixava a pílula peça-hero colada no border-bottom
+         do header → visualmente parecia flutuando. 12px dá respiro. */
+      padding: 12px 20px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -2155,9 +2157,14 @@
     }
 
     .editor-mini-meta {
+      /* Atrito 5b: sem flex-wrap, em mobile estreito o dot + format + tipo + badge
+         de status tentavam caber em 1 linha só → ficavam comprimidos/feios.
+         row-gap garante espaço quando quebra pra 2 linhas. */
       display: flex;
+      flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 4px;
+      row-gap: 5px;
+      margin-bottom: 6px;
       align-items: center;
     }
 
@@ -2360,6 +2367,20 @@
       border-color: var(--mauve);
       background: var(--blush-light);
     }
+    /* Atrito 1 caminho C: pílula destrutiva (excluir day). Ação rara, fica
+       visualmente discreta — só se compromete quando hover. */
+    .editor-meta-pill.is-danger {
+      cursor: pointer;
+      color: #B85B5B;
+      border-color: var(--border-soft);
+      font-family: inherit;
+      transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+    }
+    .editor-meta-pill.is-danger:hover {
+      border-color: #B85B5B;
+      background: #FBEBEB;
+      color: #8E3A3A;
+    }
     .editor-meta-pill.has-unread-insights {
       border-color: var(--mauve);
       padding-right: 18px;
@@ -2381,6 +2402,60 @@
       0%, 100% { opacity: 0.85; transform: translateY(-50%) scale(1); }
       50%      { opacity: 1;    transform: translateY(-50%) scale(1.18); }
     }
+
+    /* Atrito 3: sheet de gestão de tags */
+    .tags-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .tag-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+    }
+    .tag-row-label {
+      flex: 1;
+      font-size: 13px;
+      color: var(--deep);
+      font-weight: 500;
+    }
+    .tag-row-count {
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.04em;
+    }
+    .tag-row-remove {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid var(--border-soft);
+      color: var(--mauve-text);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    }
+    .tag-row-remove:hover {
+      background: #FBEBEB;
+      color: #8E3A3A;
+      border-color: #B85B5B;
+    }
+    .tag-row.is-in-use .tag-row-remove {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .tag-add-row {
+      display: flex;
+      gap: 8px;
+    }
+    .tag-add-row .form-input { flex: 1; }
 
     .editor-section {
       margin-top: 32px;
@@ -2423,6 +2498,88 @@
       margin-bottom: 40px;
       padding-bottom: 24px;
       border-bottom: 1px solid var(--border-soft);
+      position: relative;
+    }
+
+    /* Atrito 6: botão pra adicionar cliente novo no master */
+    .master-add-client-btn {
+      position: absolute;
+      top: 8px;
+      right: 0;
+      padding: 10px 18px;
+      border: 1px solid var(--mauve);
+      background: var(--white);
+      color: var(--mauve);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .master-add-client-btn:hover {
+      background: var(--mauve);
+      color: var(--white);
+    }
+
+    /* Atrito 6: grid 2 colunas pros 8 hex inputs da paleta */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .palette-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .palette-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .palette-row label {
+      font-size: 10px;
+      color: var(--mauve-text);
+      letter-spacing: 0.04em;
+      min-width: 64px;
+    }
+    .palette-row input {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-family: monospace;
+      border: 1px solid var(--border-soft);
+      border-radius: 6px;
+      background: var(--white);
+    }
+
+    .pin-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pin-row .form-input {
+      flex: 1;
+      font-family: monospace;
+      letter-spacing: 0.16em;
+      text-align: center;
+    }
+    .pin-regen-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--border-soft);
+      background: var(--white);
+      color: var(--mauve);
+      border-radius: 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .pin-regen-btn:hover {
+      background: var(--blush-light);
+      border-color: var(--mauve);
     }
 
     .master-kicker {
@@ -3035,7 +3192,8 @@
       firebase.initializeApp(firebaseConfig);
       db = firebase.database();
       masterRef = db.ref(ROOT_PATH + '/_master');
-      // storageRef = firebase.storage().ref();   // TODO: incluir firebase-storage-compat.js antes
+      // Storage SDK NÃO incluído — exige plano Blaze. Logo é base64 inline
+      // (mesmo pattern do referenceImage), comprimido via compressImage().
       firebaseReady = true;
     } catch (e) {
       console.error('[Firebase init falhou]', e);
@@ -3069,17 +3227,32 @@
     // CONSTANTES
     // ============================================================
     const CARD_FORMATS = ['Story', 'Foto Feed', 'Reel', 'Carrossel'];
-    const CARD_TYPES = [
+    // Atrito 3: tags default — usadas como fallback quando cliente não tem
+    // `cardTypes` próprio salvo no Firebase. Quando Isabelle adiciona/remove
+    // tag pelo sheet de gestão, o array é seedado em /clients/{slug}/cardTypes
+    // e passa a ser a fonte de verdade.
+    const CARD_TYPES_DEFAULT = [
       'Spoiler', 'Bastidor casual', 'Look protagonismo',
       'Pílula estratégica', 'Casal viajando', 'Drop',
       'Talking head', 'Repost'
     ];
+    // Compat: aliases pra código antigo que referenciasse CARD_TYPES (não há mais).
+    const CARD_TYPES = CARD_TYPES_DEFAULT;
     const CARD_PRIORITIES = ['Alta', 'Média', 'Baixa'];
     const DEFAULT_CHECKLIST = [
       { id: 'enq', label: 'Enquadramento OK' },
       { id: 'obj', label: 'Cumpre o objetivo' },
       { id: 'leg', label: 'Legenda sem erro ortográfico' }
     ];
+
+    // Atrito 3: lê tags do cliente (com fallback pro default).
+    function getCardTypesOfClient() {
+      const cd = state.clientData;
+      if (cd && Array.isArray(cd.cardTypes) && cd.cardTypes.length > 0) {
+        return cd.cardTypes;
+      }
+      return CARD_TYPES_DEFAULT;
+    }
 
     // EDITOR_PIN agora vem do Firebase (/celulose-app/clients/{slug}/auth/editorPin).
     // A constante ficou só pra não quebrar referências legadas até elas migrarem; valor em branco.
@@ -4288,36 +4461,27 @@
 
             ${renderApprovalsByPersonaBlock(c)}
 
+            <!-- Atrito 2A: render condicional dos 3 campos de texto livre.
+                 Campo vazio = section não aparece no card final. -->
             ${c.objective ? `
               <div class="card-section">
-                <div class="card-section-label">Objetivo</div>
+                <div class="card-section-label">Objetivo do conteúdo</div>
                 <div class="card-section-text">${escapeHtml(c.objective)}</div>
               </div>
             ` : ''}
 
-            ${c.framing ? `
+            ${c.caption ? `
               <div class="card-section">
-                <div class="card-section-label">Enquadramento</div>
-                <div class="card-section-text">${escapeHtml(c.framing)}</div>
+                <div class="card-section-label">Legenda</div>
+                <div class="card-section-text">${escapeHtml(c.caption)}</div>
               </div>
             ` : ''}
 
-            ${c.concept ? `
+            ${c.topics ? `
               <div class="card-section">
-                <div class="card-section-label">Conceito</div>
-                <div class="card-section-text">${escapeHtml(c.concept)}</div>
+                <div class="card-section-label">Tópicos</div>
+                <div class="card-section-text" style="white-space: pre-line;">${escapeHtml(c.topics)}</div>
               </div>
-            ` : ''}
-
-            ${c.captionTone ? `
-              <div class="card-section">
-                <div class="card-section-label">Tom da legenda</div>
-                <div class="card-section-text is-italic">${escapeHtml(c.captionTone)}</div>
-              </div>
-            ` : ''}
-
-            ${c.anchorPhrase ? `
-              <div class="card-anchor">"${escapeHtml(c.anchorPhrase)}"</div>
             ` : ''}
 
             ${checklist.length > 0 ? `
@@ -4981,6 +5145,8 @@
       sheet.querySelector('.sheet-header').addEventListener('click', (e) => e.stopPropagation());
     }
 
+    // Atrito 4: manual reescrito pra cobrir o sistema atual — votos, comments,
+    // badges, peça-hero, ajustes da Isabelle. Tom direto, mobile-first.
     function openManualSheet() {
       const content = `
         <div class="sheet-header">
@@ -4989,30 +5155,79 @@
         </div>
         <div class="sheet-body">
           <div class="sheet-form">
+
             <div class="card-section">
-              <div class="card-section-label">Como navegar</div>
+              <div class="card-section-label">1 · Navegando</div>
               <div class="card-section-text">
-                Cada bloco do dia agrupa os conteúdos a produzir naquela janela. Toque em qualquer card pra ver o briefing completo.
+                Cada <strong>day</strong> tem vários <strong>blocos</strong>, e cada bloco agrupa os <strong>cards</strong> a produzir naquela janela. Toque em qualquer card pra abrir o briefing completo: imagem de referência, objetivo, legenda, tópicos, checklist, comentários.
               </div>
             </div>
+
             <div class="card-section">
-              <div class="card-section-label">Como concluir um conteúdo</div>
+              <div class="card-section-label">2 · Aprovando ou pedindo ajuste</div>
               <div class="card-section-text">
-                Dentro do card: marque todos os itens da checklist obrigatória (enquadramento, objetivo, legenda) — quando tudo estiver verde, dê <strong>2 toques na imagem de referência</strong> pra concluir.
+                Cada card tem dois botões: <strong>Aprovar</strong> e <strong>Pedir ajuste</strong>. Quando você aprova, toca um som curto e o celular vibra de leve — confirmação de que registrou. Pra pedir ajuste, descreva o que precisa mudar; a Isabelle recebe seu pedido.
+                <br><br>
+                Você pode <strong>mudar seu voto</strong> depois — entra no card e troca a decisão. Sem pressão.
               </div>
             </div>
+
             <div class="card-section">
-              <div class="card-section-label">Tem ideia ou dúvida?</div>
+              <div class="card-section-label">3 · Status do card</div>
               <div class="card-section-text">
-                Botão Insight no rodapé envia uma mensagem direta pra Isabelle. Use à vontade.
+                A pílula no canto do card mostra o estado:
+                <br>· <strong>aguardando votos</strong> — ainda em revisão.
+                <br>· <strong>em aprovação</strong> — alguém já votou, faltam outros.
+                <br>· <strong>✓ aprovado</strong> — todo mundo aprovou.
+                <br>· <strong>! pediu ajuste</strong> — alguém pediu mudança.
+                <br>· <strong>✓ publicado</strong> — já saiu nas redes.
               </div>
             </div>
+
             <div class="card-section">
-              <div class="card-section-label">Trocar de bloco</div>
+              <div class="card-section-label">4 · Comentários</div>
               <div class="card-section-text">
-                Botão Bloco no rodapé abre a lista do dia inteiro pra você pular pra qualquer ponto.
+                Dentro do card, role até o fim — tem o thread de comentários. Use pra discutir referência, alinhar tom, sanar dúvida. <strong>Todo mundo lê</strong>, é coletivo.
+                <br><br>
+                Bolinha mauve <strong>·</strong> no canto do card no início = tem comment novo que você ainda não viu.
               </div>
             </div>
+
+            <div class="card-section">
+              <div class="card-section-label">5 · Peça-hero</div>
+              <div class="card-section-text">
+                A pílula mauve <strong>peça-hero</strong> no topo de um bloco indica o conteúdo principal daquela janela — foco redobrado ali. É a peça que ancora o resto.
+              </div>
+            </div>
+
+            <div class="card-section">
+              <div class="card-section-label">6 · Insights pra Isabelle</div>
+              <div class="card-section-text">
+                Botão <strong>Insight</strong> no rodapé manda mensagem direta pra Isabelle. Use pra ideias soltas, contexto extra, dúvida estratégica que não é sobre um card específico.
+              </div>
+            </div>
+
+            <div class="card-section">
+              <div class="card-section-label">7 · Quando algo muda depois da sua aprovação</div>
+              <div class="card-section-text">
+                Bolinha laranja no canto do card = a Isabelle <strong>ajustou um card que você já tinha aprovado</strong>. Toque pra revisar — você pode aprovar de novo ou pedir mais mudanças.
+              </div>
+            </div>
+
+            <div class="card-section">
+              <div class="card-section-label">8 · Trocar de bloco</div>
+              <div class="card-section-text">
+                Botão <strong>Bloco</strong> no rodapé abre a lista do dia inteiro pra você pular pra qualquer ponto.
+              </div>
+            </div>
+
+            <div class="card-section">
+              <div class="card-section-label">9 · Sem internet?</div>
+              <div class="card-section-text">
+                Se aparecer uma faixa escura no topo "Sem conexão. Reconectando…", é só esperar — o app reconecta sozinho. Suas ações enquanto offline ficam pendentes; tente de novo quando o banner sumir.
+              </div>
+            </div>
+
             ${MANUAL_URL ? `<a class="btn-primary" href="${MANUAL_URL}" target="_blank" style="text-decoration: none; text-align: center;">Ver vídeo tutorial</a>` : ''}
           </div>
         </div>
@@ -5079,6 +5294,108 @@
         showToast('Rascunhos locais limpos');
         closeSheet();
         renderHome();
+      });
+    }
+
+    // ============================================================
+    // ATRITO 3 — Sheet de gestão de tags por cliente
+    // ============================================================
+    // Lê tags atuais via getCardTypesOfClient() (fallback CARD_TYPES_DEFAULT).
+    // Adicionar grava em /clients/{slug}/cardTypes (seedado se ainda não existe).
+    // Excluir bloqueia se a tag está em uso (count de cards com c.type === tag).
+    function openManageTagsSheet() {
+      const tags = getCardTypesOfClient();
+      const cards = Object.values(state.clientData?.cards || {});
+      // Conta uso de cada tag pelos cards.
+      const cardsByTag = {};
+      cards.forEach(c => {
+        if (c.type) cardsByTag[c.type] = (cardsByTag[c.type] || 0) + 1;
+      });
+
+      const content = `
+        <div class="sheet-header">
+          <div class="sheet-kicker">Gerenciar</div>
+          <div class="sheet-title">Tags do cliente</div>
+        </div>
+        <div class="sheet-body">
+          <div class="sheet-form">
+            <div class="form-group">
+              <label class="form-label">Adicionar tag nova</label>
+              <div class="tag-add-row">
+                <input type="text" class="form-input" id="new-tag-input" placeholder="Ex: Casa nova" maxlength="40" />
+                <button class="btn-primary" id="add-tag-btn" type="button">Adicionar</button>
+              </div>
+              <div class="form-hint">As tags ficam disponíveis no campo "Tipo" ao criar/editar um card.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Tags atuais (${tags.length})</label>
+              <div class="tags-list">
+                ${tags.length === 0 ? '<div class="form-hint">Nenhuma tag cadastrada ainda.</div>' :
+                  tags.map(t => {
+                    const count = cardsByTag[t] || 0;
+                    const inUse = count > 0;
+                    return `
+                      <div class="tag-row${inUse ? ' is-in-use' : ''}">
+                        <span class="tag-row-label">${escapeHtml(t)}</span>
+                        <span class="tag-row-count">${count} card${count !== 1 ? 's' : ''}</span>
+                        <button class="tag-row-remove" data-tag="${escapeAttr(t)}" type="button" title="${inUse ? 'Não dá pra excluir — tag em uso' : 'Excluir tag'}">×</button>
+                      </div>
+                    `;
+                  }).join('')
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      openSheet('manage-tags', content);
+
+      const sheet = document.getElementById('sheet');
+      sheet.querySelector('.sheet-body').addEventListener('click', (e) => e.stopPropagation());
+      sheet.querySelector('.sheet-header').addEventListener('click', (e) => e.stopPropagation());
+
+      // Adicionar
+      const input = sheet.querySelector('#new-tag-input');
+      const addBtn = sheet.querySelector('#add-tag-btn');
+      const submitAdd = () => {
+        const name = (input.value || '').trim();
+        if (!name) { showToast('Digite o nome da tag.'); return; }
+        const current = getCardTypesOfClient();
+        if (current.includes(name)) { showToast('Essa tag já existe.'); return; }
+        const next = [...current, name];
+        clientRef.child('cardTypes').set(next).then(() => {
+          showToast('Tag adicionada: ' + name);
+          openManageTagsSheet(); // re-render
+        }).catch(e => {
+          showToast('Falhou ao adicionar: ' + (e && e.message ? e.message : 'erro'));
+        });
+      };
+      addBtn.addEventListener('click', submitAdd);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submitAdd(); }
+      });
+
+      // Excluir
+      sheet.querySelectorAll('.tag-row-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tag = btn.getAttribute('data-tag');
+          const count = cardsByTag[tag] || 0;
+          if (count > 0) {
+            showToast(`"${tag}" está em uso por ${count} card${count !== 1 ? 's' : ''}. Mude o tipo desses cards primeiro.`);
+            return;
+          }
+          if (!confirm(`Excluir a tag "${tag}"?`)) return;
+          const current = getCardTypesOfClient();
+          const next = current.filter(t => t !== tag);
+          clientRef.child('cardTypes').set(next).then(() => {
+            showToast('Tag excluída: ' + tag);
+            openManageTagsSheet();
+          }).catch(e => {
+            showToast('Falhou ao excluir: ' + (e && e.message ? e.message : 'erro'));
+          });
+        });
       });
     }
 
@@ -5398,6 +5715,8 @@
             <div class="master-kicker">Celulose Digital · Master</div>
             <div class="master-title">Olá, Isabelle</div>
             <div class="master-subtitle">${clients.length} ${clients.length === 1 ? 'cliente ativo' : 'clientes ativos'}</div>
+            <!-- Atrito 6: botão pra abrir form de adicionar cliente novo -->
+            <button type="button" class="master-add-client-btn" id="add-client-btn">+ Adicionar cliente</button>
           </div>
           ${cardsHtml}
         </div>
@@ -5418,6 +5737,260 @@
           }
           window.location.href = `?cliente=${encodeURIComponent(slug)}&mode=editor&pin=${encodeURIComponent(editorPin)}`;
         });
+      });
+
+      // Atrito 6: botão "+ Adicionar cliente" abre sheet com form completo.
+      const addBtn = app.querySelector('#add-client-btn');
+      if (addBtn) addBtn.addEventListener('click', openAddClientSheet);
+    }
+
+    // ============================================================
+    // ATRITO 6 — Adicionar cliente novo (UI master)
+    // ============================================================
+    // Form sheet com nome, slug auto-gerado (editável), PINs random gerados
+    // (regeneráveis), saudação, logo (upload Storage ou URL externa) e paleta
+    // (8 hex inputs prepopulados com defaults do Closet). Cliente é criado
+    // vazio — personas são adicionadas em segundo passo (próxima feature).
+
+    // Slug a partir do nome: kebab-case, sem acentos, max 40 chars.
+    function generateSlug(name) {
+      return (name || '')
+        .toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 40);
+    }
+
+    // PIN alfanumérico, sem chars confundíveis (0/O, I/1, etc).
+    function generatePin(length) {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let out = '';
+      for (let i = 0; i < (length || 4); i++) {
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return out;
+    }
+
+    function openAddClientSheet() {
+      // Defaults da paleta — copiados do DEFAULT_PALETA do app.
+      const palette = {
+        blush:       '#FDF0F5',
+        blushLight:  '#FFF7FA',
+        rose:        '#D3889C',
+        roseSoft:    '#E5B0BF',
+        mauve:       '#A6546A',
+        mauveText:   '#6B3848',
+        deep:        '#3A1E28',
+        borderSoft:  '#F0DCE3'
+      };
+      const initialEditorPin = generatePin(4);
+      const initialViewerPin = generatePin(4);
+
+      const content = `
+        <div class="sheet-header">
+          <div class="sheet-kicker">Master</div>
+          <div class="sheet-title">Adicionar cliente</div>
+        </div>
+        <div class="sheet-body">
+          <div class="sheet-form">
+            <div class="form-group">
+              <label class="form-label">Nome do cliente</label>
+              <input type="text" class="form-input" id="ac-name" placeholder="Ex: Bruna Silva" />
+              <div class="form-hint">Aparece no editor, viewer e Master.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Slug (URL)</label>
+              <input type="text" class="form-input" id="ac-slug" placeholder="auto-gerado do nome" style="font-family: monospace;" />
+              <div class="form-hint">Vai virar parte da URL: <code>?cliente=...</code>. Só letras minúsculas, números e hífens.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">PIN do editor (você)</label>
+              <div class="pin-row">
+                <input type="text" class="form-input" id="ac-editor-pin" value="${initialEditorPin}" maxlength="8" />
+                <button type="button" class="pin-regen-btn" id="ac-editor-pin-regen">↻ Gerar</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">PIN da equipe (viewers)</label>
+              <div class="pin-row">
+                <input type="text" class="form-input" id="ac-viewer-pin" value="${initialViewerPin}" maxlength="8" />
+                <button type="button" class="pin-regen-btn" id="ac-viewer-pin-regen">↻ Gerar</button>
+              </div>
+              <div class="form-hint">Anote os dois PINs antes de salvar — eles aparecem na URL dos links.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Saudação</label>
+              <input type="text" class="form-input" id="ac-greeting" placeholder='Ex: "Olá, equipe Bruna"' />
+              <div class="form-hint">Aparece no header do viewer.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Logo (anexar arquivo ou colar URL)</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <label class="image-upload-btn" for="ac-logo-file" style="cursor: pointer;">Anexar arquivo</label>
+                <input type="file" id="ac-logo-file" accept="image/*" style="display: none;" />
+                <span id="ac-logo-status" style="font-size: 11px; color: var(--gray);">Nenhum arquivo</span>
+              </div>
+              <input type="text" class="form-input" id="ac-logo-url" placeholder="ou cole uma URL externa" style="margin-top: 8px;" />
+              <div class="form-hint">Arquivo é comprimido pra ~400px e salvo inline (base64). Sem custo de storage.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Paleta (8 cores · hex)</label>
+              <div class="palette-grid">
+                ${Object.entries(palette).map(([key, val]) => `
+                  <div class="palette-row">
+                    <span class="palette-swatch" id="ac-swatch-${key}" style="background: ${val};"></span>
+                    <label>${key}</label>
+                    <input type="text" id="ac-paleta-${key}" value="${val}" maxlength="7" />
+                  </div>
+                `).join('')}
+              </div>
+              <div class="form-hint">Os defaults são da paleta Closet — ajuste conforme branding do cliente.</div>
+            </div>
+
+            <div class="form-hint" style="font-size: 12px; color: var(--mauve-text); padding: 12px; background: var(--blush-light); border-radius: 8px;">
+              ℹ Cliente é criado <strong>vazio</strong>. Você adiciona personas, days e cards depois pelo editor.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 10px;">
+          <button class="btn-secondary" id="ac-cancel-btn">Cancelar</button>
+          <div style="flex: 1"></div>
+          <button class="btn-primary" id="ac-submit-btn">Criar cliente</button>
+        </div>
+      `;
+      openSheet('add-client', content);
+
+      const sheet = document.getElementById('sheet');
+      sheet.querySelector('.sheet-body').addEventListener('click', (e) => e.stopPropagation());
+      sheet.querySelector('.sheet-header').addEventListener('click', (e) => e.stopPropagation());
+
+      // Auto-gera slug ao digitar nome (se slug ainda não foi tocado)
+      let slugTouched = false;
+      const nameInput = sheet.querySelector('#ac-name');
+      const slugInput = sheet.querySelector('#ac-slug');
+      nameInput.addEventListener('input', () => {
+        if (!slugTouched) slugInput.value = generateSlug(nameInput.value);
+      });
+      slugInput.addEventListener('input', () => { slugTouched = true; });
+
+      // Regenerar PINs
+      sheet.querySelector('#ac-editor-pin-regen').addEventListener('click', () => {
+        sheet.querySelector('#ac-editor-pin').value = generatePin(4);
+      });
+      sheet.querySelector('#ac-viewer-pin-regen').addEventListener('click', () => {
+        sheet.querySelector('#ac-viewer-pin').value = generatePin(4);
+      });
+
+      // Sync swatches com hex inputs (preview ao vivo)
+      Object.keys(palette).forEach(key => {
+        const input = sheet.querySelector('#ac-paleta-' + key);
+        const swatch = sheet.querySelector('#ac-swatch-' + key);
+        input.addEventListener('input', () => {
+          const v = input.value.trim();
+          if (/^#[0-9A-Fa-f]{6}$/.test(v) || /^#[0-9A-Fa-f]{3}$/.test(v)) {
+            swatch.style.background = v;
+          }
+        });
+      });
+
+      // File handler — comprime via canvas pra ~400px e guarda como base64 inline
+      // (mesmo pattern de referenceImage). Zero custo, sem dependência de Storage.
+      let inlineLogoData = ''; // data: URI quando arquivo é anexado
+      const fileInput = sheet.querySelector('#ac-logo-file');
+      const fileStatus = sheet.querySelector('#ac-logo-status');
+      const urlInput = sheet.querySelector('#ac-logo-url');
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        fileStatus.textContent = 'Comprimindo…';
+        try {
+          inlineLogoData = await compressImage(file, 400, 0.85);
+          const kb = Math.round((inlineLogoData.length * 3 / 4) / 1024);
+          fileStatus.textContent = `✓ ${file.name} (${kb} KB inline)`;
+          // Limpa URL externa pra não sobrescrever o inline no submit.
+          urlInput.value = '';
+          urlInput.placeholder = 'arquivo anexado — apague pra usar URL externa';
+        } catch (e) {
+          console.error('[compressImage logo]', e);
+          fileStatus.textContent = '✗ falhou: ' + (e.message || 'erro');
+          inlineLogoData = '';
+        }
+      });
+      // Se Isabelle digita URL manualmente, descarta o inline.
+      urlInput.addEventListener('input', () => {
+        if (urlInput.value.trim()) {
+          inlineLogoData = '';
+          if (fileInput.value) {
+            fileInput.value = '';
+            fileStatus.textContent = 'Nenhum arquivo';
+          }
+        }
+      });
+
+      // Cancelar
+      sheet.querySelector('#ac-cancel-btn').addEventListener('click', closeSheet);
+
+      // Submit
+      sheet.querySelector('#ac-submit-btn').addEventListener('click', async () => {
+        const name = nameInput.value.trim();
+        const slug = (slugInput.value.trim() || generateSlug(name)).toLowerCase();
+        const editorPin = sheet.querySelector('#ac-editor-pin').value.trim();
+        const viewerPin = sheet.querySelector('#ac-viewer-pin').value.trim();
+        const greeting = sheet.querySelector('#ac-greeting').value.trim();
+        const logoUrl = inlineLogoData || urlInput.value.trim();
+
+        if (!name) { showToast('Falta o nome do cliente.'); return; }
+        if (!slug || !/^[a-z0-9-]+$/.test(slug)) { showToast('Slug inválido (só letras minúsculas, números e hífens).'); return; }
+        if (!editorPin || !viewerPin) { showToast('Faltam os PINs.'); return; }
+
+        // Verifica unicidade do slug
+        const existsSnap = await db.ref(ROOT_PATH + '/clients/' + slug).once('value');
+        if (existsSnap.exists()) { showToast(`Slug "${slug}" já existe. Escolha outro.`); return; }
+
+        // Coleta paleta
+        const paleta = {};
+        Object.keys(palette).forEach(key => {
+          const val = sheet.querySelector('#ac-paleta-' + key).value.trim();
+          paleta[key] = val || palette[key];
+        });
+
+        const clientData = {
+          meta: {
+            slug: slug,
+            name: name,
+            active: true,
+            createdAt: Date.now()
+          },
+          auth: {
+            editorPin: editorPin,
+            viewerPin: viewerPin
+          },
+          branding: {
+            paleta: paleta,
+            saudacao: greeting || ('Olá, ' + name),
+            logoUrl: logoUrl || '',
+            personaColors: {}
+          },
+          cardTypes: [...CARD_TYPES_DEFAULT]
+        };
+
+        try {
+          await db.ref(ROOT_PATH + '/clients/' + slug).set(clientData);
+          showToast(`Cliente "${name}" criado.`);
+          closeSheet();
+          // Refresca o master pra mostrar o cliente novo
+          loadMasterDashboard();
+        } catch (e) {
+          console.error('[add client] set falhou', e);
+          showToast('Falhou ao criar: ' + (e.message || 'erro'));
+        }
       });
     }
 
@@ -5586,6 +6159,45 @@
         renderEditor();
       }).catch(e => {
         showToast('Falhou ao criar day: ' + e.message);
+      });
+    }
+
+    // Atrito 1 caminho C: deleta o day atualmente selecionado + todos os cards dele.
+    // Multi-path update atômico (mesmo pattern do refactor HARD-LITE) garante que
+    // ou tudo é apagado, ou nada é. renderEditor (5723) já trata currentDayId
+    // inválido e cai no empty state quando data.days fica vazio.
+    function deleteCurrentDay() {
+      if (!clientRef) { showToast('Sem conexão com o cliente.'); return; }
+      const dayId = state.currentDayId;
+      const data = state.clientData;
+      const day = data && data.days && data.days[dayId];
+      if (!day) { showToast('Day inválido.'); return; }
+
+      const allCards = Object.values(data.cards || {});
+      const dayCards = allCards.filter(c => c.dayId === dayId);
+      const count = dayCards.length;
+
+      const dayLabel = getDayDisplayLabel(day);
+      const dayDate = formatDate(day.date);
+      const msg = count > 0
+        ? `Apagar ${dayLabel} (${dayDate}) e ${count} card${count !== 1 ? 's' : ''} do dia? Não dá pra desfazer.`
+        : `Apagar ${dayLabel} (${dayDate})?`;
+      if (!confirm(msg)) return;
+
+      const updates = {};
+      updates['days/' + dayId] = null;
+      dayCards.forEach(c => { updates['cards/' + c.id] = null; });
+      // Apaga blocks órfãos? Não — blocks podem ser compartilhados por outros days
+      // futuramente. Por enquanto blocks são por-day, mas o schema permite reusar.
+      // Manter blocks intocados é mais conservador.
+
+      clientRef.update(updates).then(() => {
+        state.currentDayId = null; // listener vai resetar pro próximo day disponível
+        showToast(count > 0 ? `Day excluído (${count} card${count !== 1 ? 's' : ''}).` : 'Day excluído.');
+        renderEditor();
+      }).catch(e => {
+        console.error('[deleteCurrentDay]', e);
+        showToast('Falhou ao excluir: ' + (e && e.message ? e.message : 'erro'));
       });
     }
 
@@ -5763,6 +6375,10 @@
               ↑ Restaurar
               <input type="file" id="restore-json-input" accept="application/json" style="display: none;" />
             </label>
+            <!-- Atrito 3: gerenciar tags do cliente (sheet com lista + criar + excluir) -->
+            <button type="button" class="editor-meta-pill is-clickable" id="manage-tags-btn" style="cursor: pointer;">⚑ Tags</button>
+            <!-- Atrito 1 caminho C: pílula de excluir o day atual. Confirm informa contagem de cards. -->
+            <button type="button" class="editor-meta-pill is-danger" id="delete-day-btn">× Excluir ${escapeHtml(getDayDisplayLabel(currentDay))}</button>
           </div>
 
           <div class="editor-blocks">
@@ -5911,6 +6527,18 @@
       const addDayTab = app.querySelector('#add-day-tab');
       if (addDayTab) {
         addDayTab.addEventListener('click', openAddDayModal);
+      }
+
+      // Atrito 1 caminho C: pílula × Excluir day. Confirm informa contagem de cards do day.
+      const deleteDayBtn = app.querySelector('#delete-day-btn');
+      if (deleteDayBtn) {
+        deleteDayBtn.addEventListener('click', deleteCurrentDay);
+      }
+
+      // Atrito 3: pílula ⚑ Tags abre sheet de gestão de tags do cliente.
+      const manageTagsBtn = app.querySelector('#manage-tags-btn');
+      if (manageTagsBtn) {
+        manageTagsBtn.addEventListener('click', openManageTagsSheet);
       }
 
       // Handler do botão "⊕ Clonar sprint" removido no refactor HARD-LITE.
@@ -6213,6 +6841,10 @@
       if (state.mode === 'editor') renderEditor();
     }
 
+    // Atrito 2A: schema simplificado — apenas 3 campos de texto livre (objective,
+    // caption, topics). Campos antigos (framing, concept, captionTone, anchorPhrase)
+    // removidos. Migração one-shot via DevTools console limpa o schema dos cards
+    // existentes (script no comentário no fim deste arquivo).
     function createDefaultCard(dayId, blockId, personaId) {
       const block = state.clientData.days[dayId].blocks[blockId];
       return {
@@ -6224,10 +6856,8 @@
         priority: 'Média',
         timeSlot: block ? (block.timeStart + '–' + block.timeEnd) : '',
         objective: '',
-        framing: '',
-        concept: '',
-        captionTone: '',
-        anchorPhrase: '',
+        caption: '',
+        topics: '',
         referenceImage: '',
         checklist: JSON.parse(JSON.stringify(DEFAULT_CHECKLIST)),
         order: 0,
@@ -6285,7 +6915,7 @@
               <div class="form-group">
                 <label class="form-label">Tipo</label>
                 <select class="form-select" id="f-type">
-                  ${CARD_TYPES.map(opt => `<option value="${opt}" ${d.type === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                  ${getCardTypesOfClient().map(opt => `<option value="${opt}" ${d.type === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                 </select>
               </div>
             </div>
@@ -6303,29 +6933,20 @@
               </div>
             </div>
 
+            <!-- Atrito 2A: 3 campos de texto livre. Vazios não aparecem no card final. -->
             <div class="form-group">
-              <label class="form-label">Objetivo</label>
-              <textarea class="form-textarea" id="f-objective" placeholder="1 frase: por que esse conteúdo existe na narrativa">${escapeHtml(d.objective)}</textarea>
+              <label class="form-label">Objetivo do conteúdo</label>
+              <textarea class="form-textarea" id="f-objective" placeholder="Por que esse conteúdo existe? Qual papel ele tem na narrativa?">${escapeHtml(d.objective || '')}</textarea>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Direcionamento de enquadramento</label>
-              <textarea class="form-textarea" id="f-framing" placeholder="Como o conteúdo deve ser captado visualmente">${escapeHtml(d.framing)}</textarea>
+              <label class="form-label">Legenda</label>
+              <textarea class="form-textarea" id="f-caption" placeholder="Copy pronta ou tom sugerido pra legenda">${escapeHtml(d.caption || '')}</textarea>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Direcionamento de conceito</label>
-              <textarea class="form-textarea" id="f-concept" placeholder="O que precisa transparecer no conteúdo">${escapeHtml(d.concept)}</textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Tom de legenda</label>
-              <textarea class="form-textarea" id="f-caption" placeholder="Sugestão de tom ou copy pronta">${escapeHtml(d.captionTone)}</textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Frase-âncora (opcional)</label>
-              <input type="text" class="form-input" id="f-anchor" value="${escapeAttr(d.anchorPhrase)}" placeholder='Ex: "primeiro café aqui em cima"' />
+              <label class="form-label">Tópicos</label>
+              <textarea class="form-textarea" id="f-topics" placeholder="Pontos a abordar (um por linha, opcional)">${escapeHtml(d.topics || '')}</textarea>
             </div>
 
             <div class="form-group">
@@ -6493,11 +7114,10 @@
       modalState.draft.type = get('f-type');
       modalState.draft.priority = get('f-priority');
       modalState.draft.timeSlot = get('f-timeslot');
+      // Atrito 2A: apenas 3 campos de texto livre.
       modalState.draft.objective = get('f-objective');
-      modalState.draft.framing = get('f-framing');
-      modalState.draft.concept = get('f-concept');
-      modalState.draft.captionTone = get('f-caption');
-      modalState.draft.anchorPhrase = get('f-anchor');
+      modalState.draft.caption = get('f-caption');
+      modalState.draft.topics = get('f-topics');
 
       overlay.querySelectorAll('.checklist-row-input').forEach(input => {
         const idx = parseInt(input.getAttribute('data-idx'), 10);
