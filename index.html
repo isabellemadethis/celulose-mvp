@@ -2498,14 +2498,23 @@
       margin-bottom: 40px;
       padding-bottom: 24px;
       border-bottom: 1px solid var(--border-soft);
-      position: relative;
+      /* Bug fix Empire Hair: position: absolute no botão sobrepunha "Olá, Isabelle"
+         em viewport estreito. Trocado por flex com wrap — botão à direita em telas
+         largas, wrappa pra linha de baixo em telas estreitas. */
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .master-header-text {
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     /* Atrito 6: botão pra adicionar cliente novo no master */
     .master-add-client-btn {
-      position: absolute;
-      top: 8px;
-      right: 0;
+      flex-shrink: 0;
       padding: 10px 18px;
       border: 1px solid var(--mauve);
       background: var(--white);
@@ -2526,7 +2535,13 @@
     .palette-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 12px;
+    }
+    /* Empire Hair fix: cada hex agora tem sublabel descritivo embaixo */
+    .palette-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .palette-row {
       display: flex;
@@ -2545,6 +2560,7 @@
       color: var(--mauve-text);
       letter-spacing: 0.04em;
       min-width: 64px;
+      font-weight: 600;
     }
     .palette-row input {
       flex: 1;
@@ -2554,6 +2570,103 @@
       border: 1px solid var(--border-soft);
       border-radius: 6px;
       background: var(--white);
+    }
+    .palette-cell-hint {
+      font-size: 10px;
+      color: var(--gray);
+      line-height: 1.4;
+      padding-left: 32px;
+    }
+
+    /* Empire Hair fix: preview ao vivo da paleta — usa CSS vars locais escopadas
+       no .palette-preview pra não vazar pro app inteiro. JS atualiza --p-* quando
+       hex inputs mudam. */
+    .palette-preview {
+      margin-top: 16px;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--p-blush-light);
+    }
+    .palette-preview-header {
+      padding: 8px 12px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border-soft);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mauve-text);
+    }
+    .palette-preview-body {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .palette-preview-kicker {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--p-mauve);
+      font-weight: 600;
+    }
+    .palette-preview-title {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--p-deep);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+    .palette-preview-subtitle {
+      font-size: 13px;
+      color: var(--p-mauve-text);
+      font-style: italic;
+    }
+    .palette-preview-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .palette-preview-pill-meta {
+      padding: 4px 10px;
+      background: var(--white);
+      border: 1px solid var(--p-border-soft);
+      border-radius: 100px;
+      font-size: 11px;
+      color: var(--p-mauve-text);
+    }
+    .palette-preview-pill-mauve {
+      padding: 4px 10px;
+      background: var(--p-blush);
+      border: 1px solid var(--p-mauve);
+      border-radius: 100px;
+      font-size: 11px;
+      color: var(--p-mauve);
+      font-weight: 500;
+    }
+    .palette-preview-cta {
+      padding: 12px 20px;
+      background: var(--p-deep);
+      color: var(--white);
+      border: none;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      align-self: flex-start;
+      cursor: default;
+    }
+    .palette-preview-divider {
+      border-top: 1px solid var(--p-border-soft);
+      margin: 4px 0;
+    }
+    .palette-preview-rose-hover {
+      padding: 4px 10px;
+      background: var(--p-rose-soft);
+      border-radius: 100px;
+      font-size: 11px;
+      color: var(--white);
+      align-self: flex-start;
     }
 
     .pin-row {
@@ -5712,9 +5825,11 @@
       app.innerHTML = `
         <div class="master-shell">
           <div class="master-header">
-            <div class="master-kicker">Celulose Digital · Master</div>
-            <div class="master-title">Olá, Isabelle</div>
-            <div class="master-subtitle">${clients.length} ${clients.length === 1 ? 'cliente ativo' : 'clientes ativos'}</div>
+            <div class="master-header-text">
+              <div class="master-kicker">Celulose Digital · Master</div>
+              <div class="master-title">Olá, Isabelle</div>
+              <div class="master-subtitle">${clients.length} ${clients.length === 1 ? 'cliente ativo' : 'clientes ativos'}</div>
+            </div>
             <!-- Atrito 6: botão pra abrir form de adicionar cliente novo -->
             <button type="button" class="master-add-client-btn" id="add-client-btn">+ Adicionar cliente</button>
           </div>
@@ -5784,6 +5899,17 @@
         deep:        '#3A1E28',
         borderSoft:  '#F0DCE3'
       };
+      // Empire Hair fix: descrição clara de pra que cada hex serve.
+      const paletteHints = {
+        blush:       'Fundo accent (hovers, fundos de pílula)',
+        blushLight:  'FUNDO PRINCIPAL DO APP (quase branco com tom)',
+        rose:        'Accent quente médio (variações)',
+        roseSoft:    'Hover de botões secundários',
+        mauve:       'COR DA MARCA (kickers, badges, dots)',
+        mauveText:   'Texto secundário (taglines, hints)',
+        deep:        'TEXTO PRINCIPAL + CTAs (títulos, botão Aprovar)',
+        borderSoft:  'Bordas e divisórias'
+      };
       const initialEditorPin = generatePin(4);
       const initialViewerPin = generatePin(4);
 
@@ -5844,14 +5970,35 @@
               <label class="form-label">Paleta (8 cores · hex)</label>
               <div class="palette-grid">
                 ${Object.entries(palette).map(([key, val]) => `
-                  <div class="palette-row">
-                    <span class="palette-swatch" id="ac-swatch-${key}" style="background: ${val};"></span>
-                    <label>${key}</label>
-                    <input type="text" id="ac-paleta-${key}" value="${val}" maxlength="7" />
+                  <div class="palette-cell">
+                    <div class="palette-row">
+                      <span class="palette-swatch" id="ac-swatch-${key}" style="background: ${val};"></span>
+                      <label>${key}</label>
+                      <input type="text" id="ac-paleta-${key}" value="${val}" maxlength="7" />
+                    </div>
+                    <div class="palette-cell-hint">${paletteHints[key] || ''}</div>
                   </div>
                 `).join('')}
               </div>
               <div class="form-hint">Os defaults são da paleta Closet — ajuste conforme branding do cliente.</div>
+
+              <!-- Empire Hair fix: preview ao vivo da paleta. CSS vars locais
+                   (--p-*) são setadas via JS quando hex muda. Mostra fundo,
+                   textos, pílulas e CTA usando as cores escolhidas. -->
+              <div class="palette-preview" id="palette-preview">
+                <div class="palette-preview-header">Preview · como vai ficar</div>
+                <div class="palette-preview-body">
+                  <div class="palette-preview-kicker">EXEMPLO · MODO EDITOR</div>
+                  <div class="palette-preview-title">Painel da Isabelle</div>
+                  <div class="palette-preview-subtitle">Aqui aparece um texto secundário em itálico, tipo uma tagline.</div>
+                  <div class="palette-preview-pills">
+                    <span class="palette-preview-pill-meta">4 cards no total</span>
+                    <span class="palette-preview-pill-mauve">peça-hero</span>
+                  </div>
+                  <div class="palette-preview-divider"></div>
+                  <button type="button" class="palette-preview-cta">Aprovar</button>
+                </div>
+              </div>
             </div>
 
             <div class="form-hint" style="font-size: 12px; color: var(--mauve-text); padding: 12px; background: var(--blush-light); border-radius: 8px;">
@@ -5888,7 +6035,22 @@
         sheet.querySelector('#ac-viewer-pin').value = generatePin(4);
       });
 
-      // Sync swatches com hex inputs (preview ao vivo)
+      // Sync swatches + preview ao vivo. Cada input atualiza:
+      //   1. O swatch quadradinho ao lado do hex
+      //   2. As CSS vars locais do .palette-preview (--p-blush-light, --p-mauve, etc)
+      // Preview usa essas vars no CSS e re-renderiza com as novas cores.
+      const preview = sheet.querySelector('#palette-preview');
+      function updatePreview() {
+        if (!preview) return;
+        Object.keys(palette).forEach(key => {
+          const input = sheet.querySelector('#ac-paleta-' + key);
+          const v = input.value.trim();
+          const finalVal = (/^#[0-9A-Fa-f]{6}$/.test(v) || /^#[0-9A-Fa-f]{3}$/.test(v)) ? v : palette[key];
+          // camelCase → kebab-case (mesmo pattern do applyBranding)
+          const cssVar = '--p-' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
+          preview.style.setProperty(cssVar, finalVal);
+        });
+      }
       Object.keys(palette).forEach(key => {
         const input = sheet.querySelector('#ac-paleta-' + key);
         const swatch = sheet.querySelector('#ac-swatch-' + key);
@@ -5897,8 +6059,11 @@
           if (/^#[0-9A-Fa-f]{6}$/.test(v) || /^#[0-9A-Fa-f]{3}$/.test(v)) {
             swatch.style.background = v;
           }
+          updatePreview();
         });
       });
+      // Inicialização — pinta preview com defaults
+      updatePreview();
 
       // File handler — comprime via canvas pra ~400px e guarda como base64 inline
       // (mesmo pattern de referenceImage). Zero custo, sem dependência de Storage.
