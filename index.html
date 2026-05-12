@@ -5902,16 +5902,18 @@
         root.style.setProperty('--persona-' + id, hex);
       });
 
-      // 3. LOGO — background-image em [data-brand-logo].
+      // 3. LOGO — background-image em .welcome-logo[data-brand-logo].
       // Se branding.logoUrl vazio/ausente, NÃO mexe (deixa o conteúdo textual aparecer).
       // PROMPT 12 / D-12.3: pre-probe via Image() pra detectar 404/CORS. Se falha,
       // aplica fallback "avatar com inicial" só nos .welcome-logo (kickers de editor
       // já mostram nome do cliente como texto, então logo ausente ali é OK).
+      // FIX 09/05: seletor restrito a .welcome-logo — antes pegava todos
+      // [data-brand-logo] e aplicava bg-image em cima do texto dos editor-kicker.
       if (branding.logoUrl) {
         const url = branding.logoUrl;
         const probe = new Image();
         probe.onload = () => {
-          document.querySelectorAll('[data-brand-logo]').forEach(el => {
+          document.querySelectorAll('.welcome-logo[data-brand-logo]').forEach(el => {
             el.style.backgroundImage = 'url(' + url + ')';
             el.style.backgroundSize = 'contain';
             el.style.backgroundRepeat = 'no-repeat';
