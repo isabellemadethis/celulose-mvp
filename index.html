@@ -39,7 +39,7 @@
       --white: #FFFFFF;
       --gray: #8A8A8A;
       --gray-light: #C4C4C4;
-      --green: #07d375; /* Verde Celulose (era #4A7A52 oliva do Closet). Aprovação = identidade Celulose em todos os clientes. */
+      --green: #4A7A52; /* Verde oliva original. Tentamos Celulose #07d375 em A.3 mas espalhou pra muitos lugares (banner, progress, borda, pílula "VOCÊ EXECUTA") e ficou berrante. Revertido em A.4 — verde Celulose vai aparecer SÓ em pontos específicos do master dark. */
       --red: #B94B5A;
       --shadow-soft: 0 1px 3px rgba(58, 30, 40, 0.04), 0 4px 16px rgba(58, 30, 40, 0.04);
       --shadow-card: 0 2px 8px rgba(58, 30, 40, 0.06), 0 8px 32px rgba(58, 30, 40, 0.05);
@@ -431,9 +431,11 @@
       color: #fff;
     }
     .card-role-pill.is-mine {
-      background: var(--green);
+      /* A.4: era var(--green) (ficou verde Celulose berrante após --green global).
+         Agora usa --mauve (mesma cor da pílula "MÉDIA") pra peso de prioridade
+         integrado à paleta do cliente. */
+      background: var(--mauve);
       color: #fff;
-      box-shadow: 0 0 0 2px rgba(122, 157, 90, 0.18);
     }
     .card-role-pill.is-other {
       color: #fff;
@@ -460,7 +462,7 @@
       font-weight: 600;
     }
     .card-role-row .card-role-pill.is-mine {
-      box-shadow: 0 0 0 3px rgba(122, 157, 90, 0.22), 0 6px 18px rgba(122, 157, 90, 0.18);
+      /* A.4: removido box-shadow verde — pílula é mauve agora, sombras verdes não fazem sentido. */
     }
 
     .persona-filters {
@@ -4781,11 +4783,8 @@
       const hero = document.getElementById('card-hero');
       bindCardHero(hero, c, canVote);
 
-      // botões de aprovação
-      const approveBtn = document.getElementById('btn-approve');
-      if (approveBtn) {
-        approveBtn.addEventListener('click', () => triggerApproveAnimation(c));
-      }
+      // A.4: botão "Aprovar" removido — aprovação acontece via double-tap no hero
+      // (bindCardHero acima). Só sobrou "Pedir ajuste" no bloco de ação.
       const requestBtn = document.getElementById('btn-request-changes');
       if (requestBtn) {
         requestBtn.addEventListener('click', () => openRequestChangesSheet(c));
@@ -4852,12 +4851,14 @@
         </div>`;
       }
       // status === 'review'
+      // A.4: botão "Aprovar" removido — aprovação acontece via double-tap no hero
+      // (sistema bindCardHero já estava implementado). Só fica "Pedir ajuste" abaixo.
+      // O hint "2 toques pra aprovar" sobre a imagem do hero educa o gesto.
       if (canVote) {
         return `<div class="card-approval-block is-vote">
-          <div class="card-approval-question">O que você acha desse conteúdo?</div>
+          <div class="card-approval-question">Toque 2 vezes na imagem pra aprovar.<br><span style="font-size: 12px; color: var(--mauve-text); font-weight: 400;">Se quiser ajustes, use o botão abaixo:</span></div>
           <div class="card-approval-buttons">
-            <button class="card-approve-btn" id="btn-approve">Aprovar</button>
-            <button class="card-request-btn" id="btn-request-changes">Pedir ajuste</button>
+            <button class="card-request-btn" id="btn-request-changes" style="flex: 1;">Pedir ajuste</button>
           </div>
         </div>`;
       }
@@ -5399,7 +5400,9 @@
             <div class="card-section">
               <div class="card-section-label">2 · Aprovando ou pedindo ajuste</div>
               <div class="card-section-text">
-                Cada card tem dois botões: <strong>Aprovar</strong> e <strong>Pedir ajuste</strong>. Quando você aprova, toca um som curto e o celular vibra de leve — confirmação de que registrou. Pra pedir ajuste, descreva o que precisa mudar; a Isabelle recebe seu pedido.
+                Pra <strong>aprovar</strong>, toque <strong>2 vezes</strong> na imagem do card — vai tocar um som curto e o celular vibra de leve, confirmando que registrou. O hint "2 toques pra aprovar" aparece sobre a imagem quando o card está esperando seu voto.
+                <br><br>
+                Pra <strong>pedir ajuste</strong>, use o botão <strong>"Pedir ajuste"</strong> abaixo do card e descreva o que precisa mudar; a Isabelle recebe seu pedido.
                 <br><br>
                 Você pode <strong>mudar seu voto</strong> depois — entra no card e troca a decisão. Sem pressão.
               </div>
