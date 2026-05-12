@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Closet">
   <meta name="theme-color" content="#FDF0F5">
-  <title>Closet da Rafa — Notas de Inverno</title>
+  <title>Celulose Digital</title>
 
   <!-- Favicon Celulose Digital — SVG inline (círculo dark com C verde).
        É trocado dinamicamente via setFavicon() quando carrega um cliente
@@ -39,7 +39,7 @@
       --white: #FFFFFF;
       --gray: #8A8A8A;
       --gray-light: #C4C4C4;
-      --green: #4A7A52;
+      --green: #07d375; /* Verde Celulose (era #4A7A52 oliva do Closet). Aprovação = identidade Celulose em todos os clientes. */
       --red: #B94B5A;
       --shadow-soft: 0 1px 3px rgba(58, 30, 40, 0.04), 0 4px 16px rgba(58, 30, 40, 0.04);
       --shadow-card: 0 2px 8px rgba(58, 30, 40, 0.06), 0 8px 32px rgba(58, 30, 40, 0.05);
@@ -5780,6 +5780,7 @@
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
       setFavicon(); // tela sem cliente → favicon Celulose
+      updatePageTitle();
       app.innerHTML = `
         <div class="welcome">
           <div class="welcome-logo">Celulose Digital</div>
@@ -5802,6 +5803,7 @@
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
       setFavicon(); // cliente sumiu → favicon Celulose
+      updatePageTitle();
       app.innerHTML = `
         <div class="welcome">
           <div class="welcome-logo">Cliente não encontrado</div>
@@ -5819,6 +5821,7 @@
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
       setFavicon(); // master gate → favicon Celulose
+      updatePageTitle();
       app.innerHTML = `
         <div class="welcome">
           <div class="welcome-logo">Painel Master</div>
@@ -5900,6 +5903,24 @@
       link.href = href || CELULOSE_FAVICON_SVG;
     }
 
+    // Title contextual da aba — útil quando Isabelle tem várias abas abertas.
+    // Master: "Celulose Digital · Master"
+    // Editor: "{cliente} · Editor — Celulose Digital"
+    // Viewer: "{cliente} — Celulose Digital"
+    // Sem cliente / gate: "Celulose Digital"
+    function updatePageTitle() {
+      const clientName = (state.clientData && state.clientData.meta && state.clientData.meta.name) || '';
+      let title = 'Celulose Digital';
+      if (state.mode === 'master') {
+        title = 'Celulose Digital · Master';
+      } else if (state.mode === 'editor' && clientName) {
+        title = clientName + ' · Editor — Celulose Digital';
+      } else if (state.mode === 'viewer' && clientName) {
+        title = clientName + ' — Celulose Digital';
+      }
+      document.title = title;
+    }
+
     function applyBranding(branding) {
       branding = branding || {};
       const root = document.documentElement;
@@ -5959,6 +5980,9 @@
         // Cliente sem logoUrl — favicon Celulose continua.
         setFavicon();
       }
+
+      // Title da aba reflete cliente + modo.
+      updatePageTitle();
 
       // 4. SAUDAÇÃO — textContent em [data-brand-greeting].
       if (typeof branding.saudacao === 'string' && branding.saudacao.length) {
@@ -6056,6 +6080,7 @@
       // Master = espaço Celulose, reseta favicon pro padrão Celulose
       // (caso esteja vindo de um cliente que sobrescreveu).
       setFavicon();
+      updatePageTitle();
       try {
         const snap = await db.ref(ROOT_PATH + '/clients').once('value');
         state.masterData = { clients: snap.val() || {} };
