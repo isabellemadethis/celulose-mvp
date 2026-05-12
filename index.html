@@ -2457,6 +2457,119 @@
     }
     .tag-add-row .form-input { flex: 1; }
 
+    /* D12 — sheet Gerenciar personas (mesmo molde da sheet de tags). */
+    .persona-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+    }
+    .persona-row-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .persona-row-meta {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .persona-row-name {
+      font-size: 13px;
+      color: var(--deep);
+      font-weight: 500;
+    }
+    .persona-row-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--blush-light);
+      color: var(--mauve-text);
+      letter-spacing: 0.04em;
+      display: inline-block;
+      width: fit-content;
+    }
+    .persona-row-badge.is-voter {
+      background: var(--mauve);
+      color: var(--white);
+    }
+    .persona-row-count {
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .persona-row-remove {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid var(--border-soft);
+      color: var(--mauve-text);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+      flex-shrink: 0;
+    }
+    .persona-row-remove:hover {
+      background: #FBEBEB;
+      color: #8E3A3A;
+      border-color: #B85B5B;
+    }
+    .persona-row.is-in-use .persona-row-remove {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .persona-add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background: var(--blush-light);
+      border-radius: 10px;
+    }
+    .persona-add-row-inline {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .persona-add-row-inline .form-input { flex: 1; min-width: 120px; }
+    .persona-color-pair {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .persona-color-pair .form-input {
+      width: 90px;
+      font-family: monospace;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    .persona-color-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .persona-add-voter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--mauve-text);
+    }
+    .persona-add-voter-row input { margin: 0; }
+
     .editor-section {
       margin-top: 32px;
     }
@@ -5513,6 +5626,143 @@
     }
 
     // ============================================================
+    // D12 — sheet Gerenciar personas (paridade com sheet de tags)
+    // ============================================================
+    // CRUD de /clients/{slug}/personas + cor em /branding/personaColors.
+    // Schema: personas/{id} = { name, order, isVoter }; cor em branding.
+    // Excluir bloqueia se persona em uso (cards.personaId OU approvalByPersona).
+    function openManagePersonasSheet() {
+      const personasObj = (state.clientData && state.clientData.personas) || {};
+      const personasArr = Object.entries(personasObj)
+        .map(([id, p]) => ({ id, ...p }))
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+      const personaColors = (state.clientData?.branding?.personaColors) || {};
+
+      const content = `
+        <div class="sheet-header">
+          <div class="sheet-kicker">Gerenciar</div>
+          <div class="sheet-title">Personas do cliente</div>
+        </div>
+        <div class="sheet-body">
+          <div class="sheet-form">
+
+            <div class="form-group">
+              <label class="form-label">Adicionar persona nova</label>
+              <div class="persona-add-form">
+                <div class="persona-add-row-inline">
+                  <input type="text" class="form-input" id="new-persona-name" placeholder="Nome (ex: Bruna)" maxlength="40" />
+                  <div class="persona-color-pair">
+                    <input type="text" class="form-input" id="new-persona-color" value="#A6546A" maxlength="7" />
+                    <span class="persona-color-swatch" id="new-persona-swatch" style="background: #A6546A;"></span>
+                  </div>
+                  <button class="btn-primary" id="add-persona-btn" type="button">Adicionar</button>
+                </div>
+                <label class="persona-add-voter-row">
+                  <input type="checkbox" id="new-persona-voter" checked />
+                  Esta persona vota nas aprovações de cards
+                </label>
+              </div>
+              <div class="form-hint">Personas que votam recebem cards pra aprovar. Personas "donas" (sem voto) representam a marca em cards de vitrine.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Personas atuais (${personasArr.length})</label>
+              <div class="tags-list">
+                ${personasArr.length === 0 ? '<div class="form-hint">Nenhuma persona cadastrada ainda.</div>' :
+                  personasArr.map(p => {
+                    const usage = countPersonaUsage(p.id);
+                    const inUse = usage.total > 0;
+                    const color = personaColors[p.id] || '#888';
+                    const isVoter = p.isVoter !== false;
+                    return `
+                      <div class="persona-row${inUse ? ' is-in-use' : ''}">
+                        <span class="persona-row-swatch" style="background: ${escapeAttr(color)};"></span>
+                        <div class="persona-row-meta">
+                          <div class="persona-row-name">${escapeHtml(p.name || p.id)}</div>
+                          <span class="persona-row-badge${isVoter ? ' is-voter' : ''}">${isVoter ? 'vota' : 'dona'}</span>
+                        </div>
+                        <span class="persona-row-count">${usage.owns} card${usage.owns !== 1 ? 's' : ''} · ${usage.votes} voto${usage.votes !== 1 ? 's' : ''}</span>
+                        <button class="persona-row-remove" data-persona-id="${escapeAttr(p.id)}" type="button" title="${inUse ? 'Não dá pra excluir — persona em uso' : 'Excluir persona'}">×</button>
+                      </div>
+                    `;
+                  }).join('')
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      openSheet('manage-personas', content);
+
+      const sheet = document.getElementById('sheet');
+      sheet.querySelector('.sheet-body').addEventListener('click', (e) => e.stopPropagation());
+      sheet.querySelector('.sheet-header').addEventListener('click', (e) => e.stopPropagation());
+
+      // Hex input + swatch live (mesmo pattern do Add Cliente palette)
+      const colorInput = sheet.querySelector('#new-persona-color');
+      const swatch = sheet.querySelector('#new-persona-swatch');
+      colorInput.addEventListener('input', () => {
+        const hex = colorInput.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) swatch.style.background = hex;
+      });
+
+      // Adicionar
+      const nameInput = sheet.querySelector('#new-persona-name');
+      const voterInput = sheet.querySelector('#new-persona-voter');
+      const addBtn = sheet.querySelector('#add-persona-btn');
+      const submitAdd = () => {
+        const name = (nameInput.value || '').trim();
+        if (!name) { showToast('Digite o nome da persona.'); return; }
+        const color = (colorInput.value || '').trim();
+        if (!/^#[0-9A-Fa-f]{6}$/.test(color)) { showToast('Cor inválida — use formato #RRGGBB.'); return; }
+        const isVoter = !!voterInput.checked;
+        const existingPersonas = (state.clientData && state.clientData.personas) || {};
+        const id = generatePersonaId(name, existingPersonas);
+        const order = Object.values(existingPersonas).reduce((max, p) => Math.max(max, p.order || 0), 0) + 1;
+
+        const updates = {};
+        updates['personas/' + id] = { name, order, isVoter };
+        updates['branding/personaColors/' + id] = color;
+
+        clientRef.update(updates).then(() => {
+          showToast('Persona adicionada: ' + name);
+          openManagePersonasSheet(); // re-render
+        }).catch(e => {
+          showToast('Falhou ao adicionar: ' + (e && e.message ? e.message : 'erro'));
+        });
+      };
+      addBtn.addEventListener('click', submitAdd);
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submitAdd(); }
+      });
+
+      // Excluir
+      sheet.querySelectorAll('.persona-row-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const personaId = btn.getAttribute('data-persona-id');
+          const persona = personasObj[personaId];
+          if (!persona) return;
+          const usage = countPersonaUsage(personaId);
+          if (usage.total > 0) {
+            showToast(`"${persona.name || personaId}" tem ${usage.owns} card${usage.owns !== 1 ? 's' : ''} e ${usage.votes} voto${usage.votes !== 1 ? 's' : ''}. Mude/apague esses cards primeiro.`);
+            return;
+          }
+          if (!confirm(`Excluir a persona "${persona.name || personaId}"?\nNão dá pra desfazer.`)) return;
+          const updates = {};
+          updates['personas/' + personaId] = null;
+          updates['branding/personaColors/' + personaId] = null;
+          clientRef.update(updates).then(() => {
+            showToast('Persona excluída: ' + (persona.name || personaId));
+            openManagePersonasSheet();
+          }).catch(e => {
+            showToast('Falhou ao excluir: ' + (e && e.message ? e.message : 'erro'));
+          });
+        });
+      });
+    }
+
+    // ============================================================
     // EDITOR
     // ============================================================
     // ============================================================
@@ -5887,6 +6137,29 @@
       return out;
     }
 
+    // D12 — gera personaId a partir do nome (slug). Se já existe em `existing`,
+    // adiciona sufixo numérico ("-2", "-3", ...). Fallback "p" + random se nome vazio.
+    function generatePersonaId(name, existing) {
+      const base = generateSlug(name) || 'p' + Math.random().toString(36).slice(2, 6);
+      const taken = new Set(Object.keys(existing || {}));
+      if (!taken.has(base)) return base;
+      let i = 2;
+      while (taken.has(base + '-' + i)) i++;
+      return base + '-' + i;
+    }
+
+    // D12 — conta cards onde a persona é dona OU votou. Usado pra bloquear delete.
+    function countPersonaUsage(personaId) {
+      const cards = Object.values(state.clientData?.cards || {});
+      let owns = 0;
+      let votes = 0;
+      cards.forEach(c => {
+        if (c.personaId === personaId) owns++;
+        if (c.approvalByPersona && c.approvalByPersona[personaId]) votes++;
+      });
+      return { owns, votes, total: owns + votes };
+    }
+
     function openAddClientSheet() {
       // Defaults da paleta — copiados do DEFAULT_PALETA do app.
       const palette = {
@@ -6001,8 +6274,27 @@
               </div>
             </div>
 
+            <!-- D12 B-light: bloquinho opcional pra criar 1ª persona junto com o cliente. -->
+            <div class="form-group" style="margin-top: 24px; padding-top: 24px; border-top: 1px dashed var(--border-soft);">
+              <label class="form-label">1ª persona <span style="font-weight: 400; color: var(--mauve-text); font-size: 11px;">(opcional)</span></label>
+              <div class="persona-add-form">
+                <div class="persona-add-row-inline">
+                  <input type="text" class="form-input" id="ac-persona-name" placeholder="Nome (ex: Bruna)" maxlength="40" />
+                  <div class="persona-color-pair">
+                    <input type="text" class="form-input" id="ac-persona-color" value="#A6546A" maxlength="7" />
+                    <span class="persona-color-swatch" id="ac-persona-swatch" style="background: #A6546A;"></span>
+                  </div>
+                </div>
+                <label class="persona-add-voter-row">
+                  <input type="checkbox" id="ac-persona-voter" checked />
+                  Esta persona vota nas aprovações de cards
+                </label>
+              </div>
+              <div class="form-hint">Se preencher o nome, o cliente já sai com 1 persona pronta. Pode adicionar mais depois pelo editor (★ Personas).</div>
+            </div>
+
             <div class="form-hint" style="font-size: 12px; color: var(--mauve-text); padding: 12px; background: var(--blush-light); border-radius: 8px;">
-              ℹ Cliente é criado <strong>vazio</strong>. Você adiciona personas, days e cards depois pelo editor.
+              ℹ Days e cards são adicionados depois pelo editor.
             </div>
           </div>
         </div>
@@ -6065,6 +6357,16 @@
       // Inicialização — pinta preview com defaults
       updatePreview();
 
+      // D12 B-light: swatch live pro hex da 1ª persona.
+      const acPersonaColor = sheet.querySelector('#ac-persona-color');
+      const acPersonaSwatch = sheet.querySelector('#ac-persona-swatch');
+      if (acPersonaColor && acPersonaSwatch) {
+        acPersonaColor.addEventListener('input', () => {
+          const v = acPersonaColor.value.trim();
+          if (/^#[0-9A-Fa-f]{6}$/.test(v)) acPersonaSwatch.style.background = v;
+        });
+      }
+
       // File handler — comprime via canvas pra ~400px e guarda como base64 inline
       // (mesmo pattern de referenceImage). Zero custo, sem dependência de Storage.
       let inlineLogoData = ''; // data: URI quando arquivo é anexado
@@ -6126,6 +6428,22 @@
           paleta[key] = val || palette[key];
         });
 
+        // D12 B-light: coleta 1ª persona (opcional). Só inclui se nome preenchido.
+        const acPersonaName = (sheet.querySelector('#ac-persona-name').value || '').trim();
+        const personaColors = {};
+        let personasInitial = null;
+        if (acPersonaName) {
+          const acPersonaColorVal = (sheet.querySelector('#ac-persona-color').value || '').trim();
+          if (!/^#[0-9A-Fa-f]{6}$/.test(acPersonaColorVal)) {
+            showToast('Cor da persona inválida — use formato #RRGGBB ou deixe o nome em branco.');
+            return;
+          }
+          const acPersonaVoter = !!sheet.querySelector('#ac-persona-voter').checked;
+          const personaId = generatePersonaId(acPersonaName, {});
+          personasInitial = { [personaId]: { name: acPersonaName, order: 1, isVoter: acPersonaVoter } };
+          personaColors[personaId] = acPersonaColorVal;
+        }
+
         const clientData = {
           meta: {
             slug: slug,
@@ -6141,10 +6459,11 @@
             paleta: paleta,
             saudacao: greeting || ('Olá, ' + name),
             logoUrl: logoUrl || '',
-            personaColors: {}
+            personaColors: personaColors
           },
           cardTypes: [...CARD_TYPES_DEFAULT]
         };
+        if (personasInitial) clientData.personas = personasInitial;
 
         try {
           await db.ref(ROOT_PATH + '/clients/' + slug).set(clientData);
@@ -6540,6 +6859,8 @@
               ↑ Restaurar
               <input type="file" id="restore-json-input" accept="application/json" style="display: none;" />
             </label>
+            <!-- D12: gerenciar personas do cliente (sheet com lista + criar + excluir) -->
+            <button type="button" class="editor-meta-pill is-clickable" id="manage-personas-btn" style="cursor: pointer;">★ Personas</button>
             <!-- Atrito 3: gerenciar tags do cliente (sheet com lista + criar + excluir) -->
             <button type="button" class="editor-meta-pill is-clickable" id="manage-tags-btn" style="cursor: pointer;">⚑ Tags</button>
             <!-- Atrito 1 caminho C: pílula de excluir o day atual. Confirm informa contagem de cards. -->
@@ -6698,6 +7019,12 @@
       const deleteDayBtn = app.querySelector('#delete-day-btn');
       if (deleteDayBtn) {
         deleteDayBtn.addEventListener('click', deleteCurrentDay);
+      }
+
+      // D12: pílula ★ Personas abre sheet de gestão de personas do cliente.
+      const managePersonasBtn = app.querySelector('#manage-personas-btn');
+      if (managePersonasBtn) {
+        managePersonasBtn.addEventListener('click', openManagePersonasSheet);
       }
 
       // Atrito 3: pílula ⚑ Tags abre sheet de gestão de tags do cliente.
