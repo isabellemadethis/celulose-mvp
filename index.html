@@ -9,6 +9,13 @@
   <meta name="theme-color" content="#FDF0F5">
   <title>Closet da Rafa — Notas de Inverno</title>
 
+  <!-- Favicon Celulose Digital — SVG inline (círculo dark com C verde).
+       É trocado dinamicamente via setFavicon() quando carrega um cliente
+       (passa a usar branding.logoUrl) e voltado pro padrão Celulose ao
+       abrir master / entry gate / master pin gate. -->
+  <link rel="icon" type="image/svg+xml" id="favicon-link"
+    href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='29' fill='%230a0a0a' stroke='%2307d375' stroke-width='3'/><text x='32' y='42' font-family='system-ui,sans-serif' font-size='32' font-weight='600' fill='white' text-anchor='middle'>C</text></svg>" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -5772,6 +5779,7 @@
     function renderEntryGate() {
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
+      setFavicon(); // tela sem cliente → favicon Celulose
       app.innerHTML = `
         <div class="welcome">
           <div class="welcome-logo">Celulose Digital</div>
@@ -5793,6 +5801,7 @@
       clearAuthLocal();
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
+      setFavicon(); // cliente sumiu → favicon Celulose
       app.innerHTML = `
         <div class="welcome">
           <div class="welcome-logo">Cliente não encontrado</div>
@@ -5809,6 +5818,7 @@
       clearAuthLocal();
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
+      setFavicon(); // master gate → favicon Celulose
       app.innerHTML = `
         <div class="welcome">
           <div class="welcome-logo">Painel Master</div>
@@ -5874,6 +5884,22 @@
     // Cor default por persona quando branding.personaColors não tem a key.
     const DEFAULT_PERSONA_COLOR = '#888';
 
+    // Favicon Celulose (default quando não tem cliente carregado — master,
+    // entry gate, master pin gate). Mesma SVG do <link rel="icon"> inicial.
+    const CELULOSE_FAVICON_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='29' fill='%230a0a0a' stroke='%2307d375' stroke-width='3'/><text x='32' y='42' font-family='system-ui,sans-serif' font-size='32' font-weight='600' fill='white' text-anchor='middle'>C</text></svg>";
+
+    function setFavicon(href) {
+      let link = document.getElementById('favicon-link');
+      if (!link) {
+        link = document.createElement('link');
+        link.id = 'favicon-link';
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      // Se logoUrl vazio/ausente, volta pro favicon Celulose.
+      link.href = href || CELULOSE_FAVICON_SVG;
+    }
+
     function applyBranding(branding) {
       branding = branding || {};
       const root = document.documentElement;
@@ -5919,12 +5945,19 @@
             el.style.backgroundRepeat = 'no-repeat';
             el.style.backgroundPosition = 'center';
           });
+          // Favicon dinâmico — usa logo do cliente na aba do navegador.
+          setFavicon(url);
         };
         probe.onerror = () => {
           console.warn('[applyBranding] logoUrl falhou:', url);
           applyLogoFallback();
+          // Logo do cliente falhou — volta favicon pra Celulose.
+          setFavicon();
         };
         probe.src = url;
+      } else {
+        // Cliente sem logoUrl — favicon Celulose continua.
+        setFavicon();
       }
 
       // 4. SAUDAÇÃO — textContent em [data-brand-greeting].
@@ -6020,6 +6053,9 @@
     async function loadMasterDashboard() {
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
+      // Master = espaço Celulose, reseta favicon pro padrão Celulose
+      // (caso esteja vindo de um cliente que sobrescreveu).
+      setFavicon();
       try {
         const snap = await db.ref(ROOT_PATH + '/clients').once('value');
         state.masterData = { clients: snap.val() || {} };
@@ -6901,14 +6937,25 @@
           <div class="editor-section">
             <div class="editor-section-title">URLs pra cada fundador</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
-              ${personas.map(f => `
-                <div style="background: var(--white); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 16px;">
-                  <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mauve); margin-bottom: 6px;">${escapeHtml(f.name)}</div>
-                  <div style="word-break: break-all; font-family: monospace; font-size: 11px; color: var(--gray);">
-                    ${window.location.origin}${window.location.pathname}?u=${f.id}
+              ${personas.map(f => {
+                // FIX 09/05: URL completa com cliente + persona + viewerPin.
+                // Antes era só ?u=ID, que caía em "URL vazia" no bootstrap e
+                // o cache localStorage redirecionava pro último modo (editor).
+                const _slug = state.clientSlug || '';
+                const _viewerPin = (data.auth && data.auth.viewerPin) || '';
+                const personaUrl = `${window.location.origin}${window.location.pathname}?cliente=${encodeURIComponent(_slug)}&u=${encodeURIComponent(f.id)}&pin=${encodeURIComponent(_viewerPin)}`;
+                return `
+                  <div style="background: var(--white); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+                      <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mauve);">${escapeHtml(f.name)}</div>
+                      <button class="btn-copy-persona-link" data-url="${escapeAttr(personaUrl)}" type="button" style="font-size: 10px; padding: 5px 12px; background: var(--mauve); color: var(--white); border: none; border-radius: 100px; cursor: pointer; letter-spacing: 0.04em; flex-shrink: 0;">📋 Copiar</button>
+                    </div>
+                    <div style="word-break: break-all; font-family: monospace; font-size: 11px; color: var(--gray);">
+                      ${escapeHtml(personaUrl)}
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </div>
         </div>
@@ -7028,6 +7075,24 @@
       if (managePersonasBtn) {
         managePersonasBtn.addEventListener('click', openManagePersonasSheet);
       }
+
+      // FIX 09/05: bind do botão "📋 Copiar" nas URLs por fundador.
+      // Usa Clipboard API moderna; fallback gracioso se browser bloqueia (http inseguro, etc).
+      app.querySelectorAll('.btn-copy-persona-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url');
+          if (!url) return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+              showToast('Link copiado!');
+            }).catch(() => {
+              showToast('Falhou ao copiar. Selecione o texto manualmente.');
+            });
+          } else {
+            showToast('Clipboard não disponível. Selecione o texto manualmente.');
+          }
+        });
+      });
 
       // Atrito 3: pílula ⚑ Tags abre sheet de gestão de tags do cliente.
       const manageTagsBtn = app.querySelector('#manage-tags-btn');
