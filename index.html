@@ -41,7 +41,7 @@
       --gray-light: #C4C4C4;
       --green: #4A7A52; /* Verde oliva original. Tentamos Celulose #07d375 em A.3 mas espalhou pra muitos lugares (banner, progress, borda, pílula "VOCÊ EXECUTA") e ficou berrante. Revertido em A.4 — verde Celulose vai aparecer SÓ em pontos específicos. */
       --celulose-green: #07d375; /* Verde signature Celulose. Aplicado APENAS em pontos de "chamada pra aprovar" no hero (hint, pulse, coração da animação) e no master dark. */
-      --red: #B94B5A;
+      --red: #dc2626;
       --shadow-soft: 0 1px 3px rgba(58, 30, 40, 0.04), 0 4px 16px rgba(58, 30, 40, 0.04);
       --shadow-card: 0 2px 8px rgba(58, 30, 40, 0.06), 0 8px 32px rgba(58, 30, 40, 0.05);
       --shadow-modal: 0 16px 48px rgba(58, 30, 40, 0.18), 0 4px 16px rgba(58, 30, 40, 0.12);
@@ -1627,7 +1627,7 @@
     .sheet-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(58, 30, 40, 0.4);
+      background: rgba(10, 10, 10, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 800;
@@ -3271,6 +3271,36 @@
     body.is-manage-mode .master-client-card-delete {
       display: flex;
     }
+    /* P10 — irmao do delete: edit branding (verde Celulose no hover, espelha o pattern do x). */
+    .master-client-card-edit {
+      position: absolute;
+      top: 8px;
+      right: 44px; /* 28px (delete width) + 8px gap + 8px margem direita */
+      width: 28px;
+      height: 28px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      color: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+      z-index: 2;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .master-client-card-edit:hover {
+      background: #07d375;
+      border-color: #07d375;
+      color: #0a0a0a;
+      transform: scale(1.1);
+    }
+    body.is-manage-mode .master-client-card-edit {
+      display: flex;
+    }
 
     /* ============================================================ */
     /* MODAL (editor card form)                                     */
@@ -3278,7 +3308,7 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(58, 30, 40, 0.4);
+      background: rgba(10, 10, 10, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 1000;
@@ -5582,7 +5612,6 @@
     function renderBottomNavViewer() {
       return `
         <nav class="bottom-nav">
-          <button class="nav-btn" data-nav="switch"><span class="nav-icon">◐</span><span class="nav-label">Bloco</span></button>
           <button class="nav-btn" data-nav="insights"><span class="nav-icon">✦</span><span class="nav-label">Insight</span></button>
           <button class="nav-btn" data-nav="manual"><span class="nav-icon">?</span><span class="nav-label">Manual</span></button>
           <button class="nav-btn" data-nav="settings"><span class="nav-icon">⚙</span><span class="nav-label">Ajustes</span></button>
@@ -5604,8 +5633,7 @@
       root.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const nav = btn.getAttribute('data-nav');
-          if (nav === 'switch') openSwitchSheet();
-          else if (nav === 'insights') openInsightSheet();
+          if (nav === 'insights') openInsightSheet();
           else if (nav === 'manual') openManualSheet();
           else if (nav === 'settings') openSettingsSheet();
         });
@@ -5834,14 +5862,7 @@
             </div>
 
             <div class="card-section">
-              <div class="card-section-label">8 · Trocar de bloco</div>
-              <div class="card-section-text">
-                Botão <strong>Bloco</strong> no rodapé abre a lista do dia inteiro pra você pular pra qualquer ponto.
-              </div>
-            </div>
-
-            <div class="card-section">
-              <div class="card-section-label">9 · Sem internet?</div>
+              <div class="card-section-label">8 · Sem internet?</div>
               <div class="card-section-text">
                 Se aparecer uma faixa escura no topo "Sem conexão. Reconectando…", é só esperar — o app reconecta sozinho. Suas ações enquanto offline ficam pendentes; tente de novo quando o banner sumir.
               </div>
@@ -6500,7 +6521,10 @@
             const dayCount = Object.keys(c.days || {}).length;
 
             const cards = Object.values(c.cards || {});
-            const reviewCount = cards.filter(card => card && card.status === 'review').length;
+            // B8 fix: exclui cards que todas as personas ja aprovaram (effective === 'approved').
+            // card.status fica 'review' ate Marcar como publicado, mas semanticamente o card nao esta
+            // mais 'em aprovacao' se todas votaram approved. Cards com requested_changes/pending/in_progress continuam contando.
+            const reviewCount = cards.filter(card => card && card.status === 'review' && getCardEffectiveApproval(card) !== 'approved').length;
 
             const insights = Object.values(c.insights || {});
             const lastSeenInsightAt = (c.notifications && c.notifications.isabelle && c.notifications.isabelle.lastSeenInsightAt) || 0;
@@ -6543,6 +6567,8 @@
                     <span class="master-client-stat${insightsClass}"><strong>${newInsightsCount}</strong> insights novos</span>
                   </div>
                 </button>
+                <!-- P10: edit branding irmao (esquerda do x, verde no hover). -->
+                <button type="button" class="master-client-card-edit" data-slug="${escapeHtml(slug)}" aria-label="Editar branding de ${escapeHtml(meta.name || slug)}">⚙</button>
                 <!-- D17: x irmao (HTML valido — nao aninha button-em-button). -->
                 <button type="button" class="master-client-card-delete" data-slug="${escapeHtml(slug)}" aria-label="Apagar ${escapeHtml(meta.name || slug)}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
               </div>
@@ -6613,6 +6639,17 @@
           const slug = btn.getAttribute('data-slug');
           if (!slug) return;
           openDeleteClientSheet(slug, clientsObj[slug]);
+        });
+      });
+
+      // P10: edit branding em cada card — abre sheet de edicao. stopPropagation pra
+      // nao disparar o click do card (que navegaria pro editor).
+      app.querySelectorAll('.master-client-card-edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const slug = btn.getAttribute('data-slug');
+          if (!slug) return;
+          openEditClientSheet(slug, clientsObj[slug]);
         });
       });
     }
