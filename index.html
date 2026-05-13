@@ -2967,6 +2967,83 @@
     }
 
     /* ============================================================ */
+    /* MASTER DARK — Repaint Celulose (Commit B / D16)              */
+    /* Aplica SO quando body.master-mode (toggleado em renderForCurrentMode  */
+    /* + route()). Editor/viewer/home permanecem na paleta cliente — */
+    /* zero risco de vazamento dark pro app cliente.                */
+    /* Cards recebem CSS vars locais via inline style (--card-bg /  */
+    /* --card-fg / --card-accent / --card-border / --card-bg-soft / */
+    /* --card-accent-soft) em renderMasterDashboard — vitrine       */
+    /* colorida sobre o dark, paleta de cada cliente preservada.    */
+    /* Fallback de cada var = paleta global blush (defensivo se     */
+    /* branding faltar).                                            */
+    /* ============================================================ */
+    body.master-mode {
+      background: #0a0a0a;
+    }
+    body.master-mode .master-shell {
+      background: transparent;
+    }
+    body.master-mode .master-header {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+    body.master-mode .master-kicker {
+      color: var(--celulose-green);
+    }
+    body.master-mode .master-title {
+      color: #FFFFFF;
+    }
+    body.master-mode .master-subtitle {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    body.master-mode .master-add-client-btn {
+      border-color: var(--celulose-green);
+      background: transparent;
+      color: var(--celulose-green);
+    }
+    body.master-mode .master-add-client-btn:hover {
+      background: var(--celulose-green);
+      color: #0a0a0a;
+    }
+    body.master-mode .master-empty {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.6);
+    }
+    /* Vitrine V1 — cards usam CSS vars locais escopadas no proprio elemento. */
+    body.master-mode .master-client-card {
+      background: var(--card-bg, var(--white));
+      border-color: var(--card-border, var(--border-soft));
+      color: var(--card-fg, var(--deep));
+    }
+    body.master-mode .master-client-card:hover {
+      border-color: var(--celulose-green);
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--celulose-green) 18%, transparent);
+    }
+    body.master-mode .master-client-name {
+      color: var(--card-fg, var(--deep));
+    }
+    body.master-mode .master-client-sprint {
+      color: var(--card-accent-soft, var(--mauve-text));
+    }
+    body.master-mode .master-client-stat {
+      background: var(--card-bg-soft, var(--blush-light));
+      border-color: var(--card-border, var(--border-soft));
+      color: var(--card-accent-soft, var(--mauve-text));
+    }
+    body.master-mode .master-client-stat strong {
+      color: var(--card-fg, var(--deep));
+    }
+    body.master-mode .master-client-stat.is-attention {
+      background: var(--white);
+      border-color: var(--card-accent, var(--mauve));
+      color: var(--card-accent, var(--mauve));
+    }
+    body.master-mode .master-client-stat.is-attention strong {
+      color: var(--card-accent, var(--mauve));
+    }
+
+    /* ============================================================ */
     /* MODAL (editor card form)                                     */
     /* ============================================================ */
     .modal-overlay {
@@ -3671,13 +3748,14 @@
       const goingToCard = state.mode === 'viewer' && state.viewer === 'card' && state.currentCardId;
       if (!goingToCard) detachCommentsListener();
 
-      if (state.mode === 'editor')      { document.body.classList.add('editor-mode'); renderEditor(); }
-      else if (state.mode === 'master') { document.body.classList.remove('editor-mode'); renderMasterDashboard?.(); }
+      if (state.mode === 'editor')      { document.body.classList.add('editor-mode'); document.body.classList.remove('master-mode'); renderEditor(); }
+      else if (state.mode === 'master') { document.body.classList.remove('editor-mode'); document.body.classList.add('master-mode'); renderMasterDashboard?.(); }
       else if (goingToCard) {
         document.body.classList.remove('editor-mode');
+        document.body.classList.remove('master-mode');
         renderCardView();
       }
-      else                              { document.body.classList.remove('editor-mode'); renderHome(); }
+      else                              { document.body.classList.remove('editor-mode'); document.body.classList.remove('master-mode'); renderHome(); }
       if (state.clientData && state.clientData.branding) applyBranding(state.clientData.branding);
     }
 
@@ -3696,6 +3774,7 @@
         state.mode = 'master';
         state.authValidated = true;
         document.body.classList.remove('editor-mode');
+        document.body.classList.add('master-mode');
         await loadMasterDashboard();
         return;
       }
@@ -3728,6 +3807,7 @@
           state.currentDayId = inferCurrentDayId();
         }
         document.body.classList.add('editor-mode');
+        document.body.classList.remove('master-mode');
         applyBranding(state.clientData.branding);  // pre-paint: CSS vars setadas
         saveAuthLocal(params);
         attachClientListener();
@@ -3756,6 +3836,7 @@
         state.currentDayId = inferCurrentDayId();
       }
       document.body.classList.remove('editor-mode');
+      document.body.classList.remove('master-mode');
       applyBranding(state.clientData.branding);  // pre-paint: CSS vars setadas
       saveAuthLocal(params);
       attachClientListener();
@@ -6169,8 +6250,30 @@
             const reviewClass = reviewCount > 0 ? ' is-attention' : '';
             const insightsClass = newInsightsCount > 0 ? ' is-attention' : '';
 
+            // Vitrine V1 (D16): cada card recebe CSS vars locais com a paleta
+            // do cliente — fundo blushLight do branding, texto deep, accent
+            // mauve. Fallback = DEFAULT_PALETA inline (mesmo do applyBranding,
+            // duplicado aqui pra evitar dependencia de hoisting na composicao
+            // do template). CSS esta em body.master-mode .master-client-card.
+            const paleta = Object.assign({
+              blush:       '#FDF0F5',
+              blushLight:  '#FFF7FA',
+              mauve:       '#A6546A',
+              mauveText:   '#6B3848',
+              deep:        '#3A1E28',
+              borderSoft:  '#F0DCE3'
+            }, (c.branding && c.branding.paleta) || {});
+            const cardStyle = [
+              `--card-bg: ${paleta.blushLight}`,
+              `--card-bg-soft: ${paleta.blush}`,
+              `--card-fg: ${paleta.deep}`,
+              `--card-accent: ${paleta.mauve}`,
+              `--card-accent-soft: ${paleta.mauveText}`,
+              `--card-border: ${paleta.borderSoft}`
+            ].join('; ');
+
             return `
-              <button type="button" class="master-client-card" data-slug="${escapeHtml(slug)}">
+              <button type="button" class="master-client-card" data-slug="${escapeHtml(slug)}" style="${cardStyle}">
                 <div class="master-client-name">${escapeHtml(meta.name || slug || '(sem nome)')}</div>
                 <div class="master-client-sprint">${dayCount} ${dayCount === 1 ? 'day cadastrado' : 'days cadastrados'}</div>
                 <div class="master-client-stats">
