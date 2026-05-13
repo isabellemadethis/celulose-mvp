@@ -3097,6 +3097,9 @@
     body.master-mode .image-upload-btn:hover {
       background: color-mix(in srgb, var(--celulose-green) 8%, transparent);
     }
+    body.master-mode .persona-add-form {
+      background: rgba(0, 0, 0, 0.03);
+    }
     body.master-mode .image-loading {
       color: var(--celulose-green);
     }
@@ -3562,26 +3565,36 @@
       padding: 40px;
       text-align: center;
       gap: 18px;
-      color: var(--mauve-text, #6B3848);
+      color: rgba(255, 255, 255, 0.7);
+      background: #0a0a0a;
+    }
+    /* body + #app ganham fundo dark APENAS enquanto o boot-splash existe no DOM
+       (route() substitui via app.innerHTML quando renderiza um mode). :has e
+       suportado em Chrome 105+/Safari 15.4+/Firefox 121+ — todos 2022/2023. */
+    body:has(#boot-state) {
+      background: #0a0a0a;
+    }
+    body:has(#boot-state) #app {
+      background: #0a0a0a;
     }
     .boot-splash-kicker {
       font-size: 11px;
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: var(--mauve, #A6546A);
+      color: #07d375;
       font-weight: 600;
     }
     .boot-splash-title {
       font-size: 22px;
       font-weight: 500;
-      color: var(--deep, #3A1E28);
+      color: #FFFFFF;
       letter-spacing: -0.01em;
     }
     .boot-spinner {
       width: 28px;
       height: 28px;
-      border: 2px solid var(--border-soft, #F0DCE3);
-      border-top-color: var(--mauve, #A6546A);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #07d375;
       border-radius: 50%;
       animation: boot-spin 0.8s linear infinite;
       margin-top: 4px;
@@ -6698,7 +6711,7 @@
               <div class="form-hint">Se preencher o nome, o cliente já sai com 1 persona pronta. Pode adicionar mais depois pelo editor (★ Personas).</div>
             </div>
 
-            <div class="form-hint" style="font-size: 12px; color: var(--mauve-text); padding: 12px; background: var(--blush-light); border-radius: 8px;">
+            <div class="form-hint" style="font-size: 12px; color: rgba(0,0,0,0.6); padding: 12px; background: rgba(0,0,0,0.03); border-radius: 8px;">
               ℹ Days e cards são adicionados depois pelo editor.
             </div>
           </div>
