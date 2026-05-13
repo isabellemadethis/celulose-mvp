@@ -3132,12 +3132,12 @@
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.95);
       color: rgba(0, 0, 0, 0.7);
-      font-size: 18px;
-      line-height: 1;
       border: 1px solid rgba(0, 0, 0, 0.08);
       cursor: pointer;
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
       z-index: 2;
+      /* padding zero garante que o SVG 12x12 fique exato no centro da bolinha 28x28 */
+      padding: 0;
     }
     .master-client-card-delete:hover {
       background: #dc2626;
@@ -6394,7 +6394,7 @@
                   </div>
                 </button>
                 <!-- D17: x irmao (HTML valido — nao aninha button-em-button). -->
-                <button type="button" class="master-client-card-delete" data-slug="${escapeHtml(slug)}" aria-label="Apagar ${escapeHtml(meta.name || slug)}">x</button>
+                <button type="button" class="master-client-card-delete" data-slug="${escapeHtml(slug)}" aria-label="Apagar ${escapeHtml(meta.name || slug)}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
               </div>
             `;
           }).join('')}</div>`;
