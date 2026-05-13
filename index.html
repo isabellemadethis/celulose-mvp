@@ -3103,6 +3103,42 @@
     body.master-mode .image-loading {
       color: var(--celulose-green);
     }
+    /* Round 3 — auditoria profunda: form-input borders, pin-regen, swatches, */
+    /* voter-row, btn-secondary. Todos viram cinza neutro / verde Celulose.   */
+    body.master-mode .form-input,
+    body.master-mode .form-textarea,
+    body.master-mode .form-select {
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+    body.master-mode .form-input::placeholder,
+    body.master-mode .form-textarea::placeholder {
+      color: rgba(0, 0, 0, 0.4);
+    }
+    body.master-mode .persona-color-swatch,
+    body.master-mode .palette-swatch {
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+    body.master-mode .persona-add-voter-row {
+      color: rgba(0, 0, 0, 0.7);
+    }
+    body.master-mode .pin-regen-btn {
+      color: var(--celulose-green);
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+    body.master-mode .pin-regen-btn:hover {
+      background: color-mix(in srgb, var(--celulose-green) 8%, transparent);
+      border-color: var(--celulose-green);
+    }
+    body.master-mode .btn-secondary {
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+    body.master-mode .btn-secondary:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    /* form-hint dentro do master vira cinza-escuro neutro (era var(--gray)) */
+    body.master-mode .form-hint {
+      color: rgba(0, 0, 0, 0.55);
+    }
     /* Notificacoes globais escopadas pelo master — toast e banner viram preto */
     /* Celulose enquanto a Isabelle esta no master. Em editor de cliente, voltam */
     /* pro --deep da paleta cliente. */
@@ -3901,6 +3937,23 @@
     }
 
     // Re-render baseado no modo atual. Usado pelo listener pra reagir a mudanças.
+    // Helper — renderiza saudacao com substituicao do placeholder {nome}.
+    // Se saudacao contem {nome}, troca pelo persona.name em <strong>; senao
+    // mostra saudacao literal (sem strong). Permite saudacao tipo "Olá, {nome}"
+    // (dinamica por persona) OU "Bem-vindo de volta, Boss" (literal sem nome).
+    // Default quando saudacao vazia: usa greetingByHour() + ", {nome}".
+    function renderGreetingHtml(saudacao, personaName) {
+      const sd = (typeof saudacao === 'string' && saudacao.length)
+        ? saudacao
+        : (greetingByHour() + ', {nome}');
+      const safeName = escapeHtml(personaName || '');
+      if (sd.indexOf('{nome}') >= 0) {
+        const parts = sd.split('{nome}');
+        return escapeHtml(parts[0]) + '<strong>' + safeName + '</strong>' + (parts.length > 1 ? escapeHtml(parts.slice(1).join('{nome}')) : '');
+      }
+      return escapeHtml(sd);
+    }
+
     // Reaplica branding no final pra que [data-brand-logo] / [data-brand-greeting]
     // peguem logo/saudação do branding (CSS vars de paleta/persona já são setadas pelo
     // applyBranding pré-render em route(), via :root, então não dependem do DOM).
@@ -4703,7 +4756,7 @@
       app.innerHTML = `
         <div class="home-header">
           <div class="home-kicker">${escapeHtml(getDayDisplayLabel(day))} · ${formatDate(day.date)}</div>
-          <div class="home-greeting"><span data-brand-greeting>${greetingByHour()}, </span><strong>${escapeHtml(persona.name)}</strong></div>
+          <div class="home-greeting">${renderGreetingHtml(state.clientData && state.clientData.branding && state.clientData.branding.saudacao, persona.name)}</div>
           <div class="home-pendentes">${pendentesCopy(totalPending, dayCards.length)}</div>
         </div>
 
@@ -4763,7 +4816,7 @@
       app.innerHTML = `
         <div class="home-header">
           <div class="home-kicker">${escapeHtml(clientName)}</div>
-          <div class="home-greeting"><span data-brand-greeting>${greetingByHour()}, </span><strong>${escapeHtml(persona ? persona.name : '')}</strong></div>
+          <div class="home-greeting">${renderGreetingHtml(state.clientData && state.clientData.branding && state.clientData.branding.saudacao, persona ? persona.name : '')}</div>
         </div>
         <div style="padding: 48px 24px; text-align: center; color: var(--mauve-text);">
           <div style="font-size: 14px; line-height: 1.5; max-width: 280px; margin: 0 auto;">
@@ -6642,8 +6695,8 @@
 
             <div class="form-group">
               <label class="form-label">Saudação</label>
-              <input type="text" class="form-input" id="ac-greeting" placeholder='Ex: "Olá, equipe Bruna"' />
-              <div class="form-hint">Aparece no header do viewer.</div>
+              <input type="text" class="form-input" id="ac-greeting" placeholder='Ex: "Olá, {nome}"' />
+              <div class="form-hint">Aparece no header do viewer. Use <code>{nome}</code> pra incluir o nome da persona (vira "Olá, <strong>Caíque</strong>" pra ele, "Olá, <strong>Bruna</strong>" pra ela). Sem o <code>{nome}</code>, a saudação aparece literal.</div>
             </div>
 
             <div class="form-group">
@@ -6875,7 +6928,7 @@
           },
           branding: {
             paleta: paleta,
-            saudacao: greeting || ('Olá, ' + name),
+            saudacao: greeting || 'Olá, {nome}',
             logoUrl: logoUrl || '',
             personaColors: personaColors
           },
@@ -6989,6 +7042,150 @@
       });
       // Foco no input pra usuario poder digitar imediatamente
       setTimeout(() => slugInput && slugInput.focus(), 50);
+    }
+
+    // ============================================================
+    // D13 — Edit Cliente (UI editor)
+    // ============================================================
+    // Sheet pra editar branding de cliente ja criado — nome, saudacao com
+    // placeholder {nome}, logo URL/base64, paleta 8 hex com preview ao vivo.
+    // Slug + PINs nao editaveis (slug e imutavel; PINs ficam em outro fluxo).
+    // Submit usa db.update() pra preservar campos nao tocados (personas, days,
+    // cards, auth, etc). Apos salvar, reload pra refletir nome em todo lugar.
+    function openEditClientSheet(slug, clientData) {
+      if (!clientData) {
+        showToast('Cliente nao encontrado.');
+        return;
+      }
+      const meta = clientData.meta || {};
+      const branding = clientData.branding || {};
+      const DEFAULT_PALETA_EC = {
+        blush:       '#FDF0F5',
+        blushLight:  '#FFF7FA',
+        rose:        '#D3889C',
+        roseSoft:    '#E5B0BF',
+        mauve:       '#A6546A',
+        mauveText:   '#6B3848',
+        deep:        '#3A1E28',
+        borderSoft:  '#F0DCE3'
+      };
+      const palette = Object.assign({}, DEFAULT_PALETA_EC, branding.paleta || {});
+      const paletteHints = {
+        blush:       'Fundo accent (hovers, fundos de pílula)',
+        blushLight:  'FUNDO PRINCIPAL DO APP (quase branco com tom)',
+        rose:        'Accent quente médio (variações)',
+        roseSoft:    'Hover de botões secundários',
+        mauve:       'COR DA MARCA (kickers, badges, dots)',
+        mauveText:   'Texto secundário (taglines, hints)',
+        deep:        'TEXTO PRINCIPAL + CTAs (títulos, botão Aprovar)',
+        borderSoft:  'Bordas e divisórias'
+      };
+
+      const content = `
+        <div class="sheet-header">
+          <div class="sheet-kicker">Editar branding</div>
+          <div class="sheet-title">${escapeHtml(meta.name || slug)}</div>
+        </div>
+        <div class="sheet-body">
+          <div class="sheet-form">
+            <div class="form-group">
+              <label class="form-label">Nome do cliente</label>
+              <input type="text" class="form-input" id="ec-name" value="${escapeHtml(meta.name || '')}" />
+              <div class="form-hint">Aparece no editor, viewer e Master.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Saudação</label>
+              <input type="text" class="form-input" id="ec-greeting" value="${escapeHtml(branding.saudacao || '')}" placeholder='Ex: "Olá, {nome}"' />
+              <div class="form-hint">Use <code>{nome}</code> pra incluir o nome da persona dinâmico. Ex: <code>Olá, {nome}</code> vira "Olá, <strong>Caíque</strong>" pra ele. Sem o <code>{nome}</code>, a saudação aparece literal.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Logo (URL ou base64)</label>
+              <input type="text" class="form-input" id="ec-logo-url" value="${escapeHtml(branding.logoUrl || '')}" placeholder="data:image/png;base64,... ou URL externa" />
+              <div class="form-hint">Aceita base64 inline (data URI) ou URL externa. Deixe vazio pra usar "C" textual.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Paleta (8 cores · hex)</label>
+              <div class="palette-grid">
+                ${Object.entries(palette).map(([key, val]) => `
+                  <div class="palette-cell">
+                    <div class="palette-row">
+                      <span class="palette-swatch" id="ec-swatch-${key}" style="background: ${val};"></span>
+                      <label>${key}</label>
+                      <input type="text" id="ec-paleta-${key}" value="${val}" maxlength="7" />
+                    </div>
+                    <div class="palette-cell-hint">${paletteHints[key] || ''}</div>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="form-hint">Ajustes refletem no editor/viewer apos salvar.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 10px;">
+          <button class="btn-secondary" id="ec-cancel-btn">Cancelar</button>
+          <div style="flex: 1"></div>
+          <button class="btn-primary" id="ec-submit-btn">Salvar</button>
+        </div>
+      `;
+      openSheet('edit-client', content);
+
+      const sheet = document.getElementById('sheet');
+      sheet.querySelector('.sheet-body').addEventListener('click', (e) => e.stopPropagation());
+      sheet.querySelector('.sheet-header').addEventListener('click', (e) => e.stopPropagation());
+
+      // Live swatch update: input hex -> background do swatch.
+      Object.keys(palette).forEach(key => {
+        const inputEl = document.getElementById('ec-paleta-' + key);
+        const swatchEl = document.getElementById('ec-swatch-' + key);
+        if (!inputEl || !swatchEl) return;
+        inputEl.addEventListener('input', () => {
+          let v = inputEl.value.trim();
+          if (!v.startsWith('#')) v = '#' + v;
+          swatchEl.style.background = v;
+        });
+      });
+
+      document.getElementById('ec-cancel-btn').addEventListener('click', closeSheet);
+      document.getElementById('ec-submit-btn').addEventListener('click', async () => {
+        const newName = document.getElementById('ec-name').value.trim();
+        const newSaudacao = document.getElementById('ec-greeting').value.trim();
+        const newLogoUrl = document.getElementById('ec-logo-url').value.trim();
+        if (!newName) {
+          showToast('Nome eh obrigatorio.');
+          return;
+        }
+        const newPaleta = {};
+        Object.keys(palette).forEach(key => {
+          let v = document.getElementById('ec-paleta-' + key).value.trim();
+          if (!v.startsWith('#')) v = '#' + v;
+          newPaleta[key] = v;
+        });
+
+        const submitBtn = document.getElementById('ec-submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Salvando...';
+        try {
+          const updates = {};
+          updates[ROOT_PATH + '/clients/' + slug + '/meta/name'] = newName;
+          updates[ROOT_PATH + '/clients/' + slug + '/branding/saudacao'] = newSaudacao;
+          updates[ROOT_PATH + '/clients/' + slug + '/branding/logoUrl'] = newLogoUrl;
+          updates[ROOT_PATH + '/clients/' + slug + '/branding/paleta'] = newPaleta;
+          await db.ref().update(updates);
+          showToast('"' + newName + '" atualizado.');
+          closeSheet();
+          // Reload garante consistencia em tudo (nome no master, paleta global,
+          // logo, saudacao com novo {nome} aplicado). Pattern simples e robusto.
+          setTimeout(() => window.location.reload(), 400);
+        } catch (e) {
+          console.error('[edit client] update falhou', e);
+          showToast('Falhou: ' + (e.message || 'erro'));
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Salvar';
+        }
+      });
     }
 
     // ============================================================
@@ -7374,6 +7571,8 @@
             </label>
             <!-- D12: gerenciar personas do cliente (sheet com lista + criar + excluir) -->
             <button type="button" class="editor-meta-pill is-clickable" id="manage-personas-btn" style="cursor: pointer;">★ Personas</button>
+            <!-- D13: editar branding (nome, saudacao, logo, paleta) do cliente -->
+            <button type="button" class="editor-meta-pill is-clickable" id="edit-branding-btn" style="cursor: pointer;">⚙ Branding</button>
             <!-- Atrito 3: gerenciar tags do cliente (sheet com lista + criar + excluir) -->
             <button type="button" class="editor-meta-pill is-clickable" id="manage-tags-btn" style="cursor: pointer;">⚑ Tags</button>
             <!-- Atrito 1 caminho C: pílula de excluir o day atual. Confirm informa contagem de cards. -->
@@ -7549,6 +7748,11 @@
       const managePersonasBtn = app.querySelector('#manage-personas-btn');
       if (managePersonasBtn) {
         managePersonasBtn.addEventListener('click', openManagePersonasSheet);
+      }
+      // D13: pílula ⚙ Branding abre sheet de edição (nome, saudação, logo, paleta).
+      const editBrandingBtn = app.querySelector('#edit-branding-btn');
+      if (editBrandingBtn) {
+        editBrandingBtn.addEventListener('click', () => openEditClientSheet(state.clientSlug, state.clientData));
       }
 
       // FIX 09/05: bind do botão "📋 Copiar" nas URLs por fundador.
