@@ -3065,6 +3065,53 @@
       background: var(--celulose-green);
       color: #0a0a0a;
     }
+    /* Polish UX master — TUDO que estava em paleta Closet (rosa) e devia ser */
+    /* paleta Celulose (dark + verde) dentro do master. Escopado body.master-mode */
+    /* pra editor/viewer manterem paleta cliente intactos. */
+    body.master-mode .sheet {
+      background: var(--white);
+    }
+    body.master-mode .sheet-handle {
+      background: rgba(0, 0, 0, 0.15);
+    }
+    body.master-mode .sheet-header {
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+    }
+    body.master-mode .form-input:focus,
+    body.master-mode .form-textarea:focus,
+    body.master-mode .form-select:focus {
+      border-color: var(--celulose-green);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--celulose-green) 18%, transparent);
+    }
+    body.master-mode .form-select {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2307d375'><path d='M7 10l5 5 5-5z'/></svg>");
+    }
+    body.master-mode .image-upload {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.15);
+    }
+    body.master-mode .image-upload-btn {
+      color: var(--celulose-green);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    body.master-mode .image-upload-btn:hover {
+      background: color-mix(in srgb, var(--celulose-green) 8%, transparent);
+    }
+    body.master-mode .image-loading {
+      color: var(--celulose-green);
+    }
+    /* Notificacoes globais escopadas pelo master — toast e banner viram preto */
+    /* Celulose enquanto a Isabelle esta no master. Em editor de cliente, voltam */
+    /* pro --deep da paleta cliente. */
+    body.master-mode .toast {
+      background: #0a0a0a;
+    }
+    body.master-mode .offline-banner {
+      background: #0a0a0a;
+    }
+    body.master-mode .offline-banner-dot {
+      background: var(--celulose-green);
+    }
 
     /* ============================================================ */
     /* MASTER MANAGE / DELETE (Commit B / D17)                      */
