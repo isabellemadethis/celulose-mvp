@@ -3113,6 +3113,13 @@
       position: relative;
       display: block;
     }
+    /* Card como flex column sem width explicito encolhe pro conteudo dentro do
+       wrapper display:block. Forca largura cheia pra preservar o comportamento
+       pre-D17 (quando o card era filho direto do grid auto-fill). */
+    .master-client-card-wrapper .master-client-card {
+      width: 100%;
+      box-sizing: border-box;
+    }
     .master-client-card-delete {
       position: absolute;
       top: 8px;
@@ -3123,17 +3130,18 @@
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      background: rgba(0, 0, 0, 0.06);
-      color: rgba(0, 0, 0, 0.55);
+      background: rgba(255, 255, 255, 0.95);
+      color: rgba(0, 0, 0, 0.7);
       font-size: 18px;
       line-height: 1;
-      border: none;
+      border: 1px solid rgba(0, 0, 0, 0.08);
       cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
       z-index: 2;
     }
     .master-client-card-delete:hover {
       background: #dc2626;
+      border-color: #dc2626;
       color: #FFFFFF;
       transform: scale(1.1);
     }
