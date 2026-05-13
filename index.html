@@ -3067,6 +3067,81 @@
     }
 
     /* ============================================================ */
+    /* MASTER MANAGE / DELETE (Commit B / D17)                      */
+    /* Toggle "Gerenciar" no header flipa body.is-manage-mode.     */
+    /* Cards ganham botao x no canto top-right (display:none default,*/
+    /* visivel so em is-manage-mode). Click no x abre sheet de       */
+    /* confirm com count detalhado + input pra digitar slug + botao  */
+    /* Apagar disabled ate match. Pre-check anti-self-delete via     */
+    /* loadAuthLocal()?.cliente === slug. Refresh via                */
+    /* loadMasterDashboard() pos remove (mesmo pattern de Add).      */
+    /* ============================================================ */
+    .master-manage-toggle-btn {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      border: 1px solid var(--mauve);
+      background: var(--white);
+      color: var(--mauve);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .master-manage-toggle-btn:hover {
+      background: var(--blush-light);
+    }
+    body.master-mode .master-manage-toggle-btn {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    body.master-mode .master-manage-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #FFFFFF;
+    }
+    body.master-mode .master-manage-toggle-btn.is-active {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    /* Wrapper envolve cada card pra hospedar o x absoluto sem violar */
+    /* HTML (button dentro de button e invalido). Wrapper preserva o  */
+    /* slot do grid auto-fill — ele que vira o cell, card e filho.   */
+    .master-client-card-wrapper {
+      position: relative;
+      display: block;
+    }
+    .master-client-card-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.06);
+      color: rgba(0, 0, 0, 0.55);
+      font-size: 18px;
+      line-height: 1;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+      z-index: 2;
+    }
+    .master-client-card-delete:hover {
+      background: #dc2626;
+      color: #FFFFFF;
+      transform: scale(1.1);
+    }
+    body.is-manage-mode .master-client-card-delete {
+      display: flex;
+    }
+
+    /* ============================================================ */
     /* MODAL (editor card form)                                     */
     /* ============================================================ */
     .modal-overlay {
@@ -3771,14 +3846,15 @@
       const goingToCard = state.mode === 'viewer' && state.viewer === 'card' && state.currentCardId;
       if (!goingToCard) detachCommentsListener();
 
-      if (state.mode === 'editor')      { document.body.classList.add('editor-mode'); document.body.classList.remove('master-mode'); renderEditor(); }
+      if (state.mode === 'editor')      { document.body.classList.add('editor-mode'); document.body.classList.remove('master-mode'); document.body.classList.remove('is-manage-mode'); renderEditor(); }
       else if (state.mode === 'master') { document.body.classList.remove('editor-mode'); document.body.classList.add('master-mode'); renderMasterDashboard?.(); }
       else if (goingToCard) {
         document.body.classList.remove('editor-mode');
         document.body.classList.remove('master-mode');
+        document.body.classList.remove('is-manage-mode');
         renderCardView();
       }
-      else                              { document.body.classList.remove('editor-mode'); document.body.classList.remove('master-mode'); renderHome(); }
+      else                              { document.body.classList.remove('editor-mode'); document.body.classList.remove('master-mode'); document.body.classList.remove('is-manage-mode'); renderHome(); }
       if (state.clientData && state.clientData.branding) applyBranding(state.clientData.branding);
     }
 
@@ -3831,6 +3907,7 @@
         }
         document.body.classList.add('editor-mode');
         document.body.classList.remove('master-mode');
+        document.body.classList.remove('is-manage-mode');
         applyBranding(state.clientData.branding);  // pre-paint: CSS vars setadas
         saveAuthLocal(params);
         attachClientListener();
@@ -3860,6 +3937,7 @@
       }
       document.body.classList.remove('editor-mode');
       document.body.classList.remove('master-mode');
+      document.body.classList.remove('is-manage-mode');
       applyBranding(state.clientData.branding);  // pre-paint: CSS vars setadas
       saveAuthLocal(params);
       attachClientListener();
@@ -6298,14 +6376,18 @@
             ].join('; ');
 
             return `
-              <button type="button" class="master-client-card" data-slug="${escapeHtml(slug)}" style="${cardStyle}">
-                <div class="master-client-name">${escapeHtml(meta.name || slug || '(sem nome)')}</div>
-                <div class="master-client-sprint">${dayCount} ${dayCount === 1 ? 'day cadastrado' : 'days cadastrados'}</div>
-                <div class="master-client-stats">
-                  <span class="master-client-stat${reviewClass}"><strong>${reviewCount}</strong> em aprovação</span>
-                  <span class="master-client-stat${insightsClass}"><strong>${newInsightsCount}</strong> insights novos</span>
-                </div>
-              </button>
+              <div class="master-client-card-wrapper">
+                <button type="button" class="master-client-card" data-slug="${escapeHtml(slug)}" style="${cardStyle}">
+                  <div class="master-client-name">${escapeHtml(meta.name || slug || '(sem nome)')}</div>
+                  <div class="master-client-sprint">${dayCount} ${dayCount === 1 ? 'day cadastrado' : 'days cadastrados'}</div>
+                  <div class="master-client-stats">
+                    <span class="master-client-stat${reviewClass}"><strong>${reviewCount}</strong> em aprovação</span>
+                    <span class="master-client-stat${insightsClass}"><strong>${newInsightsCount}</strong> insights novos</span>
+                  </div>
+                </button>
+                <!-- D17: x irmao (HTML valido — nao aninha button-em-button). -->
+                <button type="button" class="master-client-card-delete" data-slug="${escapeHtml(slug)}" aria-label="Apagar ${escapeHtml(meta.name || slug)}">x</button>
+              </div>
             `;
           }).join('')}</div>`;
 
@@ -6317,6 +6399,8 @@
               <div class="master-title">Olá, Isabelle</div>
               <div class="master-subtitle">${clients.length} ${clients.length === 1 ? 'cliente ativo' : 'clientes ativos'}</div>
             </div>
+            <!-- D17: toggle pra entrar/sair do modo gerenciar (revela x nos cards) -->
+            <button type="button" class="master-manage-toggle-btn" id="manage-toggle-btn">⚙ Gerenciar</button>
             <!-- Atrito 6: botão pra abrir form de adicionar cliente novo -->
             <button type="button" class="master-add-client-btn" id="add-client-btn">+ Adicionar cliente</button>
           </div>
@@ -6344,6 +6428,35 @@
       // Atrito 6: botão "+ Adicionar cliente" abre sheet com form completo.
       const addBtn = app.querySelector('#add-client-btn');
       if (addBtn) addBtn.addEventListener('click', openAddClientSheet);
+
+      // D17: toggle Gerenciar — flipa body.is-manage-mode + visual do botao.
+      // Estado eh ephemero MAS persiste entre re-renders do master (so reseta
+      // quando sai do master via renderForCurrentMode/route — limpamos la).
+      // Restaura visual no boot caso re-render aconteca com flag ja ativa.
+      const manageBtn = app.querySelector('#manage-toggle-btn');
+      if (manageBtn) {
+        const syncManageBtnVisual = () => {
+          const on = document.body.classList.contains('is-manage-mode');
+          manageBtn.classList.toggle('is-active', on);
+          manageBtn.textContent = on ? '✕ Sair de gerenciar' : '⚙ Gerenciar';
+        };
+        syncManageBtnVisual();
+        manageBtn.addEventListener('click', () => {
+          document.body.classList.toggle('is-manage-mode');
+          syncManageBtnVisual();
+        });
+      }
+
+      // D17: x em cada card — abre sheet de confirm. stopPropagation pra
+      // nao disparar o click do card (que navegaria pro editor).
+      app.querySelectorAll('.master-client-card-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const slug = btn.getAttribute('data-slug');
+          if (!slug) return;
+          openDeleteClientSheet(slug, clientsObj[slug]);
+        });
+      });
     }
 
     // ============================================================
@@ -6713,6 +6826,101 @@
           showToast('Falhou ao criar: ' + (e.message || 'erro'));
         }
       });
+    }
+
+    // ============================================================
+    // D17 — Delete cliente (UI master)
+    // ============================================================
+    // Sheet de confirmacao com count detalhado (personas/days/cards/votos/
+    // insights), input pra digitar slug literal e botao Apagar disabled
+    // ate match. Pre-check anti-self-delete via loadAuthLocal — bloqueia
+    // delete do cliente cuja sessao esta cacheada. Refresh master via
+    // loadMasterDashboard() apos remove (mesmo pattern de Add Cliente).
+    function openDeleteClientSheet(slug, clientData) {
+      // Pre-check 1: cliente nao existe (corrida — alguem apagou em outra aba).
+      if (!clientData) {
+        showToast('Cliente nao encontrado. Atualize a tela.');
+        return;
+      }
+      // Pre-check 2: anti-self-delete.
+      const cached = loadAuthLocal();
+      if (cached && cached.cliente === slug) {
+        showToast('Voce esta logada nesse cliente. Faca logout primeiro.');
+        return;
+      }
+
+      const meta = (clientData && clientData.meta) || {};
+      const clientName = meta.name || slug;
+
+      const personasCount = Object.keys(clientData.personas || {}).length;
+      const daysCount = Object.keys(clientData.days || {}).length;
+      const cardsObj = clientData.cards || {};
+      const cardsCount = Object.keys(cardsObj).length;
+      let votosCount = 0;
+      Object.values(cardsObj).forEach(card => {
+        votosCount += Object.keys((card && card.approvalByPersona) || {}).length;
+      });
+      const insightsCount = Object.keys(clientData.insights || {}).length;
+
+      const plural = (n, sing, plur) => `<strong>${n}</strong> ${n === 1 ? sing : plur}`;
+
+      const content = `
+        <div class="sheet-header">
+          <div class="sheet-kicker">Master · Apagar cliente</div>
+          <div class="sheet-title">Apagar ${escapeHtml(clientName)}?</div>
+        </div>
+        <div class="sheet-body">
+          <div class="form-group">
+            <p style="font-size: 14px; line-height: 1.7; color: var(--deep);">
+              Vai apagar
+              ${plural(personasCount, 'persona', 'personas')},
+              ${plural(daysCount, 'day', 'days')},
+              ${plural(cardsCount, 'card', 'cards')},
+              ${plural(votosCount, 'voto', 'votos')} e
+              ${plural(insightsCount, 'insight', 'insights')}.
+              <br><br>
+              <strong style="color: #dc2626;">Nao da pra desfazer.</strong>
+            </p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="text-transform: none; letter-spacing: 0.04em;">Pra confirmar, digite <code style="background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-family: monospace;">${escapeHtml(slug)}</code></label>
+            <input type="text" class="form-input" id="dc-slug-confirm" placeholder="${escapeHtml(slug)}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </div>
+        </div>
+        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 10px;">
+          <button class="btn-secondary" id="dc-cancel-btn">Cancelar</button>
+          <div style="flex: 1"></div>
+          <button class="btn-primary" id="dc-submit-btn" disabled style="background: #dc2626; color: #FFFFFF;">Apagar</button>
+        </div>
+      `;
+      openSheet('delete-client', content);
+
+      const slugInput = document.getElementById('dc-slug-confirm');
+      const submitBtn = document.getElementById('dc-submit-btn');
+      const cancelBtn = document.getElementById('dc-cancel-btn');
+
+      slugInput.addEventListener('input', () => {
+        submitBtn.disabled = slugInput.value.trim() !== slug;
+      });
+      cancelBtn.addEventListener('click', closeSheet);
+      submitBtn.addEventListener('click', async () => {
+        if (slugInput.value.trim() !== slug) return; // defesa extra
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Apagando...';
+        try {
+          await db.ref(ROOT_PATH + '/clients/' + slug).remove();
+          showToast(`Cliente "${clientName}" apagado.`);
+          closeSheet();
+          loadMasterDashboard();
+        } catch (e) {
+          console.error('[delete client] remove falhou', e);
+          showToast('Falhou ao apagar: ' + (e.message || 'erro'));
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Apagar';
+        }
+      });
+      // Foco no input pra usuario poder digitar imediatamente
+      setTimeout(() => slugInput && slugInput.focus(), 50);
     }
 
     // ============================================================
