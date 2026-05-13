@@ -2981,6 +2981,14 @@
     body.master-mode {
       background: #0a0a0a;
     }
+    /* #app envolve o .master-shell e tem background blush-light + max-width:480px
+       na regra base (linha ~85). Como ID > classe na especificidade, o background
+       blush vazava por tras do shell e o 480px espremia o master de 960. Aqui
+       neutralizamos os dois SO no master-mode — editor/viewer mantem 480 + blush. */
+    body.master-mode #app {
+      background: transparent;
+      max-width: none;
+    }
     body.master-mode .master-shell {
       background: transparent;
     }
@@ -6265,7 +6273,9 @@
             }, (c.branding && c.branding.paleta) || {});
             const cardStyle = [
               `--card-bg: ${paleta.blushLight}`,
-              `--card-bg-soft: ${paleta.blush}`,
+              // 2C: pilula stat usa sombra translucida — legivel em qualquer
+              // paleta cliente (blush escuro do Empire quebrava se usasse paleta.blush).
+              `--card-bg-soft: rgba(0, 0, 0, 0.05)`,
               `--card-fg: ${paleta.deep}`,
               `--card-accent: ${paleta.mauve}`,
               `--card-accent-soft: ${paleta.mauveText}`,
