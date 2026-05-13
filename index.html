@@ -3050,6 +3050,21 @@
     body.master-mode .master-client-stat.is-attention strong {
       color: var(--card-accent, var(--mauve));
     }
+    /* Sheets abertas em master-mode (Add Cliente hoje; Edit/Delete depois):
+       UX usa verde Celulose em vez de mauve da paleta default. Botao primario
+       vira verde + texto #0a0a0a (mesmo padrao do .master-add-client-btn:hover).
+       Preview da paleta cliente e swatch da persona NAO afetados — usam vars
+       escopadas (--p-*) ou estilo inline. */
+    body.master-mode .sheet-kicker {
+      color: var(--celulose-green);
+    }
+    body.master-mode .form-label {
+      color: var(--celulose-green);
+    }
+    body.master-mode .btn-primary {
+      background: var(--celulose-green);
+      color: #0a0a0a;
+    }
 
     /* ============================================================ */
     /* MODAL (editor card form)                                     */
