@@ -3159,6 +3159,23 @@
       border-bottom-color: rgba(0, 0, 0, 0.08);
       color: rgba(0, 0, 0, 0.6);
     }
+    /* Round 5 — heranca: textos da sheet do master herdam preto neutro 85%, */
+    /* substituindo o var(--deep) mauve escuro que vinha do body global.     */
+    /* Sheet-title, form-input typed text, btn-secondary text resolvem.      */
+    body.master-mode .sheet {
+      color: rgba(0, 0, 0, 0.85);
+    }
+    body.master-mode .sheet-title {
+      color: rgba(0, 0, 0, 0.85);
+    }
+    body.master-mode .form-input,
+    body.master-mode .form-textarea,
+    body.master-mode .form-select {
+      color: rgba(0, 0, 0, 0.85);
+    }
+    body.master-mode .btn-secondary {
+      color: rgba(0, 0, 0, 0.85);
+    }
     /* Notificacoes globais escopadas pelo master — toast e banner viram preto */
     /* Celulose enquanto a Isabelle esta no master. Em editor de cliente, voltam */
     /* pro --deep da paleta cliente. */
@@ -6789,7 +6806,7 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 10px;">
+        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; gap: 10px;">
           <button class="btn-secondary" id="ac-cancel-btn">Cancelar</button>
           <div style="flex: 1"></div>
           <button class="btn-primary" id="ac-submit-btn">Criar cliente</button>
@@ -7028,7 +7045,7 @@
             <input type="text" class="form-input" id="dc-slug-confirm" placeholder="${escapeHtml(slug)}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
           </div>
         </div>
-        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 10px;">
+        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; gap: 10px;">
           <button class="btn-secondary" id="dc-cancel-btn">Cancelar</button>
           <div style="flex: 1"></div>
           <button class="btn-primary" id="dc-submit-btn" disabled style="background: #dc2626; color: #FFFFFF;">Apagar</button>
@@ -7144,7 +7161,7 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 10px;">
+        <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--white); padding: 16px 20px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; gap: 10px;">
           <button class="btn-secondary" id="ec-cancel-btn">Cancelar</button>
           <div style="flex: 1"></div>
           <button class="btn-primary" id="ec-submit-btn">Salvar</button>
