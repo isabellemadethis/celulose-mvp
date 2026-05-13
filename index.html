@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Closet">
+  <meta name="apple-mobile-web-app-title" content="Celulose">
   <meta name="theme-color" content="#FDF0F5">
   <title>Celulose Digital</title>
 
@@ -15,6 +15,10 @@
        abrir master / entry gate / master pin gate. -->
   <link rel="icon" type="image/svg+xml" id="favicon-link"
     href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='29' fill='%230a0a0a' stroke='%2307d375' stroke-width='3'/><text x='32' y='42' font-family='system-ui,sans-serif' font-size='32' font-weight='600' fill='white' text-anchor='middle'>C</text></svg>" />
+
+  <!-- N-B PWA: manifest + apple-touch-icon (precondição pra Service Worker + Push). -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4274,6 +4278,13 @@
         .sort((a, b) => (a.order || 0) - (b.order || 0));
     }
 
+    // A2 — Feature flag por cliente: pílula peça-hero só aparece quando flag === true.
+    // Schema: clients/{slug}/features.heroPiece (boolean). Default undefined (= off) pra
+    // clientes que não migraram ainda. Migração explícita via Edit Cliente (UI) ou via JS Console.
+    function clientHasHeroPiece() {
+      return state.clientData && state.clientData.features && state.clientData.features.heroPiece === true;
+    }
+
     // Personas que VOTAM (aprovam cards). Filtra por isVoter explícito no Firebase.
     // Closet continua existindo como persona "dona" pra cards de marca (Isa produz),
     // mas não recebe entrada em approvalByPersona — ela tem isVoter:false setado
@@ -4932,7 +4943,7 @@
             <div class="block-time">${b.timeStart}–${b.timeEnd}</div>
             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
               ${territoryLabel ? `<div class="block-territory">${escapeHtml(territoryLabel)}</div>` : ''}
-              ${b.heroPiece ? `<div class="block-hero-pill">${escapeHtml(b.heroPiece)}</div>` : ''}
+              ${b.heroPiece && clientHasHeroPiece() ? `<div class="block-hero-pill">${escapeHtml(b.heroPiece)}</div>` : ''}
             </div>
           </div>
           <div class="block-title">${escapeHtml(b.label)}</div>
@@ -6587,6 +6598,8 @@
             <button type="button" class="master-manage-toggle-btn" id="manage-toggle-btn">⚙ Gerenciar</button>
             <!-- Atrito 6: botão pra abrir form de adicionar cliente novo -->
             <button type="button" class="master-add-client-btn" id="add-client-btn">+ Adicionar cliente</button>
+            <!-- N-B L3: botao pra testar notificacao local (PWA push setup, pre-FCM). -->
+            <button type="button" class="master-add-client-btn" id="test-notif-btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2);">🔔 Testar</button>
           </div>
           ${cardsHtml}
         </div>
@@ -6612,6 +6625,10 @@
       // Atrito 6: botão "+ Adicionar cliente" abre sheet com form completo.
       const addBtn = app.querySelector('#add-client-btn');
       if (addBtn) addBtn.addEventListener('click', openAddClientSheet);
+
+      // N-B L3: bind do botao "Testar notificacao" (master only).
+      const testNotifBtn = app.querySelector('#test-notif-btn');
+      if (testNotifBtn) testNotifBtn.addEventListener('click', testNotification);
 
       // D17: toggle Gerenciar — flipa body.is-manage-mode + visual do botao.
       // Estado eh ephemero MAS persiste entre re-renders do master (so reseta
@@ -7133,6 +7150,7 @@
       }
       const meta = clientData.meta || {};
       const branding = clientData.branding || {};
+      const features = clientData.features || {};
       const DEFAULT_PALETA_EC = {
         blush:       '#FDF0F5',
         blushLight:  '#FFF7FA',
@@ -7178,6 +7196,20 @@
               <label class="form-label">Logo (URL ou base64)</label>
               <input type="text" class="form-input" id="ec-logo-url" value="${escapeHtml(branding.logoUrl || '')}" placeholder="data:image/png;base64,... ou URL externa" />
               <div class="form-hint">Aceita base64 inline (data URI) ou URL externa. Deixe vazio pra usar "C" textual.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Features ativas</label>
+              <div class="form-hint" style="margin-top: 0; margin-bottom: 12px;">
+                Recursos específicos do cliente. Schema: <code>features.X</code>.
+              </div>
+              <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 8px 0;">
+                <input type="checkbox" id="ec-feat-heroPiece" ${features.heroPiece === true ? 'checked' : ''} style="margin-top: 4px; flex-shrink: 0;" />
+                <div>
+                  <div style="font-weight: 500; color: var(--deep);">Peça-hero</div>
+                  <div class="form-hint" style="margin-top: 2px;">Pílula mauve no header do bloco com a peça principal. Some quando off; bloco modal esconde o campo. Dado existente preservado.</div>
+                </div>
+              </label>
             </div>
 
             <div class="form-group">
@@ -7247,6 +7279,9 @@
           updates[ROOT_PATH + '/clients/' + slug + '/branding/saudacao'] = newSaudacao;
           updates[ROOT_PATH + '/clients/' + slug + '/branding/logoUrl'] = newLogoUrl;
           updates[ROOT_PATH + '/clients/' + slug + '/branding/paleta'] = newPaleta;
+          // A2: feature flag heroPiece
+          const newHeroPieceFlag = document.getElementById('ec-feat-heroPiece').checked;
+          updates[ROOT_PATH + '/clients/' + slug + '/features/heroPiece'] = newHeroPieceFlag;
           await db.ref().update(updates);
           showToast('"' + newName + '" atualizado.');
           closeSheet();
@@ -7865,7 +7900,7 @@
       if (isMeal) klass.push('is-meal');
       if (isPause) klass.push('is-pause');
 
-      const hasDetail = block.heroPiece || block.locationSpecific || block.note;
+      const hasDetail = (block.heroPiece && clientHasHeroPiece()) || block.locationSpecific || block.note;
 
       return `
         <div class="${klass.join(' ')}">
@@ -7884,7 +7919,7 @@
           </div>
           ${hasDetail ? `
             <div class="editor-block-detail">
-              ${block.heroPiece ? `<span class="editor-block-detail-pill is-hero">peça-hero · ${escapeHtml(block.heroPiece)}</span>` : ''}
+              ${block.heroPiece && clientHasHeroPiece() ? `<span class="editor-block-detail-pill is-hero">peça-hero · ${escapeHtml(block.heroPiece)}</span>` : ''}
               ${block.locationSpecific ? `<span class="editor-block-detail-pill">${escapeHtml(block.locationSpecific)}</span>` : ''}
               ${block.note ? `<span class="editor-block-detail-note">${escapeHtml(block.note)}</span>` : ''}
             </div>
@@ -8606,11 +8641,13 @@
               <input type="text" class="form-input" id="bf-location" value="${escapeAttr(d.locationSpecific)}" placeholder="Ex: Café Dona Belandira" />
               <div class="form-hint">Aparece no card do bloco como detalhe ("→ Café Dona Belandira").</div>
             </div>
+            ${clientHasHeroPiece() ? `
             <div class="form-group">
               <label class="form-label">Peça-hero do bloco</label>
               <input type="text" class="form-input" id="bf-hero" value="${escapeAttr(d.heroPiece)}" placeholder="Ex: Olíbano vinho" />
               <div class="form-hint">Peça/cor que protagoniza o bloco. Aparece como pill mauve no header.</div>
             </div>
+            ` : ''}
             <div class="form-group">
               <label class="form-label">Anotação livre</label>
               <textarea class="form-textarea" id="bf-note" placeholder="Lembrete, contexto, decisão tomada em campo">${escapeHtml(d.note)}</textarea>
@@ -8653,7 +8690,8 @@
       d.kind = get('bf-kind') || d.kind || 'shoot';
       d.territoryCategory = get('bf-territory');
       d.locationSpecific = get('bf-location');
-      d.heroPiece = get('bf-hero');
+      // A2: se flag off, campo nao renderizou e get retornaria '' — preservar valor existente.
+      d.heroPiece = clientHasHeroPiece() ? get('bf-hero') : (d.heroPiece || '');
       d.note = get('bf-note');
 
       const path = 'days/' + blockModalState.dayId + '/blocks/' + blockModalState.blockId;
@@ -8849,6 +8887,70 @@
     }
 
     // ============================================================
+    // N-B L3 — NOTIFICATION HELPERS (PWA push setup local)
+    // ============================================================
+    // Flow inicial: pede permission ao usuario, dispara notificacao local via
+    // SW registration (preferencial) ou Notification constructor (fallback).
+    // FCM + Cloud Function viram em S2.5 — aqui e setup do front que ja deixa
+    // tudo pronto pra receber push events do SW.
+
+    async function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        showToast('Browser nao suporta notificacoes');
+        return 'unsupported';
+      }
+      if (Notification.permission === 'granted') return 'granted';
+      if (Notification.permission === 'denied') {
+        showToast('Notificacoes bloqueadas — habilite nas config do browser');
+        return 'denied';
+      }
+      try {
+        return await Notification.requestPermission();
+      } catch (e) {
+        console.warn('[notif] permission request falhou:', e);
+        return 'default';
+      }
+    }
+
+    async function showNativeNotification(title, body, options) {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+      const opts = Object.assign({
+        body: body || '',
+        icon: './icon.svg',
+        badge: './icon.svg',
+        tag: 'celulose-default'
+      }, options || {});
+      try {
+        // Preferencial: via SW registration (suporta badge, actions, persiste no tray).
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.ready;
+          await reg.showNotification(title, opts);
+          return true;
+        }
+        // Fallback: Notification constructor (sem SW)
+        new Notification(title, opts);
+        return true;
+      } catch (e) {
+        console.warn('[notif] showNotification falhou:', e);
+        return false;
+      }
+    }
+
+    async function testNotification() {
+      const perm = await requestNotificationPermission();
+      if (perm === 'granted') {
+        const ok = await showNativeNotification(
+          'Celulose · Notificacoes ativas',
+          'Tudo certo! Voce vai receber alertas de aprovacao, ajuste e insight quando o backend (FCM) for ligado.',
+          { tag: 'celulose-test' }
+        );
+        showToast(ok ? 'Notificacao enviada' : 'Falha ao enviar');
+      }
+      // 'denied' e 'unsupported' ja mostraram toast via requestNotificationPermission
+    }
+
+
+    // ============================================================
     // HELPERS
     // ============================================================
     function escapeHtml(s) {
@@ -8891,6 +8993,19 @@
     // BOOT
     // ============================================================
     bootstrap();
+
+    // N-B L2: registra Service Worker (PWA-capable; offline shell + push handler).
+    // Fire-and-forget — falha de SW nao deve bloquear o app.
+    // Roda apos 'load' pra nao concorrer com bootstrap inicial.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then((reg) => {
+          console.log('[SW] registrado, scope:', reg.scope);
+        }).catch((err) => {
+          console.warn('[SW] registro falhou:', err);
+        });
+      });
+    }
   </script>
 </body>
 </html>

@@ -1,0 +1,21 @@
+{
+  "name": "Celulose Digital",
+  "short_name": "Celulose",
+  "description": "App MVP Ponte v1.5 — aprovação de conteúdo entre Isabelle Cardoso (Celulose Digital) e clientes.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "categories": ["productivity", "business"],
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
