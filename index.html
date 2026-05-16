@@ -4007,6 +4007,12 @@
       padding-bottom: calc(40px + var(--safe-bottom)) !important;
     }
 
+    /* Sheet de delegação cresce mais que outros (default 80vh) pra Pedir Ajuste
+       caber sem scroll mesmo com tags + comentário + botões. */
+    .sheet-type-delegacao {
+      max-height: 94vh !important;
+    }
+
     /* ============================================================ */
     /* S2.5* C2 — Pauta do dia (POV Isabelle) + Histórico           */
     /* ============================================================ */
@@ -4701,7 +4707,7 @@
     .img-modal-overlay {
       position: fixed;
       inset: 0;
-      z-index: 200;
+      z-index: 9000;
       background: rgba(0, 0, 0, 0.92);
       display: flex;
       align-items: center;
@@ -4819,7 +4825,7 @@
     .ajuste-screen {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
     .ajuste-back {
@@ -4951,16 +4957,16 @@
 
     .ajuste-textarea {
       width: 100%;
-      padding: 12px 14px;
+      padding: 10px 12px;
       font-family: inherit;
       font-size: 14px;
-      line-height: 1.55;
+      line-height: 1.5;
       color: var(--deep);
       background: var(--white);
       border: 1.5px solid var(--border-soft);
       border-radius: var(--radius-md);
       resize: vertical;
-      min-height: 80px;
+      min-height: 70px;
       transition: border-color 0.15s ease;
     }
     .ajuste-textarea:focus {
@@ -7515,8 +7521,11 @@
       document.body.classList.add('modal-open');
       const sheet = document.getElementById('sheet');
       sheet.classList.remove('is-hidden');
+      // S2.5* polish: classe extra pra CSS escopar por tipo (ex: sheet de
+      // delegação pode ser mais alto pra caber Pedir Ajuste sem rolar)
+      const typeClass = type ? ` sheet-type-${type}` : '';
       sheet.innerHTML = `
-        <div class="sheet" onclick="event.stopPropagation()">
+        <div class="sheet${typeClass}" onclick="event.stopPropagation()">
           <div class="sheet-handle"></div>
           ${content}
         </div>
