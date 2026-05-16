@@ -3771,6 +3771,235 @@
       0%, 100% { opacity: 0.4; }
       50% { opacity: 1; }
     }
+
+    /* ============================================================ */
+    /* S2.5* DELEGAÇÃO CLOSET — paleta Closet + shells (C1)         */
+    /* Força paleta Closet quando executora-mode (Jamily entra      */
+    /* sempre no universo do Closet, nunca em modo dark Celulose).  */
+    /* ============================================================ */
+
+    body.executora-mode {
+      background: var(--blush-light);
+      color: var(--deep);
+    }
+    body.executora-mode #app {
+      background: var(--blush-light);
+      max-width: 480px;
+    }
+
+    .executora-shell {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--blush-light);
+    }
+
+    .executora-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: calc(var(--safe-top) + 18px) 20px 16px;
+      background: var(--deep);
+      color: var(--blush-light);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .executora-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .executora-kicker {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--rose-soft);
+      opacity: 0.85;
+    }
+    .executora-greeting {
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    .executora-greeting strong {
+      font-weight: 600;
+    }
+    .executora-logout {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--blush-light);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      transition: background 0.15s ease;
+    }
+    .executora-logout:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .executora-main {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 24px 20px calc(96px + var(--safe-bottom));
+    }
+
+    .executora-placeholder {
+      margin-top: 40px;
+      padding: 32px 24px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-lg);
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+    }
+    .executora-placeholder-kicker {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 12px;
+    }
+    .executora-placeholder-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--deep);
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+    .executora-placeholder-sub {
+      font-size: 14px;
+      color: var(--mauve-text);
+      line-height: 1.5;
+    }
+
+    .executora-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 10px 12px calc(12px + var(--safe-bottom));
+      background: var(--white);
+      border-top: 1px solid var(--border-soft);
+      box-shadow: 0 -4px 16px rgba(58, 30, 40, 0.06);
+      z-index: 20;
+    }
+    .executora-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 6px;
+      border-radius: var(--radius-md);
+      color: var(--gray);
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+    .executora-tab .executora-tab-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+    .executora-tab .executora-tab-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .executora-tab.active {
+      color: var(--mauve);
+      background: var(--blush);
+    }
+    .executora-tab:hover:not(.active) {
+      color: var(--mauve-text);
+      background: rgba(166, 84, 106, 0.06);
+    }
+
+    /* ----- Sheet de delegação (POV Isabelle dentro do editor) ----- */
+    .delegacao-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 12px 0 18px;
+      border-bottom: 1px solid var(--border-soft);
+      margin-bottom: 18px;
+      overflow-x: auto;
+    }
+    .delegacao-tab {
+      flex: 1 1 auto;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .delegacao-tab:hover:not(.active) {
+      color: var(--mauve-text);
+      background: rgba(166, 84, 106, 0.05);
+    }
+    .delegacao-tab.active {
+      color: var(--mauve);
+      background: var(--blush);
+      border-color: var(--rose-soft);
+    }
+    .delegacao-body {
+      min-height: 200px;
+    }
+    .delegacao-stub, .delegacao-empty {
+      padding: 28px 20px;
+      background: var(--blush-light);
+      border: 1px dashed var(--rose-soft);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+    .delegacao-stub-kicker, .delegacao-empty-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 10px;
+    }
+    .delegacao-empty-title {
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      text-transform: none;
+      color: var(--deep);
+      font-weight: 600;
+    }
+    .delegacao-stub-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--deep);
+      margin-bottom: 8px;
+    }
+    .delegacao-stub-sub, .delegacao-empty-sub {
+      font-size: 13px;
+      color: var(--mauve-text);
+      line-height: 1.55;
+    }
+    .delegacao-stub-sub code, .delegacao-empty-sub code {
+      font-family: 'SF Mono', Menlo, Consolas, monospace;
+      font-size: 12px;
+      padding: 2px 6px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: 6px;
+      color: var(--mauve-text);
+    }
   </style>
 </head>
 <body>
@@ -3872,6 +4101,41 @@
       { id: 'obj', label: 'Cumpre o objetivo' },
       { id: 'leg', label: 'Legenda sem erro ortográfico' }
     ];
+
+    // ============================================================
+    // S2.5* DELEGAÇÃO CLOSET — constantes v1.5.1 (Fase 1C)
+    // Aditivo puro. Hoje só consumidos pelo Closet (única persona
+    // executoraInterna no DB), mas vivem como constantes globais
+    // pra Fase 2 (UI) plugar sem refactor. Ver firebase-schema.md
+    // seção 7 + delta-do-html.md Áreas 14-19.
+    // ============================================================
+
+    // Três papéis distintos do app v1.5.1
+    const ROLES = Object.freeze({
+      MASTER: 'master',                       // Isabelle (multi-cliente, aprova, edita pauta)
+      EXECUTORA_INTERNA: 'executoraInterna',  // Jamily no Closet (cria, marca postado)
+      PERSONA_CLIENTE: 'personaCliente'       // Rafa, Bruna, Diogo, etc (vota — legado v1.5)
+    });
+
+    // Vocabulário fechado de tags de ajuste — não vem do DB, congelado no código
+    const ADJUSTMENT_TAGS = [
+      { id: 'ortografia',          label: 'Ortografia' },
+      { id: 'tom_de_voz',          label: 'Tom de voz' },
+      { id: 'enquadramento',       label: 'Enquadramento' },
+      { id: 'qualidade_captacao',  label: 'Qualidade da captação' },
+      { id: 'fora_da_pauta',       label: 'Fora da pauta' },
+      { id: 'outro',               label: 'Outro' }
+    ];
+
+    // Origens do card — visíveis na criação E na fila bulk pra auditabilidade
+    const CARD_ORIGINS = [
+      { id: 'pauta',            label: 'Pauta',           color: 'var(--mauve)' },
+      { id: 'pedido_fundador',  label: 'Pedido fundador', color: 'var(--rose)' },
+      { id: 'peca_nova',        label: 'Peça nova',       color: 'var(--green)' }
+    ];
+
+    // Fallback se _master/janelasAprovacao não estiver setado no DB
+    const JANELAS_FALLBACK = ['11:00', '14:00', '17:00', '19:00'];
 
     // Atrito 3: lê tags do cliente (com fallback pro default).
     function getCardTypesOfClient() {
@@ -3992,6 +4256,13 @@
       clientRef.on('value', snap => {
         const data = snap.val();
         if (!data) { renderError('Cliente sumiu do Firebase.'); return; }
+        // S2.5* / v1.5.1: aplica defaults nos cards na borda (origin/postedAt/
+        // isReference/createdByRole/lastAdjustmentId). Cards antigos do Closet
+        // (~28 em produção) sem esses campos continuam válidos. Idempotente:
+        // re-aplicar sobre cards já com os campos preserva os valores.
+        if (data && data.cards) {
+          data.cards = applyV151DefaultsBulk(data.cards);
+        }
         state.clientData = data;
         // legado: mantém state.data espelhado pra código antigo não crashar até ele migrar
         state.data = data;
@@ -4066,6 +4337,7 @@
         state.authValidated = true;
         document.body.classList.remove('editor-mode');
         document.body.classList.add('master-mode');
+        await loadJanelasAprovacao(); // S2.5*: pre-carrega janelas pra tela master
         await loadMasterDashboard();
         return;
       }
@@ -4081,10 +4353,59 @@
       clientRef = db.ref(ROOT_PATH + '/clients/' + state.clientSlug);
       const snap = await clientRef.once('value');
       if (!snap.exists()) { renderClientNotFound(); return; }
-      state.clientData = snap.val();
+      const rawClientData = snap.val();
+      // S2.5* / v1.5.1: defaults nos cards já no boot (antes do attachClientListener
+      // re-aplicar via on('value')). Garante que qualquer render no caminho route()
+      // já enxerga cards na forma v1.5.1 (origin/postedAt/isReference/etc).
+      if (rawClientData && rawClientData.cards) {
+        rawClientData.cards = applyV151DefaultsBulk(rawClientData.cards);
+      }
+      state.clientData = rawClientData;
       state.data = state.clientData; // legado espelhado
 
+      // S2.5*: side-load de personasInternas + janelas master. Não bloqueia render
+      // se falhar (ambas têm fallback). Closet hoje é o único cliente que terá
+      // personasInternas/jamily — outros clientes recebem {} silenciosamente.
+      state.clientPersonasInternas = await loadClientPersonasInternas(state.clientSlug);
+      await loadJanelasAprovacao();
+
       const auth = state.clientData.auth || {};
+
+      // ---------- 4. EXECUTORA INTERNA (S2.5* — Jamily no Closet) ----------
+      // Quarto contexto do route() introduzido em v1.5.1. Auth via
+      // personasInternas/{u}/pin. PWA-friendly (Jamily usa atalho no iPhone:
+      // mode=executora&u=jamily&pin=XXXX salvo em localStorage).
+      if (params.mode === 'executora') {
+        const internas = state.clientPersonasInternas || {};
+        if (!params.u || !internas[params.u]) {
+          renderExecutoraPersonaNotFound();
+          return;
+        }
+        const exec = internas[params.u];
+        if (!exec.pin || params.pin !== exec.pin) {
+          renderExecutoraPinGate();
+          return;
+        }
+        if (exec.active === false) {
+          renderExecutoraDesativada();
+          return;
+        }
+        state.mode = 'executora';
+        state.authValidated = true;
+        state.currentExecutoraId = params.u;
+        state.currentExecutora = exec;
+        state.executoraTab = 'hub'; // default ao entrar
+        document.body.classList.remove('editor-mode');
+        document.body.classList.remove('master-mode');
+        document.body.classList.remove('is-manage-mode');
+        document.body.classList.add('executora-mode');
+        applyBranding(state.clientData.branding);  // pre-paint
+        saveAuthLocal(params);
+        attachClientListener();
+        renderExecutoraShell();
+        applyBranding(state.clientData.branding);  // post-paint
+        return;
+      }
 
       // ---------- 4. EDITOR ----------
       if (params.mode === 'editor') {
@@ -4269,6 +4590,126 @@
       if (states.includes('approved')) return 'in_progress';
       return 'pending';
     }
+
+    // ============================================================
+    // S2.5* DELEGAÇÃO CLOSET — helpers + loaders v1.5.1 (Fase 1C)
+    // Plumbing puro. SEM UI nesta fase. Tudo é seguro de chamar
+    // mesmo quando os nós novos do DB ainda não existem (defaults
+    // no read garantem retorno coerente).
+    // ============================================================
+
+    // Estado global das janelas — preenchido por loadJanelasAprovacao()
+    // no boot do master. Fallback pra JANELAS_FALLBACK até carregar.
+    let janelasAprovacao = JANELAS_FALLBACK.slice();
+
+    // Lê _master/janelasAprovacao (set único pra todos os clientes —
+    // a janela é DA Isabelle, não do cliente). Idempotente.
+    async function loadJanelasAprovacao() {
+      try {
+        if (!masterRef) return;
+        const snap = await masterRef.child('janelasAprovacao').once('value');
+        const v = snap.val();
+        if (Array.isArray(v) && v.length > 0) {
+          janelasAprovacao = v.slice();
+        }
+      } catch (e) {
+        console.warn('[v1.5.1] janelasAprovacao indisponível, usando fallback', e);
+      }
+    }
+
+    // Lê personasInternas/{} de um cliente. Default {}: cliente sem
+    // executora opera normal (Closet hoje é o único candidato).
+    async function loadClientPersonasInternas(slug) {
+      try {
+        if (!slug) return {};
+        const snap = await db.ref(ROOT_PATH + '/clients/' + slug + '/personasInternas').once('value');
+        return snap.val() || {};
+      } catch (e) {
+        console.warn('[v1.5.1] personasInternas indisponível pra ' + slug, e);
+        return {};
+      }
+    }
+
+    // Helper canônico de papel — recebe um persona-obj (cliente OU interna)
+    // e retorna um dos ROLES.*. Usado pra escopar UI/permissões.
+    function getPersonaRole(personaObj) {
+      if (!personaObj) return null;
+      if (personaObj.role === ROLES.EXECUTORA_INTERNA) return ROLES.EXECUTORA_INTERNA;
+      return ROLES.PERSONA_CLIENTE;
+    }
+
+    // Hoje (Closet) só folga dom+seg, mas estrutura aceita qualquer combinação.
+    // Usado pelo banner "o que perdeu" + tela "bem-vinda de volta" (Fase 2).
+    function isExecutoraEmFolga(executora, dateRef) {
+      if (!executora || !Array.isArray(executora.diasDescanso) || executora.diasDescanso.length === 0) return false;
+      const ref = dateRef || new Date();
+      const dias = ['dom','seg','ter','qua','qui','sex','sab'];
+      return executora.diasDescanso.indexOf(dias[ref.getDay()]) >= 0;
+    }
+
+    // Defaults no read pra cards v1.5.1 — cards antigos (sem origin/postedAt/
+    // isReference/createdByRole/lastAdjustmentId) continuam válidos. Aplicar
+    // na borda evita undefined espalhado pelo render.
+    function applyV151Defaults(card) {
+      if (!card) return card;
+      return Object.assign({}, card, {
+        origin:           card.origin           != null ? card.origin           : 'pauta',
+        postedAt:         card.postedAt         != null ? card.postedAt         : null,
+        isReference:      card.isReference      != null ? card.isReference      : false,
+        createdByRole:    card.createdByRole    != null ? card.createdByRole    : ROLES.MASTER,
+        lastAdjustmentId: card.lastAdjustmentId != null ? card.lastAdjustmentId : null
+      });
+    }
+
+    // Aplica defaults em todo o objeto de cards (forma do listener).
+    function applyV151DefaultsBulk(cardsObj) {
+      if (!cardsObj || typeof cardsObj !== 'object') return cardsObj;
+      const out = {};
+      for (const k in cardsObj) {
+        if (Object.prototype.hasOwnProperty.call(cardsObj, k)) {
+          out[k] = applyV151Defaults(cardsObj[k]);
+        }
+      }
+      return out;
+    }
+
+    // Status efetivo do card considerando postedAt (v1.5.1) — não substitui
+    // getCardEffectiveApproval, ENVOLVE. Retorna 'posted' quando postedAt!=null,
+    // delega pro original em todo resto. Usar este pra renderização Hub Jamily
+    // (separar "aprovado pronto pra postar" de "já postado").
+    function getCardEffectiveStatus(card) {
+      if (card && card.postedAt) return 'posted';
+      return getCardEffectiveApproval(card);
+    }
+
+    // ----- Pauta diária (POV Isabelle edita, POV Jamily lê) -----
+
+    // Lê pauta de uma data específica. null = sem pauta hoje (não é erro).
+    async function loadPautaDoDia(slug, dateRef) {
+      const ref = dateRef || new Date();
+      const ymd = ref.toISOString().slice(0, 10);
+      try {
+        const snap = await db.ref(ROOT_PATH + '/clients/' + slug + '/pautas/' + ymd).once('value');
+        return snap.val();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Pra tela 7 do wireframe (POV Isabelle — pauta + histórico das últimas 3).
+    async function loadPautaUltimas3(slug) {
+      try {
+        const snap = await db.ref(ROOT_PATH + '/clients/' + slug + '/pautas')
+          .orderByKey().limitToLast(3).once('value');
+        return snap.val() || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    // ============================================================
+    // FIM bloco S2.5*
+    // ============================================================
 
     // Personas ativas, ordenadas (incluindo closet — usado pra picker, dono de card, etc).
     function getActivePersonas() {
@@ -6287,6 +6728,229 @@
     }
 
     // ============================================================
+    // S2.5* DELEGAÇÃO CLOSET — render handlers da executora interna (C1)
+    // Stubs visuais. Conteúdo real entra em C2 (Hub) / C3 (Criar) /
+    // C5 (Galeria + Histórico).
+    // ============================================================
+
+    function renderExecutoraPinGate() {
+      clearAuthLocal();
+      const app = document.getElementById('app');
+      app.classList.remove('editor-view');
+      const clientName = state.clientData?.meta?.name || '';
+      app.innerHTML = `
+        <div class="welcome">
+          <div class="welcome-logo" data-brand-logo>${escapeHtml(clientName)}</div>
+          <div class="welcome-title">Acesso restrito</div>
+          <div class="welcome-tagline">PIN inválido. Confira o atalho enviado pela Isabelle.</div>
+        </div>
+      `;
+    }
+
+    function renderExecutoraPersonaNotFound() {
+      const app = document.getElementById('app');
+      app.classList.remove('editor-view');
+      const clientName = state.clientData?.meta?.name || '';
+      app.innerHTML = `
+        <div class="welcome">
+          <div class="welcome-logo" data-brand-logo>${escapeHtml(clientName)}</div>
+          <div class="welcome-title">Acesso restrito</div>
+          <div class="welcome-tagline">Esta executora não está cadastrada neste cliente.</div>
+        </div>
+      `;
+    }
+
+    function renderExecutoraDesativada() {
+      const app = document.getElementById('app');
+      app.classList.remove('editor-view');
+      const clientName = state.clientData?.meta?.name || '';
+      app.innerHTML = `
+        <div class="welcome">
+          <div class="welcome-logo" data-brand-logo>${escapeHtml(clientName)}</div>
+          <div class="welcome-title">Acesso pausado</div>
+          <div class="welcome-tagline">Sua conta de executora foi pausada. Fala com a Isabelle.</div>
+        </div>
+      `;
+    }
+
+    // Shell principal POV executora — header fixo + área central (vai virar
+    // tela ativa conforme state.executoraTab) + bottom nav 4 abas.
+    // C1: tudo placeholder. Próximas C2-C5 plugam telas reais.
+    function renderExecutoraShell() {
+      const app = document.getElementById('app');
+      app.classList.remove('editor-view');
+      const exec = state.currentExecutora || {};
+      const clientName = state.clientData?.meta?.name || '';
+      const tab = state.executoraTab || 'hub';
+      app.innerHTML = `
+        <div class="executora-shell">
+          <header class="executora-header">
+            <div class="executora-header-left">
+              <div class="executora-kicker" data-brand-logo>${escapeHtml(clientName)}</div>
+              <div class="executora-greeting">Olá, <strong>${escapeHtml(exec.name || '')}</strong></div>
+            </div>
+            <button type="button" class="executora-logout" id="executora-logout-btn" aria-label="Sair">Sair</button>
+          </header>
+
+          <main class="executora-main">
+            ${renderExecutoraTabContent(tab)}
+          </main>
+
+          <nav class="executora-bottom-nav" role="tablist">
+            <button type="button" class="executora-tab ${tab === 'hub' ? 'active' : ''}" data-exec-tab="hub" role="tab">
+              <span class="executora-tab-icon">◉</span><span class="executora-tab-label">Hub</span>
+            </button>
+            <button type="button" class="executora-tab ${tab === 'criar' ? 'active' : ''}" data-exec-tab="criar" role="tab">
+              <span class="executora-tab-icon">＋</span><span class="executora-tab-label">Criar</span>
+            </button>
+            <button type="button" class="executora-tab ${tab === 'galeria' ? 'active' : ''}" data-exec-tab="galeria" role="tab">
+              <span class="executora-tab-icon">▦</span><span class="executora-tab-label">Galeria</span>
+            </button>
+            <button type="button" class="executora-tab ${tab === 'historico' ? 'active' : ''}" data-exec-tab="historico" role="tab">
+              <span class="executora-tab-icon">⏱</span><span class="executora-tab-label">Histórico</span>
+            </button>
+          </nav>
+        </div>
+      `;
+
+      // Handlers
+      document.getElementById('executora-logout-btn')?.addEventListener('click', () => {
+        clearAuthLocal();
+        window.location.search = '';
+      });
+      document.querySelectorAll('[data-exec-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.executoraTab = btn.getAttribute('data-exec-tab');
+          renderExecutoraShell();
+        });
+      });
+    }
+
+    // Render do conteúdo central conforme aba ativa. C1 = placeholders,
+    // C2-C5 substituem cada caso por tela real.
+    function renderExecutoraTabContent(tab) {
+      if (tab === 'hub') {
+        return `
+          <section class="executora-placeholder">
+            <div class="executora-placeholder-kicker">Hub do dia</div>
+            <div class="executora-placeholder-title">Em construção</div>
+            <div class="executora-placeholder-sub">Pauta + próxima janela + aprovados prontos pra postar entram aqui na C2.</div>
+          </section>
+        `;
+      }
+      if (tab === 'criar') {
+        return `
+          <section class="executora-placeholder">
+            <div class="executora-placeholder-kicker">Novo card</div>
+            <div class="executora-placeholder-title">Em construção</div>
+            <div class="executora-placeholder-sub">Upload + copy + peça + chip origem entra na C3.</div>
+          </section>
+        `;
+      }
+      if (tab === 'galeria') {
+        return `
+          <section class="executora-placeholder">
+            <div class="executora-placeholder-kicker">Galeria de referência</div>
+            <div class="executora-placeholder-title">Em construção</div>
+            <div class="executora-placeholder-sub">Grid 2x3 só Closet entra na C5.</div>
+          </section>
+        `;
+      }
+      if (tab === 'historico') {
+        return `
+          <section class="executora-placeholder">
+            <div class="executora-placeholder-kicker">Pautas anteriores</div>
+            <div class="executora-placeholder-title">Em construção</div>
+            <div class="executora-placeholder-sub">Histórico read-only entra na C5.</div>
+          </section>
+        `;
+      }
+      return '';
+    }
+
+    // ============================================================
+    // S2.5* DELEGAÇÃO CLOSET — sheet POV Isabelle (C1 stub, C2-C4 plugam telas)
+    // ============================================================
+
+    // Estado local do sheet de delegação. Tab persiste entre re-aberturas
+    // do sheet dentro da mesma sessão (recém-abriu Pauta, fechou, abriu de
+    // novo → volta em Pauta).
+    let delegacaoSheetTab = 'pauta';
+
+    function openDelegacaoSheet() {
+      const slug = state.clientSlug || '';
+      const internas = state.clientPersonasInternas || {};
+      const hasExecutora = Object.keys(internas).length > 0;
+      const tab = delegacaoSheetTab;
+
+      const content = `
+        <div class="sheet-header">
+          <div class="sheet-kicker">Delegação · ${escapeHtml(state.clientData?.meta?.name || slug)}</div>
+          <div class="sheet-title">📋 Painel de delegação</div>
+        </div>
+
+        <div class="delegacao-tabs" role="tablist">
+          <button type="button" class="delegacao-tab ${tab === 'pauta' ? 'active' : ''}" data-deleg-tab="pauta" role="tab">Pauta do dia</button>
+          <button type="button" class="delegacao-tab ${tab === 'fila' ? 'active' : ''}" data-deleg-tab="fila" role="tab">Fila bulk</button>
+          <button type="button" class="delegacao-tab ${tab === 'historico' ? 'active' : ''}" data-deleg-tab="historico" role="tab">Histórico de pautas</button>
+        </div>
+
+        <div class="delegacao-body">
+          ${hasExecutora ? renderDelegacaoTabContent(tab) : `
+            <div class="delegacao-empty">
+              <div class="delegacao-empty-title">Sem executora cadastrada</div>
+              <div class="delegacao-empty-sub">Este cliente ainda não tem nenhuma persona em <code>personasInternas</code>. Cadastre uma no Realtime DB pra ativar a delegação.</div>
+            </div>
+          `}
+        </div>
+      `;
+
+      openSheet('delegacao', content);
+
+      // Bind das tabs DEPOIS do openSheet (sheet acabou de injetar HTML)
+      document.querySelectorAll('[data-deleg-tab]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          delegacaoSheetTab = btn.getAttribute('data-deleg-tab');
+          openDelegacaoSheet(); // re-render
+        });
+      });
+    }
+
+    // Render do conteúdo de cada tab. C1 = stubs. C2 substitui 'pauta',
+    // C3 substitui 'fila', C5 substitui 'historico'.
+    function renderDelegacaoTabContent(tab) {
+      if (tab === 'pauta') {
+        return `
+          <div class="delegacao-stub">
+            <div class="delegacao-stub-kicker">Pauta do dia</div>
+            <div class="delegacao-stub-title">Em construção</div>
+            <div class="delegacao-stub-sub">Campo único + histórico das últimas 3 entram aqui na C2. Escreve em <code>pautas/{YYYY-MM-DD}</code>.</div>
+          </div>
+        `;
+      }
+      if (tab === 'fila') {
+        return `
+          <div class="delegacao-stub">
+            <div class="delegacao-stub-kicker">Fila bulk</div>
+            <div class="delegacao-stub-title">Em construção</div>
+            <div class="delegacao-stub-sub">Header da janela + thumbs com gradientes Closet + tag "Pedido fundador" entram na C3.</div>
+          </div>
+        `;
+      }
+      if (tab === 'historico') {
+        return `
+          <div class="delegacao-stub">
+            <div class="delegacao-stub-kicker">Histórico de pautas</div>
+            <div class="delegacao-stub-title">Em construção</div>
+            <div class="delegacao-stub-sub">Lista read-only com pautas anteriores entra na C5.</div>
+          </div>
+        `;
+      }
+      return '';
+    }
+
+    // ============================================================
     // BRANDING DINÂMICO (Área 6)
     // ============================================================
     // Paleta default — fallback caso branding.paleta não traga alguma chave.
@@ -7684,6 +8348,9 @@
             <button type="button" class="editor-meta-pill is-clickable" id="edit-branding-btn" style="cursor: pointer;">⚙ Branding</button>
             <!-- Atrito 3: gerenciar tags do cliente (sheet com lista + criar + excluir) -->
             <button type="button" class="editor-meta-pill is-clickable" id="manage-tags-btn" style="cursor: pointer;">⚑ Tags</button>
+            <!-- S2.5*: Delegação Closet (sheet com Pauta / Fila / Histórico). Aparece pra todo cliente,
+                 mas só faz sentido quando há personasInternas — a sheet stub da C1 explicita isso. -->
+            <button type="button" class="editor-meta-pill is-clickable" id="open-delegacao-btn" style="cursor: pointer; border-color: var(--celulose-green); color: var(--celulose-green);">📋 Delegação</button>
             <!-- Atrito 1 caminho C: pílula de excluir o day atual. Confirm informa contagem de cards. -->
             <button type="button" class="editor-meta-pill is-danger" id="delete-day-btn">× Excluir ${escapeHtml(getDayDisplayLabel(currentDay))}</button>
           </div>
@@ -7886,6 +8553,12 @@
       const manageTagsBtn = app.querySelector('#manage-tags-btn');
       if (manageTagsBtn) {
         manageTagsBtn.addEventListener('click', openManageTagsSheet);
+      }
+
+      // S2.5*: pílula 📋 Delegação abre sheet com Pauta / Fila / Histórico (stub na C1).
+      const openDelegacaoBtn = app.querySelector('#open-delegacao-btn');
+      if (openDelegacaoBtn) {
+        openDelegacaoBtn.addEventListener('click', openDelegacaoSheet);
       }
 
       // Handler do botão "⊕ Clonar sprint" removido no refactor HARD-LITE.
