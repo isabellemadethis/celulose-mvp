@@ -4317,6 +4317,327 @@
     }
 
     /* ============================================================ */
+    /* S2.5* C4.1 — Refazer ajustes (banner Hub + lista + form header) */
+    /* ============================================================ */
+
+    /* Banner no Hub Jamily — destaca cards pra refazer. Mauve forte. */
+    .hub-refazer-banner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 16px 18px;
+      background: var(--mauve);
+      color: var(--blush-light);
+      border: none;
+      border-radius: var(--radius-md);
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+      box-shadow: 0 4px 14px rgba(122, 76, 96, 0.18);
+    }
+    .hub-refazer-banner:hover {
+      background: var(--deep);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(38, 28, 30, 0.22);
+    }
+    .hub-refazer-banner:active {
+      transform: translateY(0);
+    }
+    .hub-refazer-banner-icon {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: var(--blush-light);
+      color: var(--mauve);
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .hub-refazer-banner-text {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .hub-refazer-banner-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .hub-refazer-banner-sub {
+      font-size: 11px;
+      opacity: 0.85;
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+    }
+    .hub-refazer-banner-chevron {
+      flex-shrink: 0;
+      font-size: 20px;
+      line-height: 1;
+      opacity: 0.85;
+    }
+
+    /* ----- Página dedicada "Refazer" ----- */
+    .refazer-screen {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 4px 0;
+    }
+    .refazer-back {
+      align-self: flex-start;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .refazer-back:hover {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+    .refazer-header {
+      padding: 0 4px;
+    }
+    .refazer-header-kicker {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 6px;
+    }
+    .refazer-header-sub {
+      font-size: 12px;
+      color: var(--mauve-text);
+      line-height: 1.4;
+      letter-spacing: 0.01em;
+    }
+    .refazer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .refazer-item {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+      padding: 12px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .refazer-item:hover {
+      border-color: var(--mauve);
+      box-shadow: 0 4px 14px rgba(122, 76, 96, 0.10);
+    }
+    .refazer-item-thumb {
+      flex-shrink: 0;
+      width: 64px;
+      aspect-ratio: 9 / 16;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--mauve), var(--rose));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .refazer-item-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .refazer-item-thumb-placeholder {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+    .refazer-item-info {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .refazer-item-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .refazer-item-meta {
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.02em;
+    }
+    .refazer-item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .refazer-item-tag {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      padding: 3px 8px;
+      line-height: 1.4;
+    }
+    .refazer-item-comment {
+      font-size: 12px;
+      color: var(--mauve-text);
+      line-height: 1.4;
+      font-style: italic;
+      padding: 6px 8px;
+      background: var(--blush-light);
+      border-left: 2px solid var(--mauve);
+      border-radius: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .refazer-item-chevron {
+      flex-shrink: 0;
+      align-self: center;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--mauve);
+      opacity: 0.6;
+    }
+
+    .refazer-empty {
+      margin-top: 32px;
+      padding: 36px 24px;
+      background: var(--white);
+      border: 1px dashed var(--rose-soft);
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+    .refazer-empty-icon {
+      font-size: 40px;
+      color: var(--rose-soft);
+      margin-bottom: 14px;
+      line-height: 1;
+    }
+    .refazer-empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--deep);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .refazer-empty-sub {
+      font-size: 13px;
+      color: var(--mauve-text);
+      line-height: 1.5;
+    }
+
+    /* ----- Header de refazer no form Criar Card ----- */
+    .criar-card-form.is-refazer {
+      gap: 14px;
+    }
+    .criar-card-refazer-back {
+      align-self: flex-start;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-bottom: 4px;
+    }
+    .criar-card-refazer-back:hover {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+    .criar-card-refazer-header {
+      padding: 14px 16px;
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .criar-card-refazer-kicker {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+    }
+    .criar-card-refazer-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .criar-card-refazer-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .criar-card-refazer-tag {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: var(--blush-light);
+      background: var(--mauve);
+      border-radius: 999px;
+      padding: 4px 10px;
+      line-height: 1.4;
+    }
+    .criar-card-refazer-comment {
+      background: var(--white);
+      border-left: 3px solid var(--mauve);
+      border-radius: 4px;
+      padding: 10px 12px;
+    }
+    .criar-card-refazer-comment-kicker {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 4px;
+    }
+    .criar-card-refazer-comment-text {
+      font-size: 13px;
+      color: var(--deep);
+      line-height: 1.45;
+      font-style: italic;
+    }
+
+    /* ============================================================ */
     /* S2.5* C5 — Galeria de referência + Histórico Pautas (Jamily) */
     /* ============================================================ */
 
@@ -5863,7 +6184,11 @@
         const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         return k === todayKey;
       }).length;
-      return { aprovados, naFila, postadosHoje };
+      // C4.1: cards da executora com ajuste pendente (lastAdjustmentId && !resolved).
+      // Conta cards "review" do universo executora cujo lastAdjustment ainda não foi
+      // resolvido. Esses cards estão escondidos da Fila Bulk até serem reenviados.
+      const paraRefazer = delegacaoCards.filter(c => c.status === 'review' && isCardComAjustePendente(c)).length;
+      return { aprovados, naFila, postadosHoje, paraRefazer };
     }
 
     // Marca card como postado. 1 clique direto (memória: ação reversível, não destrutiva).
@@ -6088,9 +6413,76 @@
       });
     }
 
+    // ----- C4.1: Refazer card ajustado (lado Jamily) -----
+
+    // Cards do universo executora interna com ajuste pendente
+    // (lastAdjustmentId definido && adjustment.resolved === false).
+    // Ordem: ajuste mais antigo primeiro (FIFO — quem espera há mais tempo).
+    function getCardsParaRefazer() {
+      const cards = Object.values((state.clientData && state.clientData.cards) || {});
+      const adjs = (state.clientData && state.clientData.adjustments) || {};
+      return cards
+        .filter(c =>
+          c &&
+          c.createdByRole === ROLES.EXECUTORA_INTERNA &&
+          c.status === 'review' &&
+          isCardComAjustePendente(c)
+        )
+        .map(c => {
+          const adj = (adjs[c.id] && c.lastAdjustmentId) ? adjs[c.id][c.lastAdjustmentId] : null;
+          return { card: c, adjustment: adj };
+        })
+        .filter(x => !!x.adjustment)
+        .sort((a, b) => (a.adjustment.requestedAt || 0) - (b.adjustment.requestedAt || 0));
+    }
+
+    // Reenviar card após Jamily ajustar — multi-path atomic update:
+    // - reescreve campos editáveis do card (title, concept, origin, referenceImage)
+    // - reseta sentForReviewAt = now (volta pro fim da FIFO da Isabelle)
+    // - marca o último adjustment como resolved=true + resolvedAt
+    // Card já está em 'review' (não muda status). Como adjustment.resolved=true,
+    // isCardComAjustePendente passa a retornar false → card reaparece em
+    // getCardsNaFilaBulk automaticamente (live update grátis na Isabelle).
+    function reenviarCardAjustado(cardId, fields) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
+      const card = (state.clientData && state.clientData.cards && state.clientData.cards[cardId]) || null;
+      if (!card) { showToast('Card não encontrado.'); return Promise.reject(); }
+      const adjId = card.lastAdjustmentId;
+      if (!adjId) { showToast('Card não tem ajuste pendente.'); return Promise.reject(); }
+
+      const c = (fields.concept || '').trim();
+      if (!c) { showToast('O texto da copy é obrigatório.'); return Promise.reject(); }
+      const t = (fields.title || '').trim();
+      const now = Date.now();
+
+      const updates = {};
+      updates[`cards/${cardId}/title`] = t || c.slice(0, 40);
+      updates[`cards/${cardId}/concept`] = c;
+      updates[`cards/${cardId}/origin`] = fields.origin || card.origin || 'pauta';
+      if (typeof fields.referenceImage === 'string') {
+        updates[`cards/${cardId}/referenceImage`] = fields.referenceImage;
+      }
+      updates[`cards/${cardId}/sentForReviewAt`] = now;
+      updates[`cards/${cardId}/updatedAt`] = now;
+      updates[`adjustments/${cardId}/${adjId}/resolved`] = true;
+      updates[`adjustments/${cardId}/${adjId}/resolvedAt`] = now;
+
+      return clientRef.update(updates).then(() => {
+        showToast('✓ Reenviado pra Isabelle');
+      }).catch(e => {
+        console.warn('[reenviarCardAjustado] erro:', e);
+        showToast('Não consegui reenviar. Tenta de novo.');
+        throw e;
+      });
+    }
+
     // Estado local do form de ajuste — sobrevive a re-renders durante a edição.
     // Reset quando submit OK ou quando usuário cancela (botão Voltar).
     let pedirAjusteState = { cardId: null, tags: [], comment: '' };
+    // C4.1 — Jamily refazendo card pós-ajuste. Quando cardId != null, a tab
+    // 'criar' renderiza form pré-preenchido com header de ajuste, e o submit
+    // chama reenviarCardAjustado em vez de criarCardJamily.
+    let refazerCardState = { cardId: null };
 
     // Aprovação 1-clique da Isabelle no fluxo de delegação.
     // Pula approvalByPersona — Isabelle É a curadoria aqui.
@@ -8249,14 +8641,23 @@
       });
       document.querySelectorAll('[data-exec-tab]').forEach(btn => {
         btn.addEventListener('click', () => {
-          state.executoraTab = btn.getAttribute('data-exec-tab');
+          const newTab = btn.getAttribute('data-exec-tab');
+          // C4.1: ao trocar de tab via bottom nav, limpa modo refazer pra evitar
+          // que o form de Criar continue pré-preenchido em contexto errado.
+          if (refazerCardState.cardId && newTab !== 'criar') {
+            refazerCardState = { cardId: null };
+            pendingImageBase64 = null;
+            pendingOrigin = 'pauta';
+          }
+          state.executoraTab = newTab;
           renderExecutoraShell();
         });
       });
 
       // Bind específico por tab
-      if (tab === 'hub')   bindHubJamilyHandlers();
-      if (tab === 'criar') bindCriarCardHandlers();
+      if (tab === 'hub')     bindHubJamilyHandlers();
+      if (tab === 'criar')   bindCriarCardHandlers();
+      if (tab === 'refazer') bindRefazerListaHandlers();
     }
 
     // Render do conteúdo central conforme aba ativa.
@@ -8266,8 +8667,15 @@
       if (tab === 'hub') {
         return renderHubJamilyHTML(data.pautaHoje);
       }
+      if (tab === 'refazer') {
+        return renderRefazerListaHTML();
+      }
       if (tab === 'criar') {
-        return renderCriarCardHTML();
+        // C4.1: se refazerCardState ativo, passa o card como prefill
+        const prefill = refazerCardState.cardId
+          ? (state.clientData && state.clientData.cards && state.clientData.cards[refazerCardState.cardId]) || null
+          : null;
+        return renderCriarCardHTML(prefill);
       }
       if (tab === 'galeria') {
         return renderGaleriaHTML();
@@ -8294,20 +8702,63 @@
     let pendingImageBase64 = null;
     let pendingOrigin = 'pauta';
 
-    function renderCriarCardHTML() {
+    function renderCriarCardHTML(prefillCard) {
+      // C4.1: se em modo refazer e prefill não veio explícito, busca pelo state.
+      if (!prefillCard && refazerCardState.cardId) {
+        prefillCard = (state.clientData && state.clientData.cards && state.clientData.cards[refazerCardState.cardId]) || null;
+      }
+      const isRefazer = !!(refazerCardState.cardId && prefillCard);
       const origins = CARD_ORIGINS;
       const previewSrc = pendingImageBase64 || '';
+      const titleVal = prefillCard?.title || '';
+      const conceptVal = prefillCard?.concept || '';
 
-      return `
-        <section class="criar-card-form">
+      // Header da tela — modo refazer mostra ajuste da Isabelle em destaque.
+      let headerBlock = '';
+      if (isRefazer) {
+        const adjs = (state.clientData && state.clientData.adjustments && state.clientData.adjustments[prefillCard.id]) || {};
+        const adj = (prefillCard.lastAdjustmentId && adjs[prefillCard.lastAdjustmentId]) || null;
+        const tagLabels = (adj?.tags || []).map(tid => {
+          const t = ADJUSTMENT_TAGS.find(x => x.id === tid);
+          return t ? t.label : tid;
+        });
+        const requestedLabel = adj?.requestedAt ? formatTimeAgo(adj.requestedAt) : '';
+        headerBlock = `
+          <button type="button" class="criar-card-refazer-back" id="criar-card-refazer-back">
+            ← Voltar pra lista
+          </button>
+          <div class="criar-card-refazer-header">
+            <div class="criar-card-refazer-kicker">Refazendo · pedido ${escapeHtml(requestedLabel)}</div>
+            <div class="criar-card-refazer-title">A Isabelle pediu mudança</div>
+            ${tagLabels.length ? `
+              <div class="criar-card-refazer-tags">
+                ${tagLabels.map(l => `<span class="criar-card-refazer-tag">${escapeHtml(l)}</span>`).join('')}
+              </div>` : ''}
+            ${adj?.comment ? `
+              <div class="criar-card-refazer-comment">
+                <div class="criar-card-refazer-comment-kicker">Comentário</div>
+                <div class="criar-card-refazer-comment-text">${escapeHtml(adj.comment)}</div>
+              </div>` : ''}
+          </div>
+        `;
+      } else {
+        headerBlock = `
           <div class="criar-card-header">
             <div class="criar-card-kicker">Novo card</div>
             <div class="criar-card-title">Vai pra fila da Isabelle aprovar</div>
           </div>
+        `;
+      }
+
+      const submitLabel = isRefazer ? 'Reenviar pra Isabelle' : 'Enviar pra fila';
+
+      return `
+        <section class="criar-card-form ${isRefazer ? 'is-refazer' : ''}">
+          ${headerBlock}
 
           <!-- Upload de mídia -->
           <div class="criar-card-field">
-            <label class="criar-card-label">Mídia (opcional)</label>
+            <label class="criar-card-label">Mídia ${isRefazer ? '(troca se quiser)' : '(opcional)'}</label>
             <div class="criar-card-upload ${previewSrc ? 'has-preview' : ''}" id="criar-upload-zone">
               ${previewSrc
                 ? `<img src="${previewSrc}" alt="Pré-visualização" class="criar-card-preview" />
@@ -8331,6 +8782,7 @@
               class="criar-card-input"
               maxlength="60"
               placeholder="Ex: Vestido vinho longo"
+              value="${escapeHtml(titleVal)}"
             />
           </div>
 
@@ -8343,7 +8795,7 @@
               maxlength="500"
               rows="4"
               placeholder="O que você queria dizer? Como abordar?"
-            ></textarea>
+            >${escapeHtml(conceptVal)}</textarea>
           </div>
 
           <!-- Chips origem -->
@@ -8366,7 +8818,7 @@
           <!-- Submit -->
           <div class="criar-card-footer">
             <button type="button" class="btn-primary criar-card-submit" id="criar-card-submit">
-              Enviar pra fila
+              ${escapeHtml(submitLabel)}
             </button>
           </div>
         </section>
@@ -8451,33 +8903,159 @@
         });
       });
 
+      // C4.1 — botão voltar pra lista (modo refazer)
+      const refazerBackBtn = document.getElementById('criar-card-refazer-back');
+      if (refazerBackBtn) {
+        refazerBackBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          cancelarRefazer();
+        });
+      }
+
       // Submit
       if (submitBtn) {
+        const isRefazer = !!refazerCardState.cardId;
+        const defaultLabel = isRefazer ? 'Reenviar pra Isabelle' : 'Enviar pra fila';
         submitBtn.addEventListener('click', async () => {
           const title = titleInput?.value || '';
           const concept = conceptInput?.value || '';
           submitBtn.disabled = true;
-          submitBtn.textContent = 'Enviando…';
+          submitBtn.textContent = isRefazer ? 'Reenviando…' : 'Enviando…';
           try {
-            await criarCardJamily({
-              title,
-              concept,
-              origin: pendingOrigin,
-              referenceImage: pendingImageBase64 || ''
-            });
-            // Reset
-            pendingImageBase64 = null;
-            pendingOrigin = 'pauta';
-            // Volta pro Hub (mostra que entrou na fila)
-            state.executoraTab = 'hub';
-            renderExecutoraShell();
+            if (isRefazer) {
+              await reenviarCardAjustado(refazerCardState.cardId, {
+                title,
+                concept,
+                origin: pendingOrigin,
+                referenceImage: pendingImageBase64 || ''
+              });
+              // Reset estado refazer + criar
+              refazerCardState = { cardId: null };
+              pendingImageBase64 = null;
+              pendingOrigin = 'pauta';
+              // Decide pra onde voltar: se ainda tem outros pra refazer, lista;
+              // caso contrário, Hub.
+              const restantes = getCardsParaRefazer();
+              state.executoraTab = restantes.length > 0 ? 'refazer' : 'hub';
+              renderExecutoraShell();
+            } else {
+              await criarCardJamily({
+                title,
+                concept,
+                origin: pendingOrigin,
+                referenceImage: pendingImageBase64 || ''
+              });
+              // Reset
+              pendingImageBase64 = null;
+              pendingOrigin = 'pauta';
+              // Volta pro Hub (mostra que entrou na fila)
+              state.executoraTab = 'hub';
+              renderExecutoraShell();
+            }
           } catch (e) {
-            // Erro já mostrou toast em criarCardJamily
+            // Erro já mostrou toast em criarCardJamily / reenviarCardAjustado
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Enviar pra fila';
+            submitBtn.textContent = defaultLabel;
           }
         });
       }
+    }
+
+    // ----- C4.1 — Refazer (lista + navegação) -----
+
+    function openRefazerCard(cardId) {
+      const card = (state.clientData && state.clientData.cards && state.clientData.cards[cardId]) || null;
+      if (!card) { showToast('Card não encontrado.'); return; }
+      refazerCardState = { cardId };
+      pendingImageBase64 = card.referenceImage || null;
+      pendingOrigin = card.origin || 'pauta';
+      state.executoraTab = 'criar';
+      renderExecutoraShell();
+    }
+
+    function cancelarRefazer() {
+      refazerCardState = { cardId: null };
+      pendingImageBase64 = null;
+      pendingOrigin = 'pauta';
+      state.executoraTab = 'refazer';
+      renderExecutoraShell();
+    }
+
+    function renderRefazerListaHTML() {
+      const lista = getCardsParaRefazer();
+      if (lista.length === 0) {
+        return `
+          <div class="refazer-screen">
+            <button type="button" class="refazer-back" id="refazer-back-hub-btn">
+              ← Voltar pro Hub
+            </button>
+            <div class="refazer-empty">
+              <div class="refazer-empty-icon">✓</div>
+              <div class="refazer-empty-title">Nada pra refazer</div>
+              <div class="refazer-empty-sub">Tudo em dia. Os ajustes que a Isabelle pedir aparecem aqui.</div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="refazer-screen">
+          <button type="button" class="refazer-back" id="refazer-back-hub-btn">
+            ← Voltar pro Hub
+          </button>
+          <div class="refazer-header">
+            <div class="refazer-header-kicker">Ajustes pra refazer · ${lista.length}</div>
+            <div class="refazer-header-sub">Mais antigos primeiro. Toca num card pra abrir e editar.</div>
+          </div>
+          <div class="refazer-list">
+            ${lista.map(({ card, adjustment }) => {
+              const title = card.title || card.concept?.slice(0, 40) || '(sem título)';
+              const tags = (adjustment.tags || []).map(tid => {
+                const t = ADJUSTMENT_TAGS.find(x => x.id === tid);
+                return t ? t.label : tid;
+              });
+              const comment = adjustment.comment || '';
+              const requestedLabel = formatTimeAgo(adjustment.requestedAt || 0);
+              const thumbHtml = card.referenceImage
+                ? `<img class="refazer-item-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
+                : `<div class="refazer-item-thumb-placeholder">${escapeHtml((title || 'C').charAt(0).toUpperCase())}</div>`;
+              return `
+                <button type="button" class="refazer-item" data-refazer-card="${escapeHtml(card.id)}">
+                  <div class="refazer-item-thumb">${thumbHtml}</div>
+                  <div class="refazer-item-info">
+                    <div class="refazer-item-title">${escapeHtml(title)}</div>
+                    <div class="refazer-item-meta">Pedido ${escapeHtml(requestedLabel)}</div>
+                    ${tags.length ? `
+                      <div class="refazer-item-tags">
+                        ${tags.map(l => `<span class="refazer-item-tag">${escapeHtml(l)}</span>`).join('')}
+                      </div>` : ''}
+                    ${comment ? `<div class="refazer-item-comment">${escapeHtml(comment)}</div>` : ''}
+                  </div>
+                  <div class="refazer-item-chevron">›</div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function bindRefazerListaHandlers() {
+      const backBtn = document.getElementById('refazer-back-hub-btn');
+      if (backBtn) {
+        backBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.executoraTab = 'hub';
+          renderExecutoraShell();
+        });
+      }
+      document.querySelectorAll('[data-refazer-card]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cardId = btn.getAttribute('data-refazer-card');
+          if (cardId) openRefazerCard(cardId);
+        });
+      });
     }
 
     // ----- Hub Jamily (C2) -----
@@ -8509,6 +9087,21 @@
           <div class="hub-card-kicker">Próxima janela da Isabelle</div>
           <div class="hub-card-janela-text">${escapeHtml(formatProximaJanela(proxima))}</div>
         </div>`;
+
+      // C4.1 — Banner de ajustes pendentes (Caminho C). Só aparece se houver
+      // cards com lastAdjustment.resolved=false. Click vai pra tab virtual
+      // 'refazer' (não exposta na bottom nav).
+      const refazerBanner = stats.paraRefazer > 0
+        ? `
+          <button type="button" class="hub-refazer-banner" id="hub-refazer-banner-btn">
+            <span class="hub-refazer-banner-icon">⚠</span>
+            <span class="hub-refazer-banner-text">
+              <span class="hub-refazer-banner-title">${stats.paraRefazer} ${stats.paraRefazer === 1 ? 'ajuste' : 'ajustes'} pra refazer</span>
+              <span class="hub-refazer-banner-sub">A Isabelle pediu mudança. Toca pra ver.</span>
+            </span>
+            <span class="hub-refazer-banner-chevron">→</span>
+          </button>`
+        : '';
 
       // Stats compactos
       const statsBlock = `
@@ -8563,6 +9156,7 @@
       return `
         <section class="hub-jamily">
           ${pautaCard}
+          ${refazerBanner}
           ${janelaCard}
           ${statsBlock}
           ${aprovadosBlock}
@@ -8578,6 +9172,15 @@
           markCardPosted(cardId);
         });
       });
+      // C4.1 — Banner de ajustes pendentes leva pra lista refazer
+      const refazerBtn = document.getElementById('hub-refazer-banner-btn');
+      if (refazerBtn) {
+        refazerBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.executoraTab = 'refazer';
+          renderExecutoraShell();
+        });
+      }
     }
 
     // ============================================================
