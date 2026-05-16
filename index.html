@@ -5427,20 +5427,35 @@
 
     // ----- Cards de delegação (C2) -----
 
+    // Fix C3 bugfix (2026-05-15): filtra direto por status+postedAt+createdByRole
+    // ao invés de delegar pra getCardEffectiveStatus, porque essa função tem
+    // early return em status='published' (legado v1) que não distinguia
+    // "aprovado pronto pra postar" de "postado". O filtro abaixo escopa o Hub
+    // ao universo da executora interna — cards legados do Closet criados pela
+    // Isabelle no fluxo tradicional NÃO entram aqui, evitando poluição visual.
     function getCardsAprovadosPraPostar() {
       const cards = Object.values((state.clientData && state.clientData.cards) || {});
       return cards
-        .filter(c => c && getCardEffectiveStatus(c) === 'approved' && !c.postedAt)
+        .filter(c =>
+          c &&
+          c.status === 'published' &&
+          !c.postedAt &&
+          c.createdByRole === ROLES.EXECUTORA_INTERNA
+        )
         .sort((a, b) => (a.sentForReviewAt || a.updatedAt || 0) - (b.sentForReviewAt || b.updatedAt || 0));
     }
 
+    // Fix C3 bugfix (2026-05-15): todos os 3 contadores escopados ao universo
+    // executora interna (createdByRole) — Hub é a visão da Jamily, não vaza
+    // cards legados criados pela Isabelle no fluxo tradicional.
     function getHubStats() {
       const cards = Object.values((state.clientData && state.clientData.cards) || {});
       const todayKey = getPautaTodayKey();
-      const aprovados = cards.filter(c => c && getCardEffectiveStatus(c) === 'approved' && !c.postedAt).length;
-      const naFila = cards.filter(c => c && c.status === 'review' && getCardEffectiveStatus(c) !== 'approved').length;
-      const postadosHoje = cards.filter(c => {
-        if (!c || !c.postedAt) return false;
+      const delegacaoCards = cards.filter(c => c && c.createdByRole === ROLES.EXECUTORA_INTERNA);
+      const aprovados = delegacaoCards.filter(c => c.status === 'published' && !c.postedAt).length;
+      const naFila = delegacaoCards.filter(c => c.status === 'review').length;
+      const postadosHoje = delegacaoCards.filter(c => {
+        if (!c.postedAt) return false;
         const d = new Date(c.postedAt);
         const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         return k === todayKey;
