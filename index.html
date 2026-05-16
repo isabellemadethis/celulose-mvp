@@ -4311,6 +4311,100 @@
     }
 
     /* ============================================================ */
+    /* S2.5* C5 — Galeria de referência + Histórico Pautas (Jamily) */
+    /* ============================================================ */
+
+    .galeria-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .galeria-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .galeria-item-thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--mauve), var(--rose));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .galeria-item-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .galeria-item-placeholder {
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+    .galeria-item-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mauve-text);
+      line-height: 1.3;
+      padding: 0 2px;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .galeria-empty {
+      margin-top: 40px;
+      padding: 36px 24px;
+      background: var(--white);
+      border: 1px dashed var(--rose-soft);
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+    .galeria-empty-icon {
+      font-size: 40px;
+      color: var(--rose-soft);
+      margin-bottom: 14px;
+      line-height: 1;
+    }
+    .galeria-empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--deep);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .galeria-empty-sub {
+      font-size: 13px;
+      color: var(--mauve-text);
+      line-height: 1.5;
+    }
+
+    /* Header introdutório do histórico (POV Jamily) */
+    .historico-jamily-header {
+      margin-bottom: 14px;
+    }
+    .historico-jamily-kicker {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 6px;
+    }
+    .historico-jamily-sub {
+      font-size: 12px;
+      color: var(--mauve-text);
+      opacity: 0.8;
+      line-height: 1.45;
+    }
+
+    /* ============================================================ */
     /* S2.5* C3 — Criar Card (POV Jamily)                            */
     /* ============================================================ */
 
@@ -5523,14 +5617,63 @@
 
     // Pra tela 7 do wireframe (POV Isabelle — pauta + histórico das últimas 3).
     async function loadPautaUltimas3(slug) {
+      return loadPautaUltimasN(slug, 3);
+    }
+
+    // Generic — POV Isabelle usa N=3; POV Jamily aba Histórico usa N=10.
+    async function loadPautaUltimasN(slug, n) {
       try {
         const snap = await db.ref(ROOT_PATH + '/clients/' + slug + '/pautas')
-          .orderByKey().limitToLast(3).once('value');
+          .orderByKey().limitToLast(n || 10).once('value');
         return snap.val() || {};
       } catch (e) {
         return {};
       }
     }
+
+    // ----- Galeria (C5) -----
+
+    // Cards marcados como referência (postados + isReference=true).
+    // Ordenados por postedAt desc (mais recente primeiro).
+    function getCardsReferencia() {
+      const cards = Object.values((state.clientData && state.clientData.cards) || {});
+      return cards
+        .filter(c => c && c.postedAt && c.isReference === true)
+        .sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0));
+    }
+
+    function renderGaleriaHTML() {
+      const refs = getCardsReferencia();
+
+      if (refs.length === 0) {
+        return `
+          <section class="galeria-empty">
+            <div class="galeria-empty-icon">★</div>
+            <div class="galeria-empty-title">Nenhuma referência marcada ainda</div>
+            <div class="galeria-empty-sub">
+              Quando a Isabelle marcar cards aprovados como padrão, eles aparecem aqui — vira sua coleção de "como o Closet costuma ficar bom".
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section class="galeria-grid">
+          ${refs.map(c => {
+            const thumb = c.referenceImage
+              ? `<img class="galeria-item-img" src="${escapeHtml(c.referenceImage)}" alt="" />`
+              : `<div class="galeria-item-placeholder">${escapeHtml((c.title || 'C').charAt(0).toUpperCase())}</div>`;
+            return `
+              <div class="galeria-item">
+                <div class="galeria-item-thumb">${thumb}</div>
+                <div class="galeria-item-title">${escapeHtml(c.title || '(sem título)')}</div>
+              </div>
+            `;
+          }).join('')}
+        </section>
+      `;
+    }
+
 
     // ----- Helpers de tempo / janelas (C2) -----
 
@@ -7964,13 +8107,20 @@
       const slug = state.clientSlug || '';
       const tab = state.executoraTab || 'hub';
 
-      // Pré-carregar pauta de hoje só quando vai pro Hub
+      // Pré-carregar dados conforme a tab
       let pautaHoje = null;
+      let historicoExt = null;
       if (tab === 'hub') {
         try {
           pautaHoje = await loadPautaDoDia(slug);
         } catch (e) {
           console.warn('[executora] load pauta falhou:', e);
+        }
+      } else if (tab === 'historico') {
+        try {
+          historicoExt = await loadPautaUltimasN(slug, 10);
+        } catch (e) {
+          console.warn('[executora] load historico falhou:', e);
         }
       }
 
@@ -7985,7 +8135,7 @@
           </header>
 
           <main class="executora-main">
-            ${renderExecutoraTabContent(tab, { pautaHoje })}
+            ${renderExecutoraTabContent(tab, { pautaHoje, historico: historicoExt })}
           </main>
 
           <nav class="executora-bottom-nav" role="tablist">
@@ -8033,21 +8183,17 @@
         return renderCriarCardHTML();
       }
       if (tab === 'galeria') {
-        return `
-          <section class="executora-placeholder">
-            <div class="executora-placeholder-kicker">Galeria de referência</div>
-            <div class="executora-placeholder-title">Em construção</div>
-            <div class="executora-placeholder-sub">Grid 2x3 só Closet entra na C5.</div>
-          </section>
-        `;
+        return renderGaleriaHTML();
       }
       if (tab === 'historico') {
+        // Reusa renderPautaHistoricoHTML da C2 — mesma estrutura,
+        // hoje em destaque mauve, anteriores opacas.
         return `
-          <section class="executora-placeholder">
-            <div class="executora-placeholder-kicker">Pautas anteriores</div>
-            <div class="executora-placeholder-title">Em construção</div>
-            <div class="executora-placeholder-sub">Histórico read-only entra na C5.</div>
-          </section>
+          <div class="historico-jamily-header">
+            <div class="historico-jamily-kicker">Pautas anteriores</div>
+            <div class="historico-jamily-sub">As 10 últimas, mais recentes em cima. Hoje destacada em mauve.</div>
+          </div>
+          ${renderPautaHistoricoHTML(data.historico)}
         `;
       }
       return '';
