@@ -4001,6 +4001,12 @@
       color: var(--mauve-text);
     }
 
+    /* Padding extra no body do sheet de delegação pra footer respirar
+       mesmo com teclado virtual aberto no iOS. */
+    .delegacao-sheet-body {
+      padding-bottom: calc(40px + var(--safe-bottom)) !important;
+    }
+
     /* ============================================================ */
     /* S2.5* C2 — Pauta do dia (POV Isabelle) + Histórico           */
     /* ============================================================ */
@@ -8377,19 +8383,21 @@
           <div class="sheet-title">📋 Painel de delegação</div>
         </div>
 
-        <div class="delegacao-tabs" role="tablist">
-          <button type="button" class="delegacao-tab ${tab === 'pauta' ? 'active' : ''}" data-deleg-tab="pauta" role="tab">Pauta do dia</button>
-          <button type="button" class="delegacao-tab ${tab === 'fila' ? 'active' : ''}" data-deleg-tab="fila" role="tab">Fila bulk</button>
-          <button type="button" class="delegacao-tab ${tab === 'historico' ? 'active' : ''}" data-deleg-tab="historico" role="tab">Histórico de pautas</button>
-        </div>
+        <div class="sheet-body delegacao-sheet-body">
+          <div class="delegacao-tabs" role="tablist">
+            <button type="button" class="delegacao-tab ${tab === 'pauta' ? 'active' : ''}" data-deleg-tab="pauta" role="tab">Pauta do dia</button>
+            <button type="button" class="delegacao-tab ${tab === 'fila' ? 'active' : ''}" data-deleg-tab="fila" role="tab">Fila bulk</button>
+            <button type="button" class="delegacao-tab ${tab === 'historico' ? 'active' : ''}" data-deleg-tab="historico" role="tab">Histórico de pautas</button>
+          </div>
 
-        <div class="delegacao-body">
-          ${hasExecutora ? renderDelegacaoTabContent(tab, { pautaHoje, historico }) : `
-            <div class="delegacao-empty">
-              <div class="delegacao-empty-title">Sem executora cadastrada</div>
-              <div class="delegacao-empty-sub">Este cliente ainda não tem nenhuma persona em <code>personasInternas</code>. Cadastre uma no Realtime DB pra ativar a delegação.</div>
-            </div>
-          `}
+          <div class="delegacao-body">
+            ${hasExecutora ? renderDelegacaoTabContent(tab, { pautaHoje, historico }) : `
+              <div class="delegacao-empty">
+                <div class="delegacao-empty-title">Sem executora cadastrada</div>
+                <div class="delegacao-empty-sub">Este cliente ainda não tem nenhuma persona em <code>personasInternas</code>. Cadastre uma no Realtime DB pra ativar a delegação.</div>
+              </div>
+            `}
+          </div>
         </div>
       `;
 
