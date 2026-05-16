@@ -4519,7 +4519,8 @@
     .criar-card-preview {
       display: block;
       width: 100%;
-      max-height: 320px;
+      aspect-ratio: 9 / 16;
+      max-height: 480px;
       object-fit: cover;
     }
     .criar-card-remove {
@@ -4628,30 +4629,35 @@
     .fila-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 14px;
     }
+    /* Polish: card vertical com imagem grande no topo (Stories shape 9:16).
+       Antes era flex row com thumb 80x80 — Isabelle não conseguia ver foto.
+       Click no thumb expande em modal (fila-thumb-clickable). */
     .fila-item {
       display: flex;
-      gap: 12px;
-      padding: 12px;
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
       background: var(--white);
       border: 1px solid var(--border-soft);
       border-radius: var(--radius-md);
+      overflow: hidden;
       transition: border-color 0.15s ease;
     }
     .fila-item:hover {
       border-color: var(--rose-soft);
     }
     .fila-item-thumb {
-      flex-shrink: 0;
-      width: 80px;
-      height: 80px;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      max-height: 360px;
       background: linear-gradient(135deg, var(--mauve), var(--rose));
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      cursor: zoom-in;
     }
     .fila-thumb-img {
       width: 100%;
@@ -4659,17 +4665,16 @@
       object-fit: cover;
     }
     .fila-thumb-placeholder {
-      font-size: 28px;
+      font-size: 56px;
       font-weight: 600;
       color: var(--white);
       letter-spacing: -0.02em;
     }
     .fila-item-body {
-      flex: 1 1 auto;
-      min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
+      padding: 14px 16px 16px;
     }
     .fila-item-meta {
       display: flex;
@@ -4757,7 +4762,7 @@
     .ajuste-screen {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
     }
 
     .ajuste-back {
@@ -4794,7 +4799,7 @@
     .ajuste-card-thumb {
       flex-shrink: 0;
       width: 60px;
-      height: 60px;
+      aspect-ratio: 9 / 16;
       border-radius: var(--radius-sm);
       overflow: hidden;
       background: linear-gradient(135deg, var(--mauve), var(--rose));
@@ -4836,7 +4841,7 @@
     .ajuste-section {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
     .ajuste-section-title {
       font-size: 13px;
@@ -4893,7 +4898,7 @@
       border: 1.5px solid var(--border-soft);
       border-radius: var(--radius-md);
       resize: vertical;
-      min-height: 110px;
+      min-height: 80px;
       transition: border-color 0.15s ease;
     }
     .ajuste-textarea:focus {
@@ -4914,7 +4919,13 @@
       display: flex;
       gap: 10px;
       justify-content: flex-end;
-      padding-top: 4px;
+      padding-top: 8px;
+      position: sticky;
+      bottom: 0;
+      background: var(--blush-light);
+      margin: 0 -4px -8px;
+      padding: 12px 4px 8px;
+      border-top: 1px solid var(--border-soft);
     }
     .ajuste-submit {
       min-width: 140px;
@@ -5228,15 +5239,26 @@
       const goingToCard = state.mode === 'viewer' && state.viewer === 'card' && state.currentCardId;
       if (!goingToCard) detachCommentsListener();
 
-      if (state.mode === 'editor')      { document.body.classList.add('editor-mode'); document.body.classList.remove('master-mode'); document.body.classList.remove('is-manage-mode'); renderEditor(); }
-      else if (state.mode === 'master') { document.body.classList.remove('editor-mode'); document.body.classList.add('master-mode'); renderMasterDashboard?.(); }
+      if (state.mode === 'editor')      { document.body.classList.add('editor-mode'); document.body.classList.remove('master-mode'); document.body.classList.remove('is-manage-mode'); document.body.classList.remove('executora-mode'); renderEditor(); }
+      else if (state.mode === 'master') { document.body.classList.remove('editor-mode'); document.body.classList.add('master-mode'); document.body.classList.remove('executora-mode'); renderMasterDashboard?.(); }
+      // S2.5* polish: case executora — sem isso o listener cai no renderHome
+      // do viewer e quebra a Jamily a cada update do Firebase. Bonus: ganha
+      // live update grátis (listener já existia, só não roteava).
+      else if (state.mode === 'executora') {
+        document.body.classList.remove('editor-mode');
+        document.body.classList.remove('master-mode');
+        document.body.classList.remove('is-manage-mode');
+        document.body.classList.add('executora-mode');
+        renderExecutoraShell();
+      }
       else if (goingToCard) {
         document.body.classList.remove('editor-mode');
         document.body.classList.remove('master-mode');
         document.body.classList.remove('is-manage-mode');
+        document.body.classList.remove('executora-mode');
         renderCardView();
       }
-      else                              { document.body.classList.remove('editor-mode'); document.body.classList.remove('master-mode'); document.body.classList.remove('is-manage-mode'); renderHome(); }
+      else                              { document.body.classList.remove('editor-mode'); document.body.classList.remove('master-mode'); document.body.classList.remove('is-manage-mode'); document.body.classList.remove('executora-mode'); renderHome(); }
       if (state.clientData && state.clientData.branding) applyBranding(state.clientData.branding);
     }
 
