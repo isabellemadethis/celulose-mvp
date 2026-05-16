@@ -4303,6 +4303,352 @@
       color: var(--mauve-text);
       line-height: 1.5;
     }
+
+    /* ============================================================ */
+    /* S2.5* C3 — Criar Card (POV Jamily)                            */
+    /* ============================================================ */
+
+    .criar-card-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .criar-card-header {
+      padding-bottom: 4px;
+    }
+    .criar-card-kicker {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 8px;
+    }
+    .criar-card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.02em;
+    }
+
+    .criar-card-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .criar-card-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mauve-text);
+      letter-spacing: 0.02em;
+    }
+
+    .criar-card-input,
+    .criar-card-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--deep);
+      background: var(--white);
+      border: 1.5px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease;
+    }
+    .criar-card-input:focus,
+    .criar-card-textarea:focus {
+      outline: none;
+      border-color: var(--mauve);
+    }
+    .criar-card-input::placeholder,
+    .criar-card-textarea::placeholder {
+      color: var(--gray-light);
+    }
+    .criar-card-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* Upload zone */
+    .criar-card-upload {
+      position: relative;
+      width: 100%;
+      min-height: 200px;
+      border: 2px dashed var(--rose-soft);
+      border-radius: var(--radius-md);
+      background: var(--blush-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .criar-card-upload:hover {
+      border-color: var(--mauve);
+      background: var(--blush);
+    }
+    .criar-card-upload.has-preview {
+      cursor: default;
+      border-style: solid;
+      border-color: var(--rose-soft);
+      background: var(--white);
+      padding: 0;
+      min-height: auto;
+    }
+    .criar-card-upload-placeholder {
+      text-align: center;
+      padding: 24px;
+    }
+    .criar-card-upload-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .criar-card-upload-cta {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--mauve);
+      margin-bottom: 4px;
+    }
+    .criar-card-upload-hint {
+      font-size: 12px;
+      color: var(--mauve-text);
+      opacity: 0.75;
+    }
+    .criar-card-preview {
+      display: block;
+      width: 100%;
+      max-height: 320px;
+      object-fit: cover;
+    }
+    .criar-card-remove {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1;
+      color: var(--deep);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .criar-card-remove:hover {
+      background: var(--red);
+      color: var(--white);
+      border-color: var(--red);
+    }
+
+    /* Chips de origem */
+    .criar-card-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .criar-card-chip {
+      flex: 1 1 auto;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray);
+      background: var(--white);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 999px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .criar-card-chip:hover:not(.active) {
+      color: var(--mauve-text);
+      background: var(--blush-light);
+    }
+    .criar-card-chip.active {
+      background: var(--blush);
+      font-weight: 600;
+    }
+
+    .criar-card-footer {
+      padding-top: 8px;
+    }
+    .criar-card-submit {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* ============================================================ */
+    /* S2.5* C3 — Fila Bulk (POV Isabelle)                          */
+    /* ============================================================ */
+
+    .fila-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      margin-bottom: 14px;
+    }
+    .fila-header.is-agora {
+      background: var(--blush);
+      border-color: var(--mauve);
+    }
+    .fila-header.is-amanha {
+      opacity: 0.85;
+    }
+    .fila-header-kicker {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+    }
+    .fila-header-janela {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mauve);
+      letter-spacing: 0.02em;
+    }
+    .fila-header.is-agora .fila-header-janela {
+      color: var(--mauve-text);
+      font-weight: 600;
+    }
+
+    .fila-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .fila-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease;
+    }
+    .fila-item:hover {
+      border-color: var(--rose-soft);
+    }
+    .fila-item-thumb {
+      flex-shrink: 0;
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--mauve), var(--rose));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fila-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .fila-thumb-placeholder {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+    .fila-item-body {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .fila-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .fila-origin-chip {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      background: var(--blush-light);
+      color: var(--mauve-text);
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+    }
+    .fila-origin-chip.is-fundador {
+      background: var(--rose-soft);
+      color: var(--deep);
+      border-color: var(--rose);
+      font-weight: 700;
+    }
+    .fila-item-time {
+      font-size: 11px;
+      color: var(--gray);
+    }
+    .fila-item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .fila-item-concept {
+      font-size: 13px;
+      color: var(--mauve-text);
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .fila-item-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .fila-btn-aprovar,
+    .fila-btn-ajuste {
+      flex: 1 1 auto;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .fila-btn-aprovar {
+      color: var(--celulose-green);
+      background: rgba(7, 211, 117, 0.08);
+      border: 1px solid var(--celulose-green);
+    }
+    .fila-btn-aprovar:hover {
+      background: var(--celulose-green);
+      color: var(--deep);
+    }
+    .fila-btn-aprovar:active {
+      transform: scale(0.97);
+    }
+    .fila-btn-ajuste {
+      color: var(--mauve);
+      background: transparent;
+      border: 1px solid var(--rose-soft);
+    }
+    .fila-btn-ajuste:hover {
+      background: var(--blush);
+      border-color: var(--mauve);
+    }
   </style>
 </head>
 <body>
@@ -5148,6 +5494,140 @@
       }).catch(e => {
         console.warn('[savePautaDoDia] erro:', e);
         showToast('Não consegui salvar a pauta. Tenta de novo.');
+      });
+    }
+
+    // ----- C3: Criar Card (Jamily) + Fila Bulk (Isabelle) -----
+
+    // Comprime imagem no front antes de salvar como base64.
+    // Max 1200px lado maior, JPEG 0.7. Resultado típico ~80-120KB → base64 ~110-160KB.
+    // Cabe folgado em 1MB de write do Realtime DB.
+    function compressImageToBase64(file, maxDim, quality) {
+      maxDim = maxDim || 1200;
+      quality = quality || 0.7;
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type || !file.type.startsWith('image/')) {
+          reject(new Error('Arquivo não é imagem'));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+              else       { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => reject(new Error('Falha ao carregar imagem'));
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ID estilo card_{ts}_{rand6} (segue convenção do schema)
+    function generateCardId() {
+      const rand = Math.random().toString(36).slice(2, 8);
+      return `card_${Date.now()}_${rand}`;
+    }
+
+    // Cria card vindo da Jamily — fluxo simplificado da delegação.
+    // Status já vai pra 'review', sem approvalByPersona (Isabelle aprova direto na Fila).
+    // Persona owner default = 'closet' (a marca). dayId = day de hoje ou o mais recente.
+    function criarCardJamily({ title, concept, origin, referenceImage }) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
+      const t = (title || '').trim();
+      const c = (concept || '').trim();
+      if (!c) { showToast('O texto da copy é obrigatório.'); return Promise.reject(); }
+
+      const dayId = inferCurrentDayId();
+      const now = Date.now();
+      const cardId = generateCardId();
+
+      const card = {
+        id: cardId,
+        sprintId: '', // legado v1.5
+        dayId: dayId || '',
+        blockId: '',  // sem bloco específico — Jamily não pensa em bloco
+        personaId: 'closet',
+        title: t || c.slice(0, 40), // se sem peça, usa início da copy como title
+        format: 'Story',
+        type: '',
+        priority: 'Média',
+        timeSlot: '',
+        objective: '',
+        framing: '',
+        concept: c,
+        captionTone: '',
+        anchorPhrase: '',
+        referenceImage: referenceImage || '',
+        checklist: [],
+        // S2.5* / v1.5.1
+        origin: origin || 'pauta',
+        postedAt: null,
+        isReference: false,
+        createdByRole: ROLES.EXECUTORA_INTERNA,
+        lastAdjustmentId: null,
+        // Status — direto pra review (sem approvalByPersona; Isabelle aprova na Fila)
+        status: 'review',
+        approvalByPersona: {},
+        sentForReviewAt: now,
+        publishedAt: null,
+        scheduledAt: null,
+        order: now, // ordem temporal por padrão
+        createdAt: now,
+        updatedAt: now
+      };
+
+      return clientRef.child('cards/' + cardId).set(card).then(() => {
+        showToast('✓ Enviado pra fila');
+      }).catch(e => {
+        console.warn('[criarCardJamily] erro:', e);
+        showToast('Não consegui salvar. Tenta de novo.');
+        throw e;
+      });
+    }
+
+    // Fila bulk = cards criados pela executora interna AINDA não aprovados.
+    // FIFO por sentForReviewAt (mais antigo = primeiro a revisar).
+    function getCardsNaFilaBulk() {
+      const cards = Object.values((state.clientData && state.clientData.cards) || {});
+      return cards
+        .filter(c =>
+          c &&
+          c.status === 'review' &&
+          c.createdByRole === ROLES.EXECUTORA_INTERNA
+        )
+        .sort((a, b) => (a.sentForReviewAt || a.createdAt || 0) - (b.sentForReviewAt || b.createdAt || 0));
+    }
+
+    // Aprovação 1-clique da Isabelle no fluxo de delegação.
+    // Pula approvalByPersona — Isabelle É a curadoria aqui.
+    // status='published' + publishedAt=now. postedAt continua null (Jamily marca depois).
+    function aprovarCardBulk(cardId) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return; }
+      const now = Date.now();
+      clientRef.child('cards/' + cardId).update({
+        status: 'published',
+        publishedAt: now,
+        updatedAt: now
+      }).then(() => {
+        showToast('✓ Aprovado · pronto pra Jamily postar');
+        // Re-render do sheet pra atualizar UI sem listener
+        if (sheetState.open && sheetState.type === 'delegacao') {
+          openDelegacaoSheet();
+        }
+      }).catch(e => {
+        console.warn('[aprovarCardBulk] erro:', e);
+        showToast('Não consegui aprovar. Tenta de novo.');
       });
     }
 
@@ -7281,8 +7761,9 @@
         });
       });
 
-      // Bind específico por tab (C2: Hub)
-      if (tab === 'hub') bindHubJamilyHandlers();
+      // Bind específico por tab
+      if (tab === 'hub')   bindHubJamilyHandlers();
+      if (tab === 'criar') bindCriarCardHandlers();
     }
 
     // Render do conteúdo central conforme aba ativa.
@@ -7293,13 +7774,7 @@
         return renderHubJamilyHTML(data.pautaHoje);
       }
       if (tab === 'criar') {
-        return `
-          <section class="executora-placeholder">
-            <div class="executora-placeholder-kicker">Novo card</div>
-            <div class="executora-placeholder-title">Em construção</div>
-            <div class="executora-placeholder-sub">Upload + copy + peça + chip origem entra na C3.</div>
-          </section>
-        `;
+        return renderCriarCardHTML();
       }
       if (tab === 'galeria') {
         return `
@@ -7320,6 +7795,200 @@
         `;
       }
       return '';
+    }
+
+    // ----- Criar Card (Jamily, C3) -----
+
+    // Estado efêmero da imagem comprimida — sobrevive entre re-renders do
+    // form (ex: digitando texto não perde a thumb selecionada). Reset ao
+    // submitar com sucesso ou ao trocar de aba.
+    let pendingImageBase64 = null;
+    let pendingOrigin = 'pauta';
+
+    function renderCriarCardHTML() {
+      const origins = CARD_ORIGINS;
+      const previewSrc = pendingImageBase64 || '';
+
+      return `
+        <section class="criar-card-form">
+          <div class="criar-card-header">
+            <div class="criar-card-kicker">Novo card</div>
+            <div class="criar-card-title">Vai pra fila da Isabelle aprovar</div>
+          </div>
+
+          <!-- Upload de mídia -->
+          <div class="criar-card-field">
+            <label class="criar-card-label">Mídia (opcional)</label>
+            <div class="criar-card-upload ${previewSrc ? 'has-preview' : ''}" id="criar-upload-zone">
+              ${previewSrc
+                ? `<img src="${previewSrc}" alt="Pré-visualização" class="criar-card-preview" />
+                   <button type="button" class="criar-card-remove" id="criar-remove-img" aria-label="Remover imagem">×</button>`
+                : `<div class="criar-card-upload-placeholder">
+                     <div class="criar-card-upload-icon">📸</div>
+                     <div class="criar-card-upload-cta">Toca pra escolher uma foto</div>
+                     <div class="criar-card-upload-hint">JPEG/PNG até ~5MB. Comprime automaticamente.</div>
+                   </div>`
+              }
+              <input type="file" id="criar-card-file" accept="image/*" style="display: none;" />
+            </div>
+          </div>
+
+          <!-- Peça (title curto) -->
+          <div class="criar-card-field">
+            <label class="criar-card-label" for="criar-card-title-input">Peça ou contexto</label>
+            <input
+              type="text"
+              id="criar-card-title-input"
+              class="criar-card-input"
+              maxlength="60"
+              placeholder="Ex: Vestido vinho longo"
+            />
+          </div>
+
+          <!-- Copy (concept) -->
+          <div class="criar-card-field">
+            <label class="criar-card-label" for="criar-card-concept-input">Copy / contexto</label>
+            <textarea
+              id="criar-card-concept-input"
+              class="criar-card-textarea"
+              maxlength="500"
+              rows="4"
+              placeholder="O que você queria dizer? Como abordar?"
+            ></textarea>
+          </div>
+
+          <!-- Chips origem -->
+          <div class="criar-card-field">
+            <label class="criar-card-label">Origem</label>
+            <div class="criar-card-chips" role="radiogroup">
+              ${origins.map(o => `
+                <button type="button"
+                  class="criar-card-chip ${pendingOrigin === o.id ? 'active' : ''}"
+                  data-origin="${o.id}"
+                  role="radio"
+                  aria-checked="${pendingOrigin === o.id}"
+                  style="${pendingOrigin === o.id ? `border-color: ${o.color}; color: ${o.color};` : ''}">
+                  ${escapeHtml(o.label)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="criar-card-footer">
+            <button type="button" class="btn-primary criar-card-submit" id="criar-card-submit">
+              Enviar pra fila
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    function bindCriarCardHandlers() {
+      const uploadZone = document.getElementById('criar-upload-zone');
+      const fileInput = document.getElementById('criar-card-file');
+      const removeBtn = document.getElementById('criar-remove-img');
+      const submitBtn = document.getElementById('criar-card-submit');
+      const titleInput = document.getElementById('criar-card-title-input');
+      const conceptInput = document.getElementById('criar-card-concept-input');
+
+      // Click na zona de upload abre file picker
+      if (uploadZone && fileInput) {
+        uploadZone.addEventListener('click', (e) => {
+          // Se clicou no remove, não abre picker
+          if (e.target.closest('#criar-remove-img')) return;
+          if (!pendingImageBase64) fileInput.click();
+        });
+      }
+
+      // Seleção de arquivo → comprime → preview
+      if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          try {
+            showToast('Comprimindo imagem…');
+            const base64 = await compressImageToBase64(file, 1200, 0.7);
+            pendingImageBase64 = base64;
+            // Re-render só desta tab
+            const main = document.querySelector('.executora-main');
+            if (main) {
+              main.innerHTML = renderCriarCardHTML();
+              bindCriarCardHandlers();
+              // Restaura valores que estavam digitados
+              const newTitle = document.getElementById('criar-card-title-input');
+              const newConcept = document.getElementById('criar-card-concept-input');
+              if (newTitle) newTitle.value = titleInput?.value || '';
+              if (newConcept) newConcept.value = conceptInput?.value || '';
+            }
+          } catch (err) {
+            console.warn('[compress] erro:', err);
+            showToast('Não consegui ler essa imagem.');
+          }
+          // Limpa file input pra permitir selecionar mesmo arquivo de novo
+          fileInput.value = '';
+        });
+      }
+
+      // Remover imagem
+      if (removeBtn) {
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          pendingImageBase64 = null;
+          const main = document.querySelector('.executora-main');
+          if (main) {
+            main.innerHTML = renderCriarCardHTML();
+            bindCriarCardHandlers();
+            const newTitle = document.getElementById('criar-card-title-input');
+            const newConcept = document.getElementById('criar-card-concept-input');
+            if (newTitle) newTitle.value = titleInput?.value || '';
+            if (newConcept) newConcept.value = conceptInput?.value || '';
+          }
+        });
+      }
+
+      // Chips de origem
+      document.querySelectorAll('[data-origin]').forEach(chip => {
+        chip.addEventListener('click', () => {
+          pendingOrigin = chip.getAttribute('data-origin');
+          // Atualiza visual sem full re-render (só toggle de classes)
+          document.querySelectorAll('[data-origin]').forEach(c => {
+            const isActive = c.getAttribute('data-origin') === pendingOrigin;
+            c.classList.toggle('active', isActive);
+            c.setAttribute('aria-checked', isActive ? 'true' : 'false');
+            const o = CARD_ORIGINS.find(x => x.id === c.getAttribute('data-origin'));
+            c.setAttribute('style', isActive ? `border-color: ${o.color}; color: ${o.color};` : '');
+          });
+        });
+      });
+
+      // Submit
+      if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+          const title = titleInput?.value || '';
+          const concept = conceptInput?.value || '';
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Enviando…';
+          try {
+            await criarCardJamily({
+              title,
+              concept,
+              origin: pendingOrigin,
+              referenceImage: pendingImageBase64 || ''
+            });
+            // Reset
+            pendingImageBase64 = null;
+            pendingOrigin = 'pauta';
+            // Volta pro Hub (mostra que entrou na fila)
+            state.executoraTab = 'hub';
+            renderExecutoraShell();
+          } catch (e) {
+            // Erro já mostrou toast em criarCardJamily
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Enviar pra fila';
+          }
+        });
+      }
     }
 
     // ----- Hub Jamily (C2) -----
@@ -7487,6 +8156,7 @@
 
       // Bind específico por tab
       if (tab === 'pauta' && hasExecutora) bindPautaPanelHandlers();
+      if (tab === 'fila'  && hasExecutora) bindFilaBulkHandlers();
     }
 
     // Render do conteúdo de cada tab. C2 plugou 'pauta' e 'historico'.
@@ -7497,18 +8167,108 @@
         return renderPautaPanelHTML(data.pautaHoje);
       }
       if (tab === 'fila') {
-        return `
-          <div class="delegacao-stub">
-            <div class="delegacao-stub-kicker">Fila bulk</div>
-            <div class="delegacao-stub-title">Em construção</div>
-            <div class="delegacao-stub-sub">Header da janela + thumbs com gradientes Closet + tag "Pedido fundador" entram na C3.</div>
-          </div>
-        `;
+        return renderFilaBulkHTML();
       }
       if (tab === 'historico') {
         return renderPautaHistoricoHTML(data.historico);
       }
       return '';
+    }
+
+    // ----- Fila Bulk (Isabelle, C3) -----
+
+    function renderFilaBulkHTML() {
+      const proxima = getProximaJanela();
+      const cards = getCardsNaFilaBulk();
+      const proxClass = proxima.isAgora ? 'is-agora' : (proxima.isAmanha ? 'is-amanha' : '');
+
+      const header = `
+        <div class="fila-header ${proxClass}">
+          <div class="fila-header-kicker">${cards.length} ${cards.length === 1 ? 'card' : 'cards'} aguardando</div>
+          <div class="fila-header-janela">${escapeHtml(formatProximaJanela(proxima))}</div>
+        </div>
+      `;
+
+      if (cards.length === 0) {
+        return `
+          ${header}
+          <div class="delegacao-empty" style="margin-top: 16px;">
+            <div class="delegacao-empty-title">Nada pra aprovar agora</div>
+            <div class="delegacao-empty-sub">A Jamily ainda não enviou cards nessa rodada. Que bom — bom tempo pra escrever a pauta de amanhã.</div>
+          </div>
+        `;
+      }
+
+      return `
+        ${header}
+        <div class="fila-list">
+          ${cards.map(c => renderFilaItemHTML(c)).join('')}
+        </div>
+      `;
+    }
+
+    function renderFilaItemHTML(card) {
+      const personaName = state.clientData?.personas?.[card.personaId]?.name || card.personaId || '';
+      const ageMs = card.sentForReviewAt || card.createdAt || Date.now();
+      const ageLabel = formatTimeAgo(ageMs);
+
+      // Thumb: imagem se tem, senão gradient mauve→rose com initial
+      const thumbHtml = card.referenceImage
+        ? `<img class="fila-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
+        : `<div class="fila-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
+
+      // Tag "Pedido fundador" destacada
+      const originObj = CARD_ORIGINS.find(o => o.id === card.origin);
+      const originLabel = originObj ? originObj.label : 'Pauta';
+      const isFundador = card.origin === 'pedido_fundador';
+      const originChip = isFundador
+        ? `<span class="fila-origin-chip is-fundador">⚡ ${escapeHtml(originLabel)}</span>`
+        : `<span class="fila-origin-chip">${escapeHtml(originLabel)}</span>`;
+
+      const conceptPreview = (card.concept || '').length > 120
+        ? (card.concept || '').slice(0, 120) + '…'
+        : (card.concept || '');
+
+      return `
+        <div class="fila-item">
+          <div class="fila-item-thumb">${thumbHtml}</div>
+          <div class="fila-item-body">
+            <div class="fila-item-meta">
+              ${originChip}
+              <span class="fila-item-time">há ${escapeHtml(ageLabel.replace('há ', ''))}</span>
+            </div>
+            <div class="fila-item-title">${escapeHtml(card.title || '(sem título)')}</div>
+            ${conceptPreview ? `<div class="fila-item-concept">${escapeHtml(conceptPreview)}</div>` : ''}
+            <div class="fila-item-actions">
+              <button type="button" class="fila-btn-ajuste" data-deleg-ajuste="${escapeHtml(card.id)}">Pedir ajuste</button>
+              <button type="button" class="fila-btn-aprovar" data-deleg-aprovar="${escapeHtml(card.id)}">✓ Aprovar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindFilaBulkHandlers() {
+      document.querySelectorAll('[data-deleg-aprovar]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cardId = btn.getAttribute('data-deleg-aprovar');
+          aprovarCardBulk(cardId);
+        });
+      });
+      document.querySelectorAll('[data-deleg-ajuste]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cardId = btn.getAttribute('data-deleg-ajuste');
+          openPedirAjusteSheet(cardId);
+        });
+      });
+    }
+
+    // Stub do C4 — sub-fluxo de pedir ajuste com tags multi-select.
+    // Substituído na C4 pela implementação real.
+    function openPedirAjusteSheet(cardId) {
+      showToast('Pedir ajuste · vai entrar na C4');
     }
 
     // ----- Painel Pauta (C2) -----
