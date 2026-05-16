@@ -4000,6 +4000,309 @@
       border-radius: 6px;
       color: var(--mauve-text);
     }
+
+    /* ============================================================ */
+    /* S2.5* C2 — Pauta do dia (POV Isabelle) + Histórico           */
+    /* ============================================================ */
+
+    .pauta-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .pauta-panel-header {
+      padding-bottom: 4px;
+    }
+    .pauta-panel-kicker {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 8px;
+    }
+    .pauta-panel-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.02em;
+    }
+    .pauta-panel-meta {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--gray);
+    }
+    .pauta-panel-body {
+      position: relative;
+    }
+    .pauta-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px 16px;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--deep);
+      background: var(--blush-light);
+      border: 1.5px solid var(--rose-soft);
+      border-radius: var(--radius-md);
+      resize: vertical;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .pauta-textarea:focus {
+      outline: none;
+      border-color: var(--mauve);
+      background: var(--white);
+    }
+    .pauta-textarea::placeholder {
+      color: var(--gray-light);
+    }
+    .pauta-counter {
+      position: absolute;
+      right: 12px;
+      bottom: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray);
+      pointer-events: none;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .pauta-panel-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding-top: 4px;
+    }
+
+    .pauta-historico {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pauta-historico-item {
+      padding: 14px 16px;
+      background: var(--blush-light);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      transition: opacity 0.2s ease;
+      opacity: 0.55;
+    }
+    .pauta-historico-item.is-today {
+      opacity: 1;
+      background: var(--blush);
+      border-color: var(--mauve);
+    }
+    .pauta-historico-date {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mauve-text);
+      margin-bottom: 6px;
+    }
+    .pauta-historico-item.is-today .pauta-historico-date {
+      color: var(--mauve);
+    }
+    .pauta-historico-text {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--deep);
+    }
+
+    /* ============================================================ */
+    /* S2.5* C2 — Hub Jamily (POV executora)                        */
+    /* ============================================================ */
+
+    .hub-jamily {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .hub-card {
+      padding: 18px 18px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+    }
+    .hub-card-kicker {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Card pauta — destaque mauve */
+    .hub-card-pauta {
+      background: var(--mauve);
+      color: var(--blush-light);
+    }
+    .hub-card-pauta .hub-card-kicker {
+      color: var(--rose-soft);
+    }
+    .hub-card-pauta-text {
+      font-size: 16px;
+      line-height: 1.55;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    .hub-card-pauta.is-empty {
+      background: var(--white);
+      border: 1px dashed var(--rose-soft);
+      color: var(--mauve-text);
+    }
+    .hub-card-pauta.is-empty .hub-card-kicker {
+      color: var(--mauve);
+    }
+    .hub-card-pauta-empty {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--mauve-text);
+    }
+
+    /* Card próxima janela — neutro com destaque verde quando "agora" */
+    .hub-card-janela {
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+    }
+    .hub-card-janela .hub-card-kicker {
+      color: var(--mauve);
+    }
+    .hub-card-janela-text {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+    }
+    .hub-card-janela.is-agora {
+      background: var(--blush);
+      border-color: var(--mauve);
+    }
+    .hub-card-janela.is-agora .hub-card-janela-text {
+      color: var(--mauve-text);
+      font-weight: 600;
+    }
+    .hub-card-janela.is-amanha {
+      opacity: 0.85;
+    }
+
+    /* Stats compactos */
+    .hub-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 4px 0;
+    }
+    .hub-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 14px 8px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+    }
+    .hub-stat-num {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--mauve);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .hub-stat-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--mauve-text);
+      letter-spacing: 0.04em;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* Bloco aprovados pra postar */
+    .hub-section {
+      margin-top: 8px;
+    }
+    .hub-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .hub-aprovados {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .hub-aprovado-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease;
+    }
+    .hub-aprovado-item:hover {
+      border-color: var(--rose-soft);
+    }
+    .hub-aprovado-info {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .hub-aprovado-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+      line-height: 1.35;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+    .hub-aprovado-meta {
+      display: flex;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.02em;
+    }
+    .hub-postei-btn {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--blush);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      transition: all 0.15s ease;
+    }
+    .hub-postei-btn:hover {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+    .hub-postei-btn:active {
+      transform: scale(0.96);
+    }
+
+    .hub-empty {
+      padding: 24px 18px;
+      background: var(--blush-light);
+      border: 1px dashed var(--rose-soft);
+      border-radius: var(--radius-md);
+      text-align: center;
+      font-size: 13px;
+      color: var(--mauve-text);
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -4705,6 +5008,147 @@
       } catch (e) {
         return {};
       }
+    }
+
+    // ----- Helpers de tempo / janelas (C2) -----
+
+    // Chave de pauta = data ISO do hoje no fuso local (não UTC — pauta é
+    // definida em horário Brasil, não UTC).
+    function getPautaTodayKey() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    // "há 5 min" / "há 2h" / "há 3d" — pra "última atualização" da pauta
+    function formatTimeAgo(ms) {
+      if (!ms) return '';
+      const diff = Date.now() - ms;
+      if (diff < 60000) return 'agora mesmo';
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `há ${mins} min`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `há ${hours}h`;
+      const days = Math.floor(hours / 24);
+      return `há ${days}d`;
+    }
+
+    // Próxima janela de aprovação considerando agora.
+    // Retorna { hora, deltaMinutes, isAgora, isAmanha }.
+    // isAgora = janela está ativa (-10min a +30min do horário marcado).
+    function getProximaJanela() {
+      const janelas = (Array.isArray(janelasAprovacao) && janelasAprovacao.length)
+        ? janelasAprovacao : JANELAS_FALLBACK;
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+
+      // Procura janela ativa (-10/+30 min) primeiro
+      for (const h of janelas) {
+        const [hh, mm] = h.split(':').map(Number);
+        const jMin = hh * 60 + mm;
+        const delta = nowMin - jMin;
+        if (delta >= -10 && delta <= 30) {
+          return { hora: h, deltaMinutes: 0, isAgora: true, isAmanha: false };
+        }
+      }
+      // Próxima futura no dia de hoje
+      for (const h of janelas) {
+        const [hh, mm] = h.split(':').map(Number);
+        const jMin = hh * 60 + mm;
+        if (jMin > nowMin) {
+          return { hora: h, deltaMinutes: jMin - nowMin, isAgora: false, isAmanha: false };
+        }
+      }
+      // Passou todas → primeira de amanhã
+      const primeira = janelas[0];
+      const [hh, mm] = primeira.split(':').map(Number);
+      const minutosAteAmanha = (24 * 60 - nowMin) + (hh * 60 + mm);
+      return { hora: primeira, deltaMinutes: minutosAteAmanha, isAgora: false, isAmanha: true };
+    }
+
+    // Formata "Próxima às 14h · daqui 1h47" / "Janela aberta · 14h" / "Próxima amanhã às 11h"
+    function formatProximaJanela(j) {
+      const horaSh = j.hora.replace(':00', 'h').replace(':', 'h');
+      if (j.isAgora) return `Janela aberta agora · ${horaSh}`;
+      if (j.isAmanha) return `Próxima amanhã às ${horaSh}`;
+      const h = Math.floor(j.deltaMinutes / 60);
+      const m = j.deltaMinutes % 60;
+      const delta = h > 0 ? `${h}h${String(m).padStart(2,'0')}` : `${m} min`;
+      return `Próxima às ${horaSh} · daqui ${delta}`;
+    }
+
+    // ----- Cards de delegação (C2) -----
+
+    function getCardsAprovadosPraPostar() {
+      const cards = Object.values((state.clientData && state.clientData.cards) || {});
+      return cards
+        .filter(c => c && getCardEffectiveStatus(c) === 'approved' && !c.postedAt)
+        .sort((a, b) => (a.sentForReviewAt || a.updatedAt || 0) - (b.sentForReviewAt || b.updatedAt || 0));
+    }
+
+    function getHubStats() {
+      const cards = Object.values((state.clientData && state.clientData.cards) || {});
+      const todayKey = getPautaTodayKey();
+      const aprovados = cards.filter(c => c && getCardEffectiveStatus(c) === 'approved' && !c.postedAt).length;
+      const naFila = cards.filter(c => c && c.status === 'review' && getCardEffectiveStatus(c) !== 'approved').length;
+      const postadosHoje = cards.filter(c => {
+        if (!c || !c.postedAt) return false;
+        const d = new Date(c.postedAt);
+        const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return k === todayKey;
+      }).length;
+      return { aprovados, naFila, postadosHoje };
+    }
+
+    // Marca card como postado. 1 clique direto (memória: ação reversível, não destrutiva).
+    function markCardPosted(cardId) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return; }
+      const now = Date.now();
+      clientRef.child('cards/' + cardId).update({
+        postedAt: now,
+        updatedAt: now
+      }).then(() => {
+        showToast('✓ Marcado como postado');
+        // Sem listener tempo real ainda (Fase 3) — força refetch do clientData
+        // pra UI atualizar o Hub. attachClientListener já está ativo, mas
+        // pra garantir que o Hub re-renderize na hora:
+        setTimeout(() => {
+          if (state.mode === 'executora' && state.executoraTab === 'hub') {
+            renderExecutoraShell();
+          }
+        }, 200);
+      }).catch(e => {
+        console.warn('[markCardPosted] erro:', e);
+        showToast('Não consegui salvar. Tenta de novo.');
+      });
+    }
+
+    // ----- Pauta do dia: salvar (C2) -----
+
+    function savePautaDoDia(texto) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
+      const t = (texto || '').trim();
+      if (!t) { showToast('Pauta vazia. Escreve algo antes de salvar.'); return Promise.reject(); }
+      const todayKey = getPautaTodayKey();
+      const now = Date.now();
+      return clientRef.child('pautas/' + todayKey).set({
+        texto: t,
+        updatedAt: now,
+        updatedBy: 'isabelle'
+      }).then(() => {
+        showToast('✓ Pauta de hoje salva');
+        // Re-render do sheet pra atualizar UI (refetch via state.clientData
+        // pode demorar — listener de cliente cobre, mas trazemos imediato
+        // chamando openDelegacaoSheet de novo)
+        if (sheetState.open && sheetState.type === 'delegacao') {
+          openDelegacaoSheet();
+        }
+      }).catch(e => {
+        console.warn('[savePautaDoDia] erro:', e);
+        showToast('Não consegui salvar a pauta. Tenta de novo.');
+      });
     }
 
     // ============================================================
@@ -6773,15 +7217,27 @@
       `;
     }
 
-    // Shell principal POV executora — header fixo + área central (vai virar
-    // tela ativa conforme state.executoraTab) + bottom nav 4 abas.
-    // C1: tudo placeholder. Próximas C2-C5 plugam telas reais.
-    function renderExecutoraShell() {
+    // Shell principal POV executora — header fixo + área central + bottom nav.
+    // C2 plugou Hub real; C3 plugará Criar; C5 plugará Galeria + Histórico.
+    // É async pq Hub precisa carregar pauta de hoje (resto vem de state.clientData).
+    async function renderExecutoraShell() {
       const app = document.getElementById('app');
       app.classList.remove('editor-view');
       const exec = state.currentExecutora || {};
       const clientName = state.clientData?.meta?.name || '';
+      const slug = state.clientSlug || '';
       const tab = state.executoraTab || 'hub';
+
+      // Pré-carregar pauta de hoje só quando vai pro Hub
+      let pautaHoje = null;
+      if (tab === 'hub') {
+        try {
+          pautaHoje = await loadPautaDoDia(slug);
+        } catch (e) {
+          console.warn('[executora] load pauta falhou:', e);
+        }
+      }
+
       app.innerHTML = `
         <div class="executora-shell">
           <header class="executora-header">
@@ -6793,7 +7249,7 @@
           </header>
 
           <main class="executora-main">
-            ${renderExecutoraTabContent(tab)}
+            ${renderExecutoraTabContent(tab, { pautaHoje })}
           </main>
 
           <nav class="executora-bottom-nav" role="tablist">
@@ -6813,7 +7269,7 @@
         </div>
       `;
 
-      // Handlers
+      // Handlers globais do shell
       document.getElementById('executora-logout-btn')?.addEventListener('click', () => {
         clearAuthLocal();
         window.location.search = '';
@@ -6824,19 +7280,17 @@
           renderExecutoraShell();
         });
       });
+
+      // Bind específico por tab (C2: Hub)
+      if (tab === 'hub') bindHubJamilyHandlers();
     }
 
-    // Render do conteúdo central conforme aba ativa. C1 = placeholders,
-    // C2-C5 substituem cada caso por tela real.
-    function renderExecutoraTabContent(tab) {
+    // Render do conteúdo central conforme aba ativa.
+    // C2 plugou 'hub'. C3 substituirá 'criar', C5 substituirá 'galeria' + 'historico'.
+    function renderExecutoraTabContent(tab, data) {
+      data = data || {};
       if (tab === 'hub') {
-        return `
-          <section class="executora-placeholder">
-            <div class="executora-placeholder-kicker">Hub do dia</div>
-            <div class="executora-placeholder-title">Em construção</div>
-            <div class="executora-placeholder-sub">Pauta + próxima janela + aprovados prontos pra postar entram aqui na C2.</div>
-          </section>
-        `;
+        return renderHubJamilyHTML(data.pautaHoje);
       }
       if (tab === 'criar') {
         return `
@@ -6868,6 +7322,106 @@
       return '';
     }
 
+    // ----- Hub Jamily (C2) -----
+
+    function renderHubJamilyHTML(pautaHoje) {
+      const proxima = getProximaJanela();
+      const stats = getHubStats();
+      const aprovados = getCardsAprovadosPraPostar();
+      const todayKey = getPautaTodayKey();
+      const todayLabel = formatDateShort(todayKey);
+
+      // Card pauta
+      const pautaCard = pautaHoje && pautaHoje.texto
+        ? `
+          <div class="hub-card hub-card-pauta">
+            <div class="hub-card-kicker">Pauta de hoje · ${escapeHtml(todayLabel)}</div>
+            <div class="hub-card-pauta-text">${escapeHtml(pautaHoje.texto)}</div>
+          </div>`
+        : `
+          <div class="hub-card hub-card-pauta is-empty">
+            <div class="hub-card-kicker">Pauta de hoje · ${escapeHtml(todayLabel)}</div>
+            <div class="hub-card-pauta-empty">A Isabelle ainda não escreveu a pauta de hoje. Aproveita pra organizar referências.</div>
+          </div>`;
+
+      // Card próxima janela
+      const proximaClass = proxima.isAgora ? 'is-agora' : (proxima.isAmanha ? 'is-amanha' : '');
+      const janelaCard = `
+        <div class="hub-card hub-card-janela ${proximaClass}">
+          <div class="hub-card-kicker">Próxima janela da Isabelle</div>
+          <div class="hub-card-janela-text">${escapeHtml(formatProximaJanela(proxima))}</div>
+        </div>`;
+
+      // Stats compactos
+      const statsBlock = `
+        <div class="hub-stats">
+          <div class="hub-stat">
+            <span class="hub-stat-num">${stats.aprovados}</span>
+            <span class="hub-stat-label">prontos pra postar</span>
+          </div>
+          <div class="hub-stat">
+            <span class="hub-stat-num">${stats.naFila}</span>
+            <span class="hub-stat-label">na fila</span>
+          </div>
+          <div class="hub-stat">
+            <span class="hub-stat-num">${stats.postadosHoje}</span>
+            <span class="hub-stat-label">postados hoje</span>
+          </div>
+        </div>`;
+
+      // Bloco aprovados
+      const aprovadosBlock = aprovados.length === 0
+        ? `
+          <div class="hub-section">
+            <div class="hub-section-title">Aprovados prontos pra postar</div>
+            <div class="hub-empty">Nada na fila pra postar. Bom momento pra criar conteúdo novo (aba Criar).</div>
+          </div>`
+        : `
+          <div class="hub-section">
+            <div class="hub-section-title">Aprovados prontos pra postar (${aprovados.length})</div>
+            <div class="hub-aprovados">
+              ${aprovados.map(c => {
+                const title = c.title || c.concept || c.objective || '(sem título)';
+                const ownerId = c.personaId || '';
+                const persona = state.clientData?.personas?.[ownerId];
+                const personaName = persona?.name || ownerId || '';
+                const formatLabel = c.format || '';
+                return `
+                  <div class="hub-aprovado-item">
+                    <div class="hub-aprovado-info">
+                      <div class="hub-aprovado-title">${escapeHtml(title)}</div>
+                      <div class="hub-aprovado-meta">
+                        ${formatLabel ? `<span>${escapeHtml(formatLabel)}</span>` : ''}
+                        ${personaName ? `<span>· ${escapeHtml(personaName)}</span>` : ''}
+                      </div>
+                    </div>
+                    <button type="button" class="hub-postei-btn" data-postei-card="${escapeHtml(c.id)}">✓ Postei</button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>`;
+
+      return `
+        <section class="hub-jamily">
+          ${pautaCard}
+          ${janelaCard}
+          ${statsBlock}
+          ${aprovadosBlock}
+        </section>
+      `;
+    }
+
+    function bindHubJamilyHandlers() {
+      document.querySelectorAll('[data-postei-card]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cardId = btn.getAttribute('data-postei-card');
+          markCardPosted(cardId);
+        });
+      });
+    }
+
     // ============================================================
     // S2.5* DELEGAÇÃO CLOSET — sheet POV Isabelle (C1 stub, C2-C4 plugam telas)
     // ============================================================
@@ -6877,11 +7431,26 @@
     // novo → volta em Pauta).
     let delegacaoSheetTab = 'pauta';
 
-    function openDelegacaoSheet() {
+    async function openDelegacaoSheet() {
       const slug = state.clientSlug || '';
       const internas = state.clientPersonasInternas || {};
       const hasExecutora = Object.keys(internas).length > 0;
       const tab = delegacaoSheetTab;
+
+      // C2: pré-carrega pauta de hoje + histórico (async) antes do render.
+      // Cards já estão em state.clientData (listener) — não precisa await.
+      let pautaHoje = null;
+      let historico = {};
+      if (hasExecutora && (tab === 'pauta' || tab === 'historico')) {
+        try {
+          [pautaHoje, historico] = await Promise.all([
+            loadPautaDoDia(slug),
+            loadPautaUltimas3(slug)
+          ]);
+        } catch (e) {
+          console.warn('[delegacao] load pauta falhou:', e);
+        }
+      }
 
       const content = `
         <div class="sheet-header">
@@ -6896,7 +7465,7 @@
         </div>
 
         <div class="delegacao-body">
-          ${hasExecutora ? renderDelegacaoTabContent(tab) : `
+          ${hasExecutora ? renderDelegacaoTabContent(tab, { pautaHoje, historico }) : `
             <div class="delegacao-empty">
               <div class="delegacao-empty-title">Sem executora cadastrada</div>
               <div class="delegacao-empty-sub">Este cliente ainda não tem nenhuma persona em <code>personasInternas</code>. Cadastre uma no Realtime DB pra ativar a delegação.</div>
@@ -6907,7 +7476,7 @@
 
       openSheet('delegacao', content);
 
-      // Bind das tabs DEPOIS do openSheet (sheet acabou de injetar HTML)
+      // Bind das tabs
       document.querySelectorAll('[data-deleg-tab]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -6915,19 +7484,17 @@
           openDelegacaoSheet(); // re-render
         });
       });
+
+      // Bind específico por tab
+      if (tab === 'pauta' && hasExecutora) bindPautaPanelHandlers();
     }
 
-    // Render do conteúdo de cada tab. C1 = stubs. C2 substitui 'pauta',
-    // C3 substitui 'fila', C5 substitui 'historico'.
-    function renderDelegacaoTabContent(tab) {
+    // Render do conteúdo de cada tab. C2 plugou 'pauta' e 'historico'.
+    // C3 substitui 'fila', C4 não muda (sub-fluxo dentro da fila).
+    function renderDelegacaoTabContent(tab, data) {
+      data = data || {};
       if (tab === 'pauta') {
-        return `
-          <div class="delegacao-stub">
-            <div class="delegacao-stub-kicker">Pauta do dia</div>
-            <div class="delegacao-stub-title">Em construção</div>
-            <div class="delegacao-stub-sub">Campo único + histórico das últimas 3 entram aqui na C2. Escreve em <code>pautas/{YYYY-MM-DD}</code>.</div>
-          </div>
-        `;
+        return renderPautaPanelHTML(data.pautaHoje);
       }
       if (tab === 'fila') {
         return `
@@ -6939,15 +7506,106 @@
         `;
       }
       if (tab === 'historico') {
+        return renderPautaHistoricoHTML(data.historico);
+      }
+      return '';
+    }
+
+    // ----- Painel Pauta (C2) -----
+
+    function renderPautaPanelHTML(pautaHoje) {
+      const todayKey = getPautaTodayKey();
+      const todayLabel = formatDateShort(todayKey);
+      const texto = (pautaHoje && pautaHoje.texto) || '';
+      const isUpdate = !!pautaHoje;
+      const lastUpdated = pautaHoje?.updatedAt
+        ? `Última atualização: ${formatTimeAgo(pautaHoje.updatedAt)}`
+        : '';
+
+      return `
+        <div class="pauta-panel">
+          <div class="pauta-panel-header">
+            <div class="pauta-panel-kicker">Hoje · ${escapeHtml(todayLabel)}</div>
+            <div class="pauta-panel-title">${isUpdate ? 'Editar pauta de hoje' : 'Escrever pauta de hoje'}</div>
+            ${lastUpdated ? `<div class="pauta-panel-meta">${escapeHtml(lastUpdated)}</div>` : ''}
+          </div>
+
+          <div class="pauta-panel-body">
+            <textarea
+              id="pauta-textarea"
+              class="pauta-textarea"
+              maxlength="280"
+              rows="4"
+              placeholder="Ex: Hoje é dia de mostrar a coleção nova. Foco na cintura alta com a blusa branca. Stories devem trazer detalhe do tecido."
+            >${escapeHtml(texto)}</textarea>
+            <div class="pauta-counter">
+              <span id="pauta-counter-value">${texto.length}</span>/280
+            </div>
+          </div>
+
+          <div class="pauta-panel-footer">
+            <button type="button" class="btn-secondary" id="pauta-cancel-btn">Cancelar</button>
+            <button type="button" class="btn-primary" id="pauta-save-btn">${isUpdate ? 'Atualizar pauta' : 'Salvar pauta'}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindPautaPanelHandlers() {
+      const textarea = document.getElementById('pauta-textarea');
+      const counter = document.getElementById('pauta-counter-value');
+      const saveBtn = document.getElementById('pauta-save-btn');
+      const cancelBtn = document.getElementById('pauta-cancel-btn');
+
+      if (textarea && counter) {
+        textarea.addEventListener('input', () => {
+          counter.textContent = String(textarea.value.length);
+        });
+        // Auto-focus pra Isabelle digitar imediato
+        setTimeout(() => textarea.focus(), 80);
+      }
+      if (saveBtn && textarea) {
+        saveBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          savePautaDoDia(textarea.value);
+        });
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeSheet();
+        });
+      }
+    }
+
+    function renderPautaHistoricoHTML(historicoObj) {
+      const entries = Object.entries(historicoObj || {})
+        .sort((a, b) => b[0].localeCompare(a[0])); // mais recente primeiro
+      if (entries.length === 0) {
         return `
-          <div class="delegacao-stub">
-            <div class="delegacao-stub-kicker">Histórico de pautas</div>
-            <div class="delegacao-stub-title">Em construção</div>
-            <div class="delegacao-stub-sub">Lista read-only com pautas anteriores entra na C5.</div>
+          <div class="delegacao-empty">
+            <div class="delegacao-empty-title">Nenhuma pauta ainda</div>
+            <div class="delegacao-empty-sub">Quando você escrever uma pauta na aba "Pauta do dia", ela aparece aqui.</div>
           </div>
         `;
       }
-      return '';
+      const todayKey = getPautaTodayKey();
+      return `
+        <div class="pauta-historico">
+          ${entries.map(([dateKey, p]) => {
+            const isToday = dateKey === todayKey;
+            const dayLabel = formatDateShort(dateKey);
+            const txt = (p && p.texto) || '';
+            const preview = txt.length > 100 ? txt.slice(0, 100) + '…' : txt;
+            return `
+              <div class="pauta-historico-item ${isToday ? 'is-today' : ''}">
+                <div class="pauta-historico-date">${escapeHtml(dayLabel)}${isToday ? ' · hoje' : ''}</div>
+                <div class="pauta-historico-text">${escapeHtml(preview)}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
     // ============================================================
