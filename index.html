@@ -4629,35 +4629,54 @@
     .fila-list {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
-    /* Polish: card vertical com imagem grande no topo (Stories shape 9:16).
-       Antes era flex row com thumb 80x80 — Isabelle não conseguia ver foto.
-       Click no thumb expande em modal (fila-thumb-clickable). */
+    /* Layout compacto (igual cards do home dos fundadores).
+       Click no thumb abre modal full-screen pra ver imagem grande. */
     .fila-item {
       display: flex;
-      flex-direction: column;
-      gap: 0;
-      padding: 0;
+      gap: 12px;
+      padding: 12px;
       background: var(--white);
       border: 1px solid var(--border-soft);
       border-radius: var(--radius-md);
-      overflow: hidden;
       transition: border-color 0.15s ease;
     }
     .fila-item:hover {
       border-color: var(--rose-soft);
     }
     .fila-item-thumb {
-      width: 100%;
+      flex-shrink: 0;
+      width: 80px;
       aspect-ratio: 9 / 16;
-      max-height: 360px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
       background: linear-gradient(135deg, var(--mauve), var(--rose));
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
       cursor: zoom-in;
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+    .fila-item-thumb:hover {
+      transform: scale(1.03);
+    }
+    .fila-item-thumb::after {
+      content: '⊕';
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--white);
+      background: rgba(0, 0, 0, 0.55);
+      border-radius: 999px;
+      pointer-events: none;
     }
     .fila-thumb-img {
       width: 100%;
@@ -4665,16 +4684,54 @@
       object-fit: cover;
     }
     .fila-thumb-placeholder {
-      font-size: 56px;
+      font-size: 28px;
       font-weight: 600;
       color: var(--white);
       letter-spacing: -0.02em;
     }
     .fila-item-body {
+      flex: 1 1 auto;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 14px 16px 16px;
+      gap: 6px;
+    }
+
+    /* Modal de imagem expandida — overlay escuro full-screen */
+    .img-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      cursor: zoom-out;
+      animation: fadeIn 0.2s ease;
+    }
+    .img-modal-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    .img-modal-close {
+      position: absolute;
+      top: calc(var(--safe-top) + 12px);
+      right: 12px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--white);
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
     }
     .fila-item-meta {
       display: flex;
@@ -4806,6 +4863,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: zoom-in;
+      transition: transform 0.15s ease;
+    }
+    .ajuste-card-thumb:hover {
+      transform: scale(1.05);
     }
     .ajuste-thumb-img {
       width: 100%;
@@ -4920,12 +4982,6 @@
       gap: 10px;
       justify-content: flex-end;
       padding-top: 8px;
-      position: sticky;
-      bottom: 0;
-      background: var(--blush-light);
-      margin: 0 -4px -8px;
-      padding: 12px 4px 8px;
-      border-top: 1px solid var(--border-soft);
     }
     .ajuste-submit {
       min-width: 140px;
@@ -8642,10 +8698,12 @@
       const ageMs = card.sentForReviewAt || card.createdAt || Date.now();
       const ageLabel = formatTimeAgo(ageMs);
 
-      // Thumb: imagem se tem, senão gradient mauve→rose com initial
+      // Thumb: imagem se tem, senão gradient mauve→rose com initial.
+      // data-img-expand sinaliza pra abrir em modal full-screen ao clicar.
       const thumbHtml = card.referenceImage
         ? `<img class="fila-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
         : `<div class="fila-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
+      const thumbAttr = card.referenceImage ? `data-img-expand="${escapeHtml(card.referenceImage)}"` : '';
 
       // Tag "Pedido fundador" destacada
       const originObj = CARD_ORIGINS.find(o => o.id === card.origin);
@@ -8661,7 +8719,7 @@
 
       return `
         <div class="fila-item">
-          <div class="fila-item-thumb">${thumbHtml}</div>
+          <div class="fila-item-thumb" ${thumbAttr}>${thumbHtml}</div>
           <div class="fila-item-body">
             <div class="fila-item-meta">
               ${originChip}
@@ -8698,6 +8756,34 @@
           openPedirAjusteSheet(cardId);
         });
       });
+      // Polish: click no thumb expande imagem em modal full-screen
+      document.querySelectorAll('[data-img-expand]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const src = el.getAttribute('data-img-expand');
+          if (src) openImageModal(src);
+        });
+      });
+    }
+
+    // ----- Modal de imagem expandida (Polish C5) -----
+    // Overlay full-screen com a imagem em tamanho real. Click em qualquer
+    // lugar fecha. Suporta tecla Esc também.
+    function openImageModal(src) {
+      const overlay = document.createElement('div');
+      overlay.className = 'img-modal-overlay';
+      overlay.innerHTML = `
+        <img class="img-modal-img" src="${escapeHtml(src)}" alt="" />
+        <button type="button" class="img-modal-close" aria-label="Fechar">×</button>
+      `;
+      document.body.appendChild(overlay);
+      const close = () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        document.removeEventListener('keydown', escHandler);
+      };
+      const escHandler = (e) => { if (e.key === 'Escape') close(); };
+      overlay.addEventListener('click', close);
+      document.addEventListener('keydown', escHandler);
     }
 
     // C4: ativa "modo ajuste" da aba Fila (mesma sheet, conteúdo substitui).
@@ -8732,6 +8818,7 @@
       const thumbHtml = card.referenceImage
         ? `<img class="ajuste-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
         : `<div class="ajuste-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
+      const ajThumbAttr = card.referenceImage ? `data-img-expand="${escapeHtml(card.referenceImage)}"` : '';
 
       const selectedTags = pedirAjusteState.tags || [];
       const commentVal = pedirAjusteState.comment || '';
@@ -8744,7 +8831,7 @@
           </button>
 
           <div class="ajuste-card-summary">
-            <div class="ajuste-card-thumb">${thumbHtml}</div>
+            <div class="ajuste-card-thumb" ${ajThumbAttr}>${thumbHtml}</div>
             <div class="ajuste-card-info">
               <div class="ajuste-card-title">${escapeHtml(card.title || '(sem título)')}</div>
               ${personaName ? `<div class="ajuste-card-meta">por ${escapeHtml(personaName)}</div>` : ''}
@@ -8792,6 +8879,14 @@
     }
 
     function bindPedirAjusteHandlers() {
+      // Click no thumb do resumo expande imagem em modal
+      document.querySelectorAll('[data-img-expand]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const src = el.getAttribute('data-img-expand');
+          if (src) openImageModal(src);
+        });
+      });
       const backBtn = document.getElementById('ajuste-back-btn');
       const cancelBtn = document.getElementById('ajuste-cancel-btn');
       const submitBtn = document.getElementById('ajuste-submit-btn');
