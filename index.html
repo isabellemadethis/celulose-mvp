@@ -4649,6 +4649,176 @@
       background: var(--blush);
       border-color: var(--mauve);
     }
+
+    /* ============================================================ */
+    /* S2.5* C4 — Pedir Ajuste (POV Isabelle, subtela da Fila)      */
+    /* ============================================================ */
+
+    .ajuste-screen {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .ajuste-back {
+      align-self: flex-start;
+      padding: 6px 10px 6px 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mauve);
+      background: transparent;
+      border-radius: 8px;
+      transition: background 0.15s ease;
+    }
+    .ajuste-back:hover {
+      background: var(--blush);
+    }
+    .ajuste-back-link {
+      color: var(--mauve);
+      text-decoration: underline;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font: inherit;
+    }
+
+    .ajuste-card-summary {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: var(--blush-light);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+    }
+    .ajuste-card-thumb {
+      flex-shrink: 0;
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--mauve), var(--rose));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ajuste-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .ajuste-thumb-placeholder {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--white);
+    }
+    .ajuste-card-info {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+    .ajuste-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--deep);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .ajuste-card-meta {
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.02em;
+    }
+
+    .ajuste-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ajuste-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+    }
+    .ajuste-section-hint {
+      font-size: 12px;
+      color: var(--mauve-text);
+      opacity: 0.85;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .ajuste-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .ajuste-tag {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mauve-text);
+      background: var(--white);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 999px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .ajuste-tag:hover:not(.active) {
+      background: var(--blush-light);
+      border-color: var(--rose-soft);
+    }
+    .ajuste-tag.active {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+    .ajuste-tag.active::before {
+      content: '✓ ';
+      font-weight: 700;
+    }
+
+    .ajuste-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--deep);
+      background: var(--white);
+      border: 1.5px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      resize: vertical;
+      min-height: 110px;
+      transition: border-color 0.15s ease;
+    }
+    .ajuste-textarea:focus {
+      outline: none;
+      border-color: var(--mauve);
+    }
+    .ajuste-textarea::placeholder {
+      color: var(--gray-light);
+    }
+    .ajuste-counter {
+      align-self: flex-end;
+      font-size: 11px;
+      color: var(--gray);
+      margin-top: -4px;
+    }
+
+    .ajuste-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding-top: 4px;
+    }
+    .ajuste-submit {
+      min-width: 140px;
+    }
   </style>
 </head>
 <body>
@@ -5611,7 +5781,9 @@
       });
     }
 
-    // Fila bulk = cards criados pela executora interna AINDA não aprovados.
+    // Fila bulk = cards criados pela executora interna AINDA não aprovados
+    // E sem ajuste pendente (cards com ajuste pedido somem da fila até Jamily
+    // marcar adjustment.resolved=true ao reenviar).
     // FIFO por sentForReviewAt (mais antigo = primeiro a revisar).
     function getCardsNaFilaBulk() {
       const cards = Object.values((state.clientData && state.clientData.cards) || {});
@@ -5619,10 +5791,73 @@
         .filter(c =>
           c &&
           c.status === 'review' &&
-          c.createdByRole === ROLES.EXECUTORA_INTERNA
+          c.createdByRole === ROLES.EXECUTORA_INTERNA &&
+          !isCardComAjustePendente(c)
         )
         .sort((a, b) => (a.sentForReviewAt || a.createdAt || 0) - (b.sentForReviewAt || b.createdAt || 0));
     }
+
+    // ----- Adjustments (C4) -----
+
+    function generateAdjustmentId() {
+      const rand = Math.random().toString(36).slice(2, 6);
+      return `adj_${Date.now()}_${rand}`;
+    }
+
+    function getCardLastAdjustment(card) {
+      if (!card || !card.lastAdjustmentId) return null;
+      const adjs = (state.clientData && state.clientData.adjustments && state.clientData.adjustments[card.id]) || {};
+      return adjs[card.lastAdjustmentId] || null;
+    }
+
+    function isCardComAjustePendente(card) {
+      const adj = getCardLastAdjustment(card);
+      return !!(adj && adj.resolved === false);
+    }
+
+    // Pedir ajuste = escreve adjustment + atualiza lastAdjustmentId no card.
+    // Status do card NÃO muda (continua 'review'). Card some da Fila Isabelle
+    // até Jamily marcar adjustment.resolved=true.
+    function pedirAjusteCard(cardId, tags, comment) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
+      const c = (comment || '').trim();
+      if (c.length < 10) { showToast('Comentário precisa ter pelo menos 10 caracteres.'); return Promise.reject(); }
+
+      const adjId = generateAdjustmentId();
+      const now = Date.now();
+      const adjustment = {
+        id: adjId,
+        cardId: cardId,
+        tags: Array.isArray(tags) ? tags : [],
+        comment: c,
+        requestedBy: 'isabelle',
+        requestedAt: now,
+        resolved: false
+      };
+
+      // Multi-path update atomic — escreve adjustment + atualiza card simultâneo
+      const updates = {};
+      updates[`adjustments/${cardId}/${adjId}`] = adjustment;
+      updates[`cards/${cardId}/lastAdjustmentId`] = adjId;
+      updates[`cards/${cardId}/updatedAt`] = now;
+
+      return clientRef.update(updates).then(() => {
+        showToast('✓ Ajuste enviado');
+        // Reset estado local + volta pra fila normal
+        pedirAjusteState = { cardId: null, tags: [], comment: '' };
+        if (sheetState.open && sheetState.type === 'delegacao') {
+          openDelegacaoSheet();
+        }
+      }).catch(e => {
+        console.warn('[pedirAjusteCard] erro:', e);
+        showToast('Não consegui enviar. Tenta de novo.');
+        throw e;
+      });
+    }
+
+    // Estado local do form de ajuste — sobrevive a re-renders durante a edição.
+    // Reset quando submit OK ou quando usuário cancela (botão Voltar).
+    let pedirAjusteState = { cardId: null, tags: [], comment: '' };
 
     // Aprovação 1-clique da Isabelle no fluxo de delegação.
     // Pula approvalByPersona — Isabelle É a curadoria aqui.
@@ -8193,6 +8428,10 @@
     // ----- Fila Bulk (Isabelle, C3) -----
 
     function renderFilaBulkHTML() {
+      // C4: se em modo ajuste, renderiza form de ajuste em vez da fila
+      if (pedirAjusteState.cardId) {
+        return renderPedirAjusteHTML(pedirAjusteState.cardId);
+      }
       const proxima = getProximaJanela();
       const cards = getCardsNaFilaBulk();
       const proxClass = proxima.isAgora ? 'is-agora' : (proxima.isAmanha ? 'is-amanha' : '');
@@ -8264,6 +8503,11 @@
     }
 
     function bindFilaBulkHandlers() {
+      // C4: se em modo ajuste, bind handlers da tela de ajuste em vez dos da fila
+      if (pedirAjusteState.cardId) {
+        bindPedirAjusteHandlers();
+        return;
+      }
       document.querySelectorAll('[data-deleg-aprovar]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -8280,10 +8524,160 @@
       });
     }
 
-    // Stub do C4 — sub-fluxo de pedir ajuste com tags multi-select.
-    // Substituído na C4 pela implementação real.
+    // C4: ativa "modo ajuste" da aba Fila (mesma sheet, conteúdo substitui).
+    // renderFilaBulkHTML checa pedirAjusteState.cardId e decide qual tela renderizar.
     function openPedirAjusteSheet(cardId) {
-      showToast('Pedir ajuste · vai entrar na C4');
+      pedirAjusteState = { cardId: cardId, tags: [], comment: '' };
+      // Reabre o sheet pra re-renderizar com o novo estado
+      if (sheetState.open && sheetState.type === 'delegacao') {
+        openDelegacaoSheet();
+      }
+    }
+
+    function cancelarPedirAjuste() {
+      pedirAjusteState = { cardId: null, tags: [], comment: '' };
+      if (sheetState.open && sheetState.type === 'delegacao') {
+        openDelegacaoSheet();
+      }
+    }
+
+    function renderPedirAjusteHTML(cardId) {
+      const card = (state.clientData && state.clientData.cards && state.clientData.cards[cardId]) || null;
+      if (!card) {
+        return `
+          <div class="delegacao-empty">
+            <div class="delegacao-empty-title">Card não encontrado</div>
+            <div class="delegacao-empty-sub">Ele pode ter sido apagado. <button type="button" class="ajuste-back-link" id="ajuste-cancel-btn">Voltar pra fila</button></div>
+          </div>
+        `;
+      }
+
+      const personaName = state.clientData?.personas?.[card.personaId]?.name || card.personaId || '';
+      const thumbHtml = card.referenceImage
+        ? `<img class="ajuste-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
+        : `<div class="ajuste-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
+
+      const selectedTags = pedirAjusteState.tags || [];
+      const commentVal = pedirAjusteState.comment || '';
+      const canSubmit = commentVal.trim().length >= 10;
+
+      return `
+        <div class="ajuste-screen">
+          <button type="button" class="ajuste-back" id="ajuste-back-btn" aria-label="Voltar pra fila">
+            ← Voltar pra fila
+          </button>
+
+          <div class="ajuste-card-summary">
+            <div class="ajuste-card-thumb">${thumbHtml}</div>
+            <div class="ajuste-card-info">
+              <div class="ajuste-card-title">${escapeHtml(card.title || '(sem título)')}</div>
+              ${personaName ? `<div class="ajuste-card-meta">por ${escapeHtml(personaName)}</div>` : ''}
+            </div>
+          </div>
+
+          <div class="ajuste-section">
+            <div class="ajuste-section-title">O que precisa ajustar?</div>
+            <div class="ajuste-section-hint">Marca quantas tags fizerem sentido. Viram observável pra calibrar briefing.</div>
+            <div class="ajuste-tags">
+              ${ADJUSTMENT_TAGS.map(t => `
+                <button type="button"
+                  class="ajuste-tag ${selectedTags.includes(t.id) ? 'active' : ''}"
+                  data-ajuste-tag="${escapeHtml(t.id)}"
+                  aria-pressed="${selectedTags.includes(t.id) ? 'true' : 'false'}">
+                  ${escapeHtml(t.label)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="ajuste-section">
+            <div class="ajuste-section-title">Comentário</div>
+            <div class="ajuste-section-hint">Obrigatório. Pelo menos 10 caracteres. Seja específica.</div>
+            <textarea
+              id="ajuste-comment"
+              class="ajuste-textarea"
+              maxlength="500"
+              rows="5"
+              placeholder="Ex: O enquadramento ficou apertado e cortou a peça. Refaz mais aberto, mostrando o caimento todo."
+            >${escapeHtml(commentVal)}</textarea>
+            <div class="ajuste-counter">
+              <span id="ajuste-counter-value">${commentVal.length}</span>/500
+            </div>
+          </div>
+
+          <div class="ajuste-footer">
+            <button type="button" class="btn-secondary" id="ajuste-cancel-btn">Cancelar</button>
+            <button type="button" class="btn-primary ajuste-submit" id="ajuste-submit-btn" ${canSubmit ? '' : 'disabled'}>
+              Enviar ajuste
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindPedirAjusteHandlers() {
+      const backBtn = document.getElementById('ajuste-back-btn');
+      const cancelBtn = document.getElementById('ajuste-cancel-btn');
+      const submitBtn = document.getElementById('ajuste-submit-btn');
+      const textarea = document.getElementById('ajuste-comment');
+      const counter = document.getElementById('ajuste-counter-value');
+
+      // Voltar/cancelar
+      [backBtn, cancelBtn].forEach(btn => {
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          cancelarPedirAjuste();
+        });
+      });
+
+      // Chips de tag (toggle)
+      document.querySelectorAll('[data-ajuste-tag]').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tagId = chip.getAttribute('data-ajuste-tag');
+          const tags = pedirAjusteState.tags || [];
+          const idx = tags.indexOf(tagId);
+          if (idx >= 0) tags.splice(idx, 1); else tags.push(tagId);
+          pedirAjusteState.tags = tags;
+          // Toggle visual sem full re-render
+          const isActive = tags.includes(tagId);
+          chip.classList.toggle('active', isActive);
+          chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      });
+
+      // Textarea — sincroniza state + atualiza counter + libera botão
+      if (textarea && counter && submitBtn) {
+        // Focus pra começar a digitar de cara
+        setTimeout(() => textarea.focus(), 80);
+        textarea.addEventListener('input', () => {
+          pedirAjusteState.comment = textarea.value;
+          counter.textContent = String(textarea.value.length);
+          submitBtn.disabled = textarea.value.trim().length < 10;
+        });
+      }
+
+      // Submit
+      if (submitBtn) {
+        submitBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (submitBtn.disabled) return;
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Enviando…';
+          try {
+            await pedirAjusteCard(
+              pedirAjusteState.cardId,
+              pedirAjusteState.tags,
+              pedirAjusteState.comment
+            );
+            // sucesso: pedirAjusteCard já reseta state + re-renderiza
+          } catch (err) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Enviar ajuste';
+          }
+        });
+      }
     }
 
     // ----- Painel Pauta (C2) -----
