@@ -4641,14 +4641,100 @@
     /* S2.5* C5 — Galeria de referência + Histórico Pautas (Jamily) */
     /* ============================================================ */
 
-    .galeria-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    /* C5.2: Galeria redesenhada — filtros + lista vertical "como os outros" + expand inline */
+
+    /* ----- Filtros (chips multi-select por dimensão) ----- */
+    .galeria-filtros {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
     }
-    /* C5.1 polish1: <button> precisa reset + profundidade visual */
-    .galeria-item {
-      /* reset do button default */
+    .galeria-filtros-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .galeria-filtros-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+    }
+    .galeria-filtros-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .galeria-filtro-chip {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--mauve-text);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      padding: 5px 10px;
+      line-height: 1.4;
+      transition: all 0.15s ease;
+    }
+    .galeria-filtro-chip:hover {
+      border-color: var(--mauve);
+    }
+    .galeria-filtro-chip.active {
+      color: var(--blush-light);
+      background: var(--mauve);
+      border-color: var(--mauve);
+    }
+    .galeria-filtros-clear {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      align-self: flex-start;
+      margin-top: 2px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--gray);
+      background: transparent;
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      transition: all 0.15s ease;
+    }
+    .galeria-filtros-clear:hover {
+      color: var(--deep);
+      border-color: var(--deep);
+    }
+
+    /* ----- Lista vertical de referências (POV Jamily) ----- */
+    .galeria-lista-header {
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+    .galeria-lista-count {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+    }
+    .galeria-lista {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .galeria-lista-item {
       appearance: none;
       -webkit-appearance: none;
       font-family: inherit;
@@ -4656,28 +4742,26 @@
       color: inherit;
       cursor: pointer;
       text-align: left;
-      /* visual de card */
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 6px;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+      padding: 12px;
       background: var(--white);
       border: 1px solid var(--border-soft);
       border-radius: var(--radius-md);
-      box-shadow: 0 2px 8px rgba(38, 28, 30, 0.05);
+      box-shadow: 0 2px 8px rgba(38, 28, 30, 0.04);
       transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     }
-    .galeria-item:hover {
-      transform: translateY(-2px);
+    .galeria-lista-item:hover {
       border-color: var(--mauve);
-      box-shadow: 0 8px 22px rgba(122, 76, 96, 0.16);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(122, 76, 96, 0.14);
     }
-    .galeria-item:active {
-      transform: translateY(0);
-    }
-    .galeria-item-thumb {
-      width: 100%;
-      aspect-ratio: 1 / 1;
+    .galeria-lista-thumb {
+      flex-shrink: 0;
+      width: 72px;
+      aspect-ratio: 9 / 16;
       border-radius: var(--radius-sm);
       overflow: hidden;
       background: linear-gradient(135deg, var(--mauve), var(--rose));
@@ -4685,47 +4769,225 @@
       align-items: center;
       justify-content: center;
     }
-    .galeria-item-img {
+    .galeria-lista-thumb-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    .galeria-item-placeholder {
-      font-size: 36px;
+    .galeria-lista-thumb-placeholder {
+      font-size: 24px;
       font-weight: 600;
       color: var(--white);
       letter-spacing: -0.02em;
     }
-    .galeria-item-body {
+    .galeria-lista-info {
+      flex: 1 1 auto;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding: 2px 4px 4px;
+      gap: 6px;
+      justify-content: center;
     }
-    .galeria-item-category {
-      align-self: flex-start;
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: lowercase;
-      color: var(--mauve);
-      background: var(--blush-light);
-      border: 1px solid var(--rose-soft);
-      border-radius: 999px;
-      padding: 2px 7px;
-      line-height: 1.4;
-    }
-    .galeria-item-title {
-      font-size: 13px;
+    .galeria-lista-title {
+      font-size: 14px;
       font-weight: 500;
       color: var(--deep);
       letter-spacing: -0.01em;
-      line-height: 1.35;
+      line-height: 1.3;
       word-break: break-word;
+    }
+    .galeria-lista-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .galeria-lista-tag {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 1.4;
+    }
+    .galeria-lista-tag-piece {
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+    }
+    .galeria-lista-tag-shot {
+      color: var(--deep);
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+    }
+    .galeria-lista-notes {
+      font-size: 12px;
+      color: var(--mauve-text);
+      line-height: 1.4;
+      font-style: italic;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+    .galeria-lista-chevron {
+      flex-shrink: 0;
+      align-self: center;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--mauve);
+      opacity: 0.6;
+    }
+    .galeria-lista-empty {
+      margin-top: 16px;
+      padding: 24px 18px;
+      background: var(--blush-light);
+      border: 1px dashed var(--rose-soft);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+    .galeria-lista-empty-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--deep);
+      margin-bottom: 6px;
+    }
+    .galeria-lista-empty-sub {
+      font-size: 12px;
+      color: var(--mauve-text);
+      line-height: 1.45;
+    }
+
+    /* ----- Expand inline (substitui modal) ----- */
+    .galeria-expand-screen {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .galeria-expand-back {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      align-self: flex-start;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      transition: all 0.15s ease;
+    }
+    .galeria-expand-back:hover {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+    .galeria-expand-media {
+      width: 100%;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--blush-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-in;
+    }
+    .galeria-expand-img {
+      width: 100%;
+      max-height: 60vh;
+      object-fit: contain;
+      display: block;
+    }
+    .galeria-expand-media-placeholder {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--mauve), var(--rose));
+      color: var(--white);
+      font-size: 56px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      border-radius: var(--radius-md);
+    }
+    .galeria-expand-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .galeria-expand-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+    .galeria-expand-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .galeria-expand-tag-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .galeria-expand-tag-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+    }
+    .galeria-expand-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .galeria-expand-tag {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      border-radius: 999px;
+      padding: 4px 10px;
+      line-height: 1.4;
+    }
+    .galeria-expand-tag-piece {
+      color: var(--blush-light);
+      background: var(--mauve);
+    }
+    .galeria-expand-tag-shot {
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+    }
+    .galeria-expand-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .galeria-expand-section-kicker {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+    }
+    .galeria-expand-section-text {
+      font-size: 14px;
+      color: var(--deep);
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    .galeria-expand-section-notes .galeria-expand-section-text {
+      background: var(--blush-light);
+      border-left: 3px solid var(--mauve);
+      padding: 12px 14px;
+      border-radius: 4px;
+      font-style: italic;
     }
 
     .galeria-empty {
@@ -4862,19 +5124,30 @@
       color: var(--gray);
       letter-spacing: 0.02em;
     }
-    .ref-item-category {
-      align-self: flex-start;
+    /* C5.2: chips de tags na lista da Isabelle (substitui categoria livre) */
+    .ref-item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .ref-item-tag {
       font-size: 10px;
       font-weight: 500;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 1.4;
+    }
+    .ref-item-tag-piece {
       color: var(--mauve);
       background: var(--blush-light);
       border: 1px solid var(--rose-soft);
-      border-radius: 999px;
-      padding: 3px 8px;
-      line-height: 1.4;
-      text-transform: lowercase;
-      margin-top: 2px;
+    }
+    .ref-item-tag-shot {
+      color: var(--deep);
+      background: var(--white);
+      border: 1px solid var(--border-soft);
     }
     .ref-item-chevron {
       flex-shrink: 0;
@@ -5084,6 +5357,38 @@
     .ref-form-remove:hover {
       background: var(--mauve);
     }
+    /* C5.2: chips multi-select no form (peça + plano) */
+    .ref-form-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .ref-form-chip {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--mauve-text);
+      background: var(--white);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 999px;
+      padding: 7px 12px;
+      line-height: 1.3;
+      transition: all 0.15s ease;
+    }
+    .ref-form-chip:hover {
+      border-color: var(--mauve);
+      color: var(--mauve);
+    }
+    .ref-form-chip.active {
+      color: var(--blush-light);
+      background: var(--mauve);
+      border-color: var(--mauve);
+    }
+
     .ref-form-footer {
       display: flex;
       flex-direction: column;
@@ -5112,133 +5417,7 @@
       background: rgba(255, 240, 240, 0.6);
     }
 
-    /* ----- Modal de visualização (POV Jamily, Galeria) ----- */
-    .reference-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(38, 28, 30, 0.78);
-      z-index: 9100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      animation: refModalFadeIn 0.2s ease;
-    }
-    @keyframes refModalFadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    .reference-modal {
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      max-width: 460px;
-      width: 100%;
-      max-height: 92vh;
-      overflow-y: auto;
-      position: relative;
-      box-shadow: 0 12px 48px rgba(0,0,0,0.32);
-    }
-    .reference-modal-close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 36px;
-      height: 36px;
-      border-radius: 999px;
-      background: rgba(38, 28, 30, 0.6);
-      color: var(--white);
-      border: none;
-      font-size: 22px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2;
-    }
-    .reference-modal-close:hover {
-      background: var(--deep);
-    }
-    .reference-modal-image-wrap {
-      width: 100%;
-      max-height: 56vh;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--blush-light);
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    }
-    .reference-modal-image {
-      width: 100%;
-      max-height: 56vh;
-      object-fit: cover;
-      display: block;
-    }
-    .reference-modal-image-placeholder {
-      width: 100%;
-      height: 220px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--mauve), var(--rose));
-      color: var(--white);
-      font-size: 56px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    }
-    .reference-modal-body {
-      padding: 18px 20px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .reference-modal-category {
-      align-self: flex-start;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      color: var(--mauve);
-      background: var(--blush-light);
-      border: 1px solid var(--rose-soft);
-      border-radius: 999px;
-      padding: 3px 10px;
-      line-height: 1.4;
-      text-transform: lowercase;
-    }
-    .reference-modal-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--deep);
-      letter-spacing: -0.02em;
-      line-height: 1.3;
-    }
-    .reference-modal-section {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .reference-modal-section-kicker {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--mauve);
-    }
-    .reference-modal-section-text {
-      font-size: 14px;
-      color: var(--deep);
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-    .reference-modal-section-notes .reference-modal-section-text {
-      background: var(--blush-light);
-      border-left: 3px solid var(--mauve);
-      padding: 12px 14px;
-      border-radius: 4px;
-      font-style: italic;
-    }
+    /* C5.2: bloco .reference-modal-* removido — galeria-expand-* substituiu */
 
     /* ============================================================ */
     /* S2.5* C3 — Criar Card (POV Jamily)                            */
@@ -5956,6 +6135,31 @@
       { id: 'peca_nova',        label: 'Peça nova',       color: 'var(--green)' }
     ];
 
+    // C5.2: Tags estruturadas das Referências — vocabulário fechado.
+    // 2 dimensões independentes pra permitir filtros funcionais na Galeria.
+    // Dimensão 1: tipo de peça (responde "o que estou fotografando?")
+    const PIECE_TYPES = [
+      { id: 'vestido',        label: 'Vestido' },
+      { id: 'calca',          label: 'Calça' },
+      { id: 'blusa_camisa',   label: 'Blusa / camisa' },
+      { id: 'conjunto',       label: 'Conjunto' },
+      { id: 'casaco_jaqueta', label: 'Casaco / jaqueta' },
+      { id: 'saia',           label: 'Saia' },
+      { id: 'sapato',         label: 'Sapato' },
+      { id: 'acessorio',      label: 'Acessório' },
+      { id: 'look_completo',  label: 'Look completo' }
+    ];
+
+    // Dimensão 2: tipo de plano (responde "como devo fotografar?")
+    const SHOT_TYPES = [
+      { id: 'corpo_inteiro',  label: 'Corpo inteiro' },
+      { id: 'meio_corpo',     label: 'Meio corpo' },
+      { id: 'close_peca',     label: 'Close peça' },
+      { id: 'detalhe',        label: 'Detalhe textura' },
+      { id: 'still_life',     label: 'Still life' },
+      { id: 'ambiente',       label: 'Ambiente' }
+    ];
+
     // Fallback se _master/janelasAprovacao não estiver setado no DB
     const JANELAS_FALLBACK = ['11:00', '14:00', '17:00', '19:00'];
 
@@ -6096,7 +6300,6 @@
         if (sheetState.open) return;
         if (blockModalState && blockModalState.open) return;
         if (blockCreateState && blockCreateState.open) return;
-        if (referenceModalState && referenceModalState.open) return;
         renderForCurrentMode();
       });
     }
@@ -6600,19 +6803,21 @@
       if (title.length > REFERENCE_LIMITS.title) { showToast(`Título passa de ${REFERENCE_LIMITS.title} chars.`); return Promise.reject(); }
       const copy = (fields.copy || '').trim();
       const notes = (fields.notes || '').trim();
-      const category = (fields.category || '').trim();
+      const pieceTypes = Array.isArray(fields.pieceTypes) ? fields.pieceTypes.filter(Boolean) : [];
+      const shotTypes  = Array.isArray(fields.shotTypes)  ? fields.shotTypes.filter(Boolean)  : [];
       const mediaBase64 = typeof fields.mediaBase64 === 'string' ? fields.mediaBase64 : '';
 
       const now = Date.now();
       const refId = existingId || generateRefId();
 
       if (existingId) {
-        // Update — preserva createdAt/createdBy
+        // Update — preserva createdAt/createdBy + category legada (não toca)
         const updates = {
           [`references/${refId}/title`]: title,
           [`references/${refId}/copy`]: copy,
           [`references/${refId}/notes`]: notes,
-          [`references/${refId}/category`]: category,
+          [`references/${refId}/pieceTypes`]: pieceTypes,
+          [`references/${refId}/shotTypes`]: shotTypes,
           [`references/${refId}/mediaBase64`]: mediaBase64,
           [`references/${refId}/updatedAt`]: now
         };
@@ -6630,7 +6835,8 @@
           title,
           copy,
           notes,
-          category,
+          pieceTypes,
+          shotTypes,
           mediaBase64,
           createdBy: 'isabelle',
           createdAt: now,
@@ -6658,12 +6864,33 @@
     }
 
 
-    function renderGaleriaHTML() {
-      // C5.1: lê de references/ direto (não filtra mais cards postados).
-      // Referências são cards-exemplo criados pela Isabelle, schema próprio.
-      const refs = getReferencesList();
+    // C5.2: Galeria redesenhada — lista vertical com 2 dimensões de filtros
+    // (peça + plano), expand inline (substitui modal) "como os outros cards".
 
-      if (refs.length === 0) {
+    // Filtra refs pelos chips ativos. Sem filtros → todas. Com filtros → AND
+    // entre dimensões, OR dentro da dimensão (ex: peça=[vestido,blusa] AND
+    // plano=[corpo_inteiro] = (vestido OU blusa) E corpo_inteiro).
+    function getFilteredReferences() {
+      const all = getReferencesList();
+      const pf = galeriaState.pieceFilter || [];
+      const sf = galeriaState.shotFilter  || [];
+      if (pf.length === 0 && sf.length === 0) return all;
+      return all.filter(r => {
+        const pieces = Array.isArray(r.pieceTypes) ? r.pieceTypes : [];
+        const shots  = Array.isArray(r.shotTypes)  ? r.shotTypes  : [];
+        const pieceOk = pf.length === 0 || pieces.some(t => pf.includes(t));
+        const shotOk  = sf.length === 0 || shots.some(t => sf.includes(t));
+        return pieceOk && shotOk;
+      });
+    }
+
+    function renderGaleriaHTML() {
+      // Expand inline: se há refId expandido, renderiza tela cheia da ref.
+      if (galeriaState.expandedRefId) {
+        return renderGaleriaExpandHTML(galeriaState.expandedRefId);
+      }
+      const all = getReferencesList();
+      if (all.length === 0) {
         return `
           <section class="galeria-empty">
             <div class="galeria-empty-icon">★</div>
@@ -6674,113 +6901,231 @@
           </section>
         `;
       }
-
       return `
-        <section class="galeria-grid">
-          ${refs.map(r => {
-            const thumb = r.mediaBase64
-              ? `<img class="galeria-item-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
-              : `<div class="galeria-item-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
-            const cat = r.category
-              ? `<span class="galeria-item-category">${escapeHtml(r.category)}</span>`
-              : '';
-            return `
-              <button type="button" class="galeria-item" data-ref-open="${escapeHtml(r.id)}">
-                <div class="galeria-item-thumb">${thumb}</div>
-                <div class="galeria-item-body">
-                  ${cat}
-                  <div class="galeria-item-title">${escapeHtml(r.title || '(sem título)')}</div>
-                </div>
-              </button>
-            `;
-          }).join('')}
-        </section>
+        ${renderGaleriaFiltrosHTML()}
+        ${renderGaleriaListaHTML()}
       `;
     }
 
-    function bindGaleriaHandlers() {
-      document.querySelectorAll('[data-ref-open]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const refId = btn.getAttribute('data-ref-open');
-          if (refId) openReferenceModal(refId);
-        });
-      });
+    function renderGaleriaFiltrosHTML() {
+      const pf = galeriaState.pieceFilter || [];
+      const sf = galeriaState.shotFilter  || [];
+      const hasAnyFilter = pf.length > 0 || sf.length > 0;
+      return `
+        <div class="galeria-filtros">
+          <div class="galeria-filtros-row">
+            <div class="galeria-filtros-label">Peça</div>
+            <div class="galeria-filtros-chips">
+              ${PIECE_TYPES.map(t => `
+                <button type="button"
+                  class="galeria-filtro-chip ${pf.includes(t.id) ? 'active' : ''}"
+                  data-filter-piece="${escapeHtml(t.id)}"
+                  aria-pressed="${pf.includes(t.id) ? 'true' : 'false'}">
+                  ${escapeHtml(t.label)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="galeria-filtros-row">
+            <div class="galeria-filtros-label">Plano</div>
+            <div class="galeria-filtros-chips">
+              ${SHOT_TYPES.map(t => `
+                <button type="button"
+                  class="galeria-filtro-chip ${sf.includes(t.id) ? 'active' : ''}"
+                  data-filter-shot="${escapeHtml(t.id)}"
+                  aria-pressed="${sf.includes(t.id) ? 'true' : 'false'}">
+                  ${escapeHtml(t.label)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          ${hasAnyFilter ? `
+            <button type="button" class="galeria-filtros-clear" id="galeria-filtros-clear-btn">
+              Limpar filtros
+            </button>` : ''}
+        </div>
+      `;
     }
 
-    // C5.1 polish1: state flag pra modal de referência (guarda contra
-    // re-render do listener Firebase que pode quebrar o overlay).
-    let referenceModalState = { open: false };
+    function renderGaleriaListaHTML() {
+      const filtered = getFilteredReferences();
+      const all = getReferencesList();
+      const hasFilter = (galeriaState.pieceFilter.length + galeriaState.shotFilter.length) > 0;
 
-    // Modal de visualização da Referência (POV Jamily). Mostra TUDO:
-    // imagem grande + título + categoria + copy + notas pedagógicas.
-    // z-index 9100 (acima de sheet-overlay 800 e do image-modal 9000).
-    // Fecha com Esc ou click no overlay.
-    function openReferenceModal(refId) {
+      if (filtered.length === 0 && hasFilter) {
+        return `
+          <div class="galeria-lista-empty">
+            <div class="galeria-lista-empty-title">Nenhuma referência com esses filtros</div>
+            <div class="galeria-lista-empty-sub">
+              Tem ${all.length} ${all.length === 1 ? 'referência' : 'referências'} no total. Tira algum filtro pra ver outras.
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="galeria-lista-header">
+          <div class="galeria-lista-count">
+            ${filtered.length} ${filtered.length === 1 ? 'referência' : 'referências'}${hasFilter ? ` de ${all.length}` : ''}
+          </div>
+        </div>
+        <div class="galeria-lista">
+          ${filtered.map(r => {
+            const pieceLabels = (r.pieceTypes || []).map(id => {
+              const t = PIECE_TYPES.find(x => x.id === id);
+              return t ? t.label : id;
+            });
+            const shotLabels = (r.shotTypes || []).map(id => {
+              const t = SHOT_TYPES.find(x => x.id === id);
+              return t ? t.label : id;
+            });
+            const allTagsHtml = [
+              ...pieceLabels.map(l => `<span class="galeria-lista-tag galeria-lista-tag-piece">${escapeHtml(l)}</span>`),
+              ...shotLabels.map(l =>  `<span class="galeria-lista-tag galeria-lista-tag-shot">${escapeHtml(l)}</span>`)
+            ].join('');
+            const notesSnippet = r.notes ? r.notes.slice(0, 120) + (r.notes.length > 120 ? '…' : '') : '';
+            const thumb = r.mediaBase64
+              ? `<img class="galeria-lista-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
+              : `<div class="galeria-lista-thumb-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
+            return `
+              <button type="button" class="galeria-lista-item" data-ref-expand="${escapeHtml(r.id)}">
+                <div class="galeria-lista-thumb">${thumb}</div>
+                <div class="galeria-lista-info">
+                  <div class="galeria-lista-title">${escapeHtml(r.title || '(sem título)')}</div>
+                  ${allTagsHtml ? `<div class="galeria-lista-tags">${allTagsHtml}</div>` : ''}
+                  ${notesSnippet ? `<div class="galeria-lista-notes">${escapeHtml(notesSnippet)}</div>` : ''}
+                </div>
+                <div class="galeria-lista-chevron">›</div>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderGaleriaExpandHTML(refId) {
       const ref = getReferenceById(refId);
-      if (!ref) { showToast('Referência sumiu.'); return; }
+      // Ref sumiu (deletada na outra ponta) — volta pra lista
+      if (!ref) {
+        galeriaState.expandedRefId = null;
+        return renderGaleriaHTML();
+      }
+      const pieceLabels = (ref.pieceTypes || []).map(id => {
+        const t = PIECE_TYPES.find(x => x.id === id);
+        return t ? t.label : id;
+      });
+      const shotLabels = (ref.shotTypes || []).map(id => {
+        const t = SHOT_TYPES.find(x => x.id === id);
+        return t ? t.label : id;
+      });
+      const imgBlock = ref.mediaBase64
+        ? `<div class="galeria-expand-media">
+             <img class="galeria-expand-img" src="${escapeHtml(ref.mediaBase64)}" alt="" data-img-expand="${escapeHtml(ref.mediaBase64)}" />
+           </div>`
+        : `<div class="galeria-expand-media-placeholder">${escapeHtml((ref.title || 'R').charAt(0).toUpperCase())}</div>`;
 
-      const existing = document.getElementById('reference-modal-overlay');
-      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+      const tagsBlock = (pieceLabels.length || shotLabels.length) ? `
+        <div class="galeria-expand-tags">
+          ${pieceLabels.length ? `
+            <div class="galeria-expand-tag-group">
+              <div class="galeria-expand-tag-label">Peça</div>
+              <div class="galeria-expand-tag-list">
+                ${pieceLabels.map(l => `<span class="galeria-expand-tag galeria-expand-tag-piece">${escapeHtml(l)}</span>`).join('')}
+              </div>
+            </div>` : ''}
+          ${shotLabels.length ? `
+            <div class="galeria-expand-tag-group">
+              <div class="galeria-expand-tag-label">Plano</div>
+              <div class="galeria-expand-tag-list">
+                ${shotLabels.map(l => `<span class="galeria-expand-tag galeria-expand-tag-shot">${escapeHtml(l)}</span>`).join('')}
+              </div>
+            </div>` : ''}
+        </div>` : '';
 
-      const overlay = document.createElement('div');
-      overlay.id = 'reference-modal-overlay';
-      overlay.className = 'reference-modal-overlay';
-      overlay.innerHTML = `
-        <div class="reference-modal" role="dialog" aria-modal="true">
-          <button type="button" class="reference-modal-close" aria-label="Fechar">×</button>
-          ${ref.mediaBase64
-            ? `<div class="reference-modal-image-wrap">
-                 <img class="reference-modal-image" src="${escapeHtml(ref.mediaBase64)}" alt="" />
-               </div>`
-            : `<div class="reference-modal-image-placeholder">${escapeHtml((ref.title || 'R').charAt(0).toUpperCase())}</div>`
-          }
-          <div class="reference-modal-body">
-            ${ref.category ? `<div class="reference-modal-category">${escapeHtml(ref.category)}</div>` : ''}
-            <div class="reference-modal-title">${escapeHtml(ref.title || '(sem título)')}</div>
+      return `
+        <div class="galeria-expand-screen">
+          <button type="button" class="galeria-expand-back" id="galeria-expand-back-btn">← Voltar pra Galeria</button>
+          ${imgBlock}
+          <div class="galeria-expand-body">
+            <div class="galeria-expand-title">${escapeHtml(ref.title || '(sem título)')}</div>
+            ${tagsBlock}
             ${ref.copy ? `
-              <div class="reference-modal-section">
-                <div class="reference-modal-section-kicker">Copy sugerida</div>
-                <div class="reference-modal-section-text">${escapeHtml(ref.copy)}</div>
+              <div class="galeria-expand-section">
+                <div class="galeria-expand-section-kicker">Copy sugerida</div>
+                <div class="galeria-expand-section-text">${escapeHtml(ref.copy)}</div>
               </div>` : ''}
             ${ref.notes ? `
-              <div class="reference-modal-section reference-modal-section-notes">
-                <div class="reference-modal-section-kicker">Por que funciona</div>
-                <div class="reference-modal-section-text">${escapeHtml(ref.notes)}</div>
+              <div class="galeria-expand-section galeria-expand-section-notes">
+                <div class="galeria-expand-section-kicker">Por que funciona</div>
+                <div class="galeria-expand-section-text">${escapeHtml(ref.notes)}</div>
               </div>` : ''}
           </div>
         </div>
       `;
-      document.body.appendChild(overlay);
+    }
 
-      referenceModalState.open = true;
-      const close = () => {
-        referenceModalState.open = false;
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        document.removeEventListener('keydown', escHandler);
-      };
-      const escHandler = (e) => { if (e.key === 'Escape') close(); };
-      // Click dentro do .reference-modal (corpo) NÃO fecha. Botão close sim.
-      const modal = overlay.querySelector('.reference-modal');
-      if (modal) {
-        modal.addEventListener('mousedown', (e) => {
-          if (e.target.closest('.reference-modal-close')) {
-            close();
-            return;
-          }
-          // Bloqueia bubble pro overlay (que fecharia)
+    function bindGaleriaHandlers() {
+      // Modo expand: bind do voltar + click na imagem pra expandir em modal
+      if (galeriaState.expandedRefId) {
+        const back = document.getElementById('galeria-expand-back-btn');
+        if (back) {
+          back.addEventListener('click', (e) => {
+            e.stopPropagation();
+            galeriaState.expandedRefId = null;
+            renderExecutoraShell();
+          });
+        }
+        document.querySelectorAll('[data-img-expand]').forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const src = el.getAttribute('data-img-expand');
+            if (src) openImageModal(src);
+          });
+        });
+        return;
+      }
+      // Modo lista: bind filtros + clicks nos itens
+      document.querySelectorAll('[data-filter-piece]').forEach(chip => {
+        chip.addEventListener('click', (e) => {
           e.stopPropagation();
+          const tagId = chip.getAttribute('data-filter-piece');
+          const arr = galeriaState.pieceFilter || [];
+          const idx = arr.indexOf(tagId);
+          if (idx >= 0) arr.splice(idx, 1); else arr.push(tagId);
+          galeriaState.pieceFilter = arr;
+          renderExecutoraShell();
+        });
+      });
+      document.querySelectorAll('[data-filter-shot]').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tagId = chip.getAttribute('data-filter-shot');
+          const arr = galeriaState.shotFilter || [];
+          const idx = arr.indexOf(tagId);
+          if (idx >= 0) arr.splice(idx, 1); else arr.push(tagId);
+          galeriaState.shotFilter = arr;
+          renderExecutoraShell();
+        });
+      });
+      const clearBtn = document.getElementById('galeria-filtros-clear-btn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          galeriaState.pieceFilter = [];
+          galeriaState.shotFilter = [];
+          renderExecutoraShell();
         });
       }
-      // Atrelar o close-on-backdrop em mousedown DEPOIS do tick atual (evita
-      // que o click original do botão da galeria bubble até aqui e feche imediato)
-      setTimeout(() => {
-        overlay.addEventListener('mousedown', (e) => {
-          // Só fecha se mousedown foi diretamente no overlay (backdrop)
-          if (e.target === overlay) close();
+      document.querySelectorAll('[data-ref-expand]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const refId = btn.getAttribute('data-ref-expand');
+          if (refId) {
+            galeriaState.expandedRefId = refId;
+            renderExecutoraShell();
+          }
         });
-      }, 0);
-      document.addEventListener('keydown', escHandler);
+      });
     }
 
 
@@ -9353,6 +9698,11 @@
             pendingImageBase64 = null;
             pendingOrigin = 'pauta';
           }
+          // C5.2: sair da Galeria reseta o expand (mas mantém filtros — útil
+          // pra ela voltar e continuar de onde estava).
+          if (newTab !== 'galeria') {
+            galeriaState.expandedRefId = null;
+          }
           state.executoraTab = newTab;
           renderExecutoraShell();
         });
@@ -9407,12 +9757,13 @@
     let pendingImageBase64 = null;
     let pendingOrigin = 'pauta';
 
-    // C5.1: estado do form de Referência. mode = 'list' | 'create' | 'edit'.
+    // C5.1+C5.2: estado do form de Referência. mode = 'list' | 'create' | 'edit'.
     // editingId só usado em 'edit'. pendingImage é base64 sobrevive re-renders.
+    // fields.pieceTypes/shotTypes são arrays (multi-select de chips fechados).
     let referenciaFormState = {
       mode: 'list',
       editingId: null,
-      fields: { title: '', copy: '', notes: '', category: '' },
+      fields: { title: '', copy: '', notes: '', pieceTypes: [], shotTypes: [] },
       pendingImage: null
     };
 
@@ -9420,9 +9771,22 @@
       referenciaFormState = {
         mode: 'list',
         editingId: null,
-        fields: { title: '', copy: '', notes: '', category: '' },
+        fields: { title: '', copy: '', notes: '', pieceTypes: [], shotTypes: [] },
         pendingImage: null
       };
+    }
+
+    // C5.2: estado da Galeria (POV Jamily) — filtros aplicados + expand inline.
+    // expandedRefId != null → renderGaleriaHTML mostra tela cheia da referência
+    // em vez da lista filtrada. Reseta ao trocar de tab via bottom nav.
+    let galeriaState = {
+      pieceFilter: [],
+      shotFilter: [],
+      expandedRefId: null
+    };
+
+    function resetGaleriaState() {
+      galeriaState = { pieceFilter: [], shotFilter: [], expandedRefId: null };
     }
 
     function renderCriarCardHTML(prefillCard) {
@@ -10331,7 +10695,23 @@
         ${header}
         <div class="ref-list">
           ${refs.map(r => {
-            const cat = r.category ? `<span class="ref-item-category">${escapeHtml(r.category)}</span>` : '';
+            const pieceLabels = (r.pieceTypes || []).map(id => {
+              const t = PIECE_TYPES.find(x => x.id === id);
+              return t ? t.label : id;
+            });
+            const shotLabels = (r.shotTypes || []).map(id => {
+              const t = SHOT_TYPES.find(x => x.id === id);
+              return t ? t.label : id;
+            });
+            const allTags = [
+              ...pieceLabels.map(l => ({ label: l, kind: 'piece' })),
+              ...shotLabels.map(l => ({ label: l, kind: 'shot' }))
+            ];
+            const tagsHtml = allTags.length > 0
+              ? `<div class="ref-item-tags">
+                   ${allTags.map(t => `<span class="ref-item-tag ref-item-tag-${t.kind}">${escapeHtml(t.label)}</span>`).join('')}
+                 </div>`
+              : '';
             const thumbHtml = r.mediaBase64
               ? `<img class="ref-item-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
               : `<div class="ref-item-thumb-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
@@ -10341,7 +10721,7 @@
                 <div class="ref-item-info">
                   <div class="ref-item-title">${escapeHtml(r.title || '(sem título)')}</div>
                   <div class="ref-item-meta">criada ${escapeHtml(formatTimeAgo(r.createdAt || 0))}</div>
-                  ${cat}
+                  ${tagsHtml}
                 </div>
                 <div class="ref-item-chevron">›</div>
               </button>
@@ -10369,7 +10749,8 @@
       const titleVal = fields.title || existing?.title || '';
       const copyVal = fields.copy || existing?.copy || '';
       const notesVal = fields.notes || existing?.notes || '';
-      const categoryVal = fields.category || existing?.category || '';
+      const pieceSel = Array.isArray(fields.pieceTypes) ? fields.pieceTypes : [];
+      const shotSel = Array.isArray(fields.shotTypes) ? fields.shotTypes : [];
       const previewSrc = referenciaFormState.pendingImage != null
         ? referenciaFormState.pendingImage
         : (existing?.mediaBase64 || '');
@@ -10440,17 +10821,34 @@
             >${escapeHtml(notesVal)}</textarea>
           </div>
 
-          <!-- Categoria -->
+          <!-- Tipo de peça (multi-select) -->
           <div class="ref-form-field">
-            <label class="ref-form-label" for="ref-form-category-input">Categoria <span class="ref-form-label-aux">(opcional)</span></label>
-            <input
-              type="text"
-              id="ref-form-category-input"
-              class="ref-form-input"
-              maxlength="${REFERENCE_LIMITS.category}"
-              placeholder="Ex: iluminação, tom, enquadramento"
-              value="${escapeHtml(categoryVal)}"
-            />
+            <label class="ref-form-label">Tipo de peça <span class="ref-form-label-aux">(pode marcar várias)</span></label>
+            <div class="ref-form-chips" role="group">
+              ${PIECE_TYPES.map(t => `
+                <button type="button"
+                  class="ref-form-chip ${pieceSel.includes(t.id) ? 'active' : ''}"
+                  data-piece-tag="${escapeHtml(t.id)}"
+                  aria-pressed="${pieceSel.includes(t.id) ? 'true' : 'false'}">
+                  ${escapeHtml(t.label)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Tipo de plano (multi-select) -->
+          <div class="ref-form-field">
+            <label class="ref-form-label">Tipo de plano <span class="ref-form-label-aux">(como fotografar)</span></label>
+            <div class="ref-form-chips" role="group">
+              ${SHOT_TYPES.map(t => `
+                <button type="button"
+                  class="ref-form-chip ${shotSel.includes(t.id) ? 'active' : ''}"
+                  data-shot-tag="${escapeHtml(t.id)}"
+                  aria-pressed="${shotSel.includes(t.id) ? 'true' : 'false'}">
+                  ${escapeHtml(t.label)}
+                </button>
+              `).join('')}
+            </div>
           </div>
 
           <!-- Footer: submit + delete (só edit) -->
@@ -10477,7 +10875,7 @@
           e.stopPropagation();
           referenciaFormState.mode = 'create';
           referenciaFormState.editingId = null;
-          referenciaFormState.fields = { title: '', copy: '', notes: '', category: '' };
+          referenciaFormState.fields = { title: '', copy: '', notes: '', pieceTypes: [], shotTypes: [] };
           referenciaFormState.pendingImage = null;
           openDelegacaoSheet();
         });
@@ -10494,7 +10892,8 @@
             title: existing.title || '',
             copy: existing.copy || '',
             notes: existing.notes || '',
-            category: existing.category || ''
+            pieceTypes: Array.isArray(existing.pieceTypes) ? existing.pieceTypes.slice() : [],
+            shotTypes: Array.isArray(existing.shotTypes) ? existing.shotTypes.slice() : []
           };
           referenciaFormState.pendingImage = null; // null = "usa existente"; só vira string se trocou
           openDelegacaoSheet();
@@ -10509,20 +10908,53 @@
       const titleInput = document.getElementById('ref-form-title-input');
       const copyInput = document.getElementById('ref-form-copy-input');
       const notesInput = document.getElementById('ref-form-notes-input');
-      const categoryInput = document.getElementById('ref-form-category-input');
       const submitBtn = document.getElementById('ref-form-submit-btn');
       const deleteBtn = document.getElementById('ref-form-delete-btn');
       const backBtn = document.getElementById('ref-form-back-btn');
 
-      // Helper — sincroniza inputs pra state.fields (chamado antes de re-renders)
+      // Helper — sincroniza inputs pra state.fields (chamado antes de re-renders).
+      // pieceTypes/shotTypes não vêm de input, vêm do state (chips toggleam direto).
       function syncFieldsFromInputs() {
         referenciaFormState.fields = {
           title: titleInput?.value || '',
           copy: copyInput?.value || '',
           notes: notesInput?.value || '',
-          category: categoryInput?.value || ''
+          pieceTypes: Array.isArray(referenciaFormState.fields?.pieceTypes)
+            ? referenciaFormState.fields.pieceTypes : [],
+          shotTypes: Array.isArray(referenciaFormState.fields?.shotTypes)
+            ? referenciaFormState.fields.shotTypes : []
         };
       }
+
+      // Chips de tags (peça + plano) — toggle no array do state, sem full re-render
+      document.querySelectorAll('[data-piece-tag]').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          syncFieldsFromInputs();
+          const tagId = chip.getAttribute('data-piece-tag');
+          const arr = referenciaFormState.fields.pieceTypes || [];
+          const idx = arr.indexOf(tagId);
+          if (idx >= 0) arr.splice(idx, 1); else arr.push(tagId);
+          referenciaFormState.fields.pieceTypes = arr;
+          const isActive = arr.includes(tagId);
+          chip.classList.toggle('active', isActive);
+          chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      });
+      document.querySelectorAll('[data-shot-tag]').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          syncFieldsFromInputs();
+          const tagId = chip.getAttribute('data-shot-tag');
+          const arr = referenciaFormState.fields.shotTypes || [];
+          const idx = arr.indexOf(tagId);
+          if (idx >= 0) arr.splice(idx, 1); else arr.push(tagId);
+          referenciaFormState.fields.shotTypes = arr;
+          const isActive = arr.includes(tagId);
+          chip.classList.toggle('active', isActive);
+          chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      });
 
       // Voltar pra lista (descarta alterações não salvas — sem confirm,
       // formulário ainda pequeno o suficiente pra não justificar atrito)
@@ -10605,7 +11037,8 @@
               title: referenciaFormState.fields.title,
               copy: referenciaFormState.fields.copy,
               notes: referenciaFormState.fields.notes,
-              category: referenciaFormState.fields.category,
+              pieceTypes: referenciaFormState.fields.pieceTypes || [],
+              shotTypes: referenciaFormState.fields.shotTypes || [],
               mediaBase64
             }, editingId);
             resetReferenciaFormState();
