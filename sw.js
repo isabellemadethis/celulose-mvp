@@ -3,7 +3,7 @@
 // ============================================================
 // Versao: bump quando shell muda — força clientes a refazer cache.
 // CACHE_NAME inclui versao pra invalidar antigos automaticamente.
-const CACHE_VERSION = 'v1-2026-05-13';
+const CACHE_VERSION = 'v2-2026-05-17-c52';
 const CACHE_NAME = 'celulose-mvp-' + CACHE_VERSION;
 
 // Shell minimo cacheado no install. Firebase + Google Fonts ficam fora
@@ -43,7 +43,9 @@ self.addEventListener('activate', (event) => {
 });
 
 // ============================================================
-// FETCH — cache-first pro shell, network-first pra Firebase/Fonts
+// FETCH — NETWORK-FIRST pro shell (sempre busca rede primeiro,
+// cache so como fallback offline). Mudanca C5.2: estrategia anterior
+// (cache-first) servia index.html antigo por dias mesmo apos deploy novo.
 // ============================================================
 self.addEventListener('fetch', (event) => {
   const req = event.request;
@@ -59,19 +61,19 @@ self.addEventListener('fetch', (event) => {
     return; // browser default: network
   }
 
-  // Same-origin: cache-first
+  // Same-origin: NETWORK-FIRST com fallback pro cache.
+  // Sempre tenta rede; se sucesso, atualiza cache pra uso offline futuro;
+  // se falhar (offline), cai pro cache; se nem cache, retorna shell pra navegacoes.
   event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((response) => {
-        // Cache successful responses do mesmo origin pra futuras visitas offline.
-        if (response && response.status === 200) {
-          const respClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, respClone));
-        }
-        return response;
-      }).catch(() => {
-        // Offline + sem cache + same-origin: retorna o shell (index.html) pra navegacoes.
+    fetch(req).then((response) => {
+      if (response && response.status === 200) {
+        const respClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(req, respClone));
+      }
+      return response;
+    }).catch(() => {
+      return caches.match(req).then((cached) => {
+        if (cached) return cached;
         if (req.mode === 'navigate') {
           return caches.match('./index.html');
         }
