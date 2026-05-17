@@ -4732,6 +4732,472 @@
     }
 
     /* ============================================================ */
+    /* S2.5* C5.1 — Biblioteca de Referências (Isabelle lista/form + Jamily modal) */
+    /* ============================================================ */
+
+    /* ----- Lista (POV Isabelle, aba Referências) ----- */
+    .ref-list-header {
+      margin-bottom: 14px;
+    }
+    .ref-list-kicker {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 6px;
+    }
+    .ref-list-sub {
+      font-size: 12px;
+      color: var(--mauve-text);
+      opacity: 0.85;
+      line-height: 1.45;
+    }
+    .ref-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ref-item {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+      padding: 12px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .ref-item:hover {
+      border-color: var(--mauve);
+      box-shadow: 0 4px 14px rgba(122, 76, 96, 0.10);
+    }
+    .ref-item-thumb {
+      flex-shrink: 0;
+      width: 64px;
+      aspect-ratio: 9 / 16;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--mauve), var(--rose));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ref-item-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .ref-item-thumb-placeholder {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+    .ref-item-info {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      justify-content: center;
+    }
+    .ref-item-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .ref-item-meta {
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.02em;
+    }
+    .ref-item-category {
+      align-self: flex-start;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      padding: 3px 8px;
+      line-height: 1.4;
+      text-transform: lowercase;
+      margin-top: 2px;
+    }
+    .ref-item-chevron {
+      flex-shrink: 0;
+      align-self: center;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--mauve);
+      opacity: 0.6;
+    }
+    .ref-list-empty {
+      padding: 36px 24px;
+      background: var(--white);
+      border: 1px dashed var(--rose-soft);
+      border-radius: var(--radius-lg);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .ref-list-empty-icon {
+      font-size: 40px;
+      color: var(--rose-soft);
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+    .ref-list-empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--deep);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+    .ref-list-empty-sub {
+      font-size: 13px;
+      color: var(--mauve-text);
+      line-height: 1.5;
+    }
+    .ref-create-btn {
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--blush-light);
+      background: var(--mauve);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.12s ease;
+    }
+    .ref-create-btn:hover {
+      background: var(--deep);
+    }
+    .ref-create-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ----- Form (POV Isabelle, criar/editar) ----- */
+    .ref-form-screen {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .ref-form-back {
+      align-self: flex-start;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ref-form-back:hover {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+    .ref-form-header {
+      padding-bottom: 4px;
+    }
+    .ref-form-kicker {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: 6px;
+    }
+    .ref-form-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.02em;
+    }
+    .ref-form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ref-form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mauve-text);
+      letter-spacing: 0.02em;
+    }
+    .ref-form-label-aux {
+      font-weight: 400;
+      color: var(--gray);
+      margin-left: 4px;
+    }
+    .ref-form-input,
+    .ref-form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--deep);
+      background: var(--white);
+      border: 1.5px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease;
+    }
+    .ref-form-input:focus,
+    .ref-form-textarea:focus {
+      outline: none;
+      border-color: var(--mauve);
+    }
+    .ref-form-input::placeholder,
+    .ref-form-textarea::placeholder {
+      color: var(--gray-light);
+    }
+    .ref-form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .ref-form-upload {
+      position: relative;
+      width: 100%;
+      min-height: 160px;
+      border: 2px dashed var(--rose-soft);
+      background: var(--blush-light);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .ref-form-upload:hover:not(.has-preview) {
+      border-color: var(--mauve);
+      background: var(--white);
+    }
+    .ref-form-upload.has-preview {
+      cursor: default;
+      border-style: solid;
+      border-color: var(--border-soft);
+      background: var(--white);
+      padding: 6px;
+    }
+    .ref-form-upload-placeholder {
+      text-align: center;
+      padding: 24px;
+    }
+    .ref-form-upload-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .ref-form-upload-cta {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--mauve);
+      margin-bottom: 4px;
+    }
+    .ref-form-upload-hint {
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 0.02em;
+    }
+    .ref-form-preview {
+      max-width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+    .ref-form-remove {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: var(--deep);
+      color: var(--white);
+      border: none;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .ref-form-remove:hover {
+      background: var(--mauve);
+    }
+    .ref-form-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .ref-form-submit {
+      width: 100%;
+    }
+    .ref-form-delete {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--gray);
+      background: transparent;
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ref-form-delete:hover {
+      color: #b94a4a;
+      border-color: #d99a9a;
+      background: rgba(255, 240, 240, 0.6);
+    }
+
+    /* ----- Modal de visualização (POV Jamily, Galeria) ----- */
+    .reference-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(38, 28, 30, 0.78);
+      z-index: 9100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: refModalFadeIn 0.2s ease;
+    }
+    @keyframes refModalFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .reference-modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      max-width: 460px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.32);
+    }
+    .reference-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: rgba(38, 28, 30, 0.6);
+      color: var(--white);
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .reference-modal-close:hover {
+      background: var(--deep);
+    }
+    .reference-modal-image-wrap {
+      width: 100%;
+      max-height: 56vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--blush-light);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .reference-modal-image {
+      width: 100%;
+      max-height: 56vh;
+      object-fit: cover;
+      display: block;
+    }
+    .reference-modal-image-placeholder {
+      width: 100%;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--mauve), var(--rose));
+      color: var(--white);
+      font-size: 56px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .reference-modal-body {
+      padding: 18px 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .reference-modal-category {
+      align-self: flex-start;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      padding: 3px 10px;
+      line-height: 1.4;
+      text-transform: lowercase;
+    }
+    .reference-modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+    }
+    .reference-modal-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .reference-modal-section-kicker {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mauve);
+    }
+    .reference-modal-section-text {
+      font-size: 14px;
+      color: var(--deep);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .reference-modal-section-notes .reference-modal-section-text {
+      background: var(--blush-light);
+      border-left: 3px solid var(--mauve);
+      padding: 12px 14px;
+      border-radius: 4px;
+      font-style: italic;
+    }
+
+    /* ============================================================ */
     /* S2.5* C3 — Criar Card (POV Jamily)                            */
     /* ============================================================ */
 
@@ -6039,7 +6505,9 @@
     // ----- Galeria (C5) -----
 
     // Cards marcados como referência (postados + isReference=true).
-    // Ordenados por postedAt desc (mais recente primeiro).
+    // OBSOLETO desde C5.1 (v1.5.2): Galeria agora lê de references/ direto.
+    // Mantido por retrocompat caso algum lugar legado chame — pode ser removido
+    // em sprint futuro depois de confirmar zero uso.
     function getCardsReferencia() {
       const cards = Object.values((state.clientData && state.clientData.cards) || {});
       return cards
@@ -6047,16 +6515,117 @@
         .sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0));
     }
 
+    // ----- C5.1 (v1.5.2): Biblioteca de Referências (subárvore separada) -----
+    // Referências são cards-exemplo criados pela Isabelle do zero (não cards
+    // postados). Schema próprio em references/{refId}. Não passam por fluxo
+    // de aprovação. Galeria da Jamily lê daqui.
+
+    // Limites de campos — UI valida antes de submit.
+    const REFERENCE_LIMITS = {
+      title: 80,
+      copy: 500,
+      notes: 1000,
+      category: 30
+    };
+
+    function generateRefId() {
+      const rand = Math.random().toString(36).slice(2, 8);
+      return `ref_${Date.now()}_${rand}`;
+    }
+
+    // Lista de referências do cliente atual, ordenada por createdAt desc
+    // (mais recente primeiro — material novo aparece no topo).
+    function getReferencesList() {
+      const refs = (state.clientData && state.clientData.references) || {};
+      return Object.values(refs)
+        .filter(r => r && r.id)
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+
+    function getReferenceById(refId) {
+      const refs = (state.clientData && state.clientData.references) || {};
+      return refs[refId] || null;
+    }
+
+    // Salvar referência — create se sem id, update se com id.
+    // Sem fluxo de aprovação — autora é a Isabelle, escreve direto.
+    function saveReference(fields, existingId) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
+      const title = (fields.title || '').trim();
+      if (!title) { showToast('Título é obrigatório.'); return Promise.reject(); }
+      if (title.length > REFERENCE_LIMITS.title) { showToast(`Título passa de ${REFERENCE_LIMITS.title} chars.`); return Promise.reject(); }
+      const copy = (fields.copy || '').trim();
+      const notes = (fields.notes || '').trim();
+      const category = (fields.category || '').trim();
+      const mediaBase64 = typeof fields.mediaBase64 === 'string' ? fields.mediaBase64 : '';
+
+      const now = Date.now();
+      const refId = existingId || generateRefId();
+
+      if (existingId) {
+        // Update — preserva createdAt/createdBy
+        const updates = {
+          [`references/${refId}/title`]: title,
+          [`references/${refId}/copy`]: copy,
+          [`references/${refId}/notes`]: notes,
+          [`references/${refId}/category`]: category,
+          [`references/${refId}/mediaBase64`]: mediaBase64,
+          [`references/${refId}/updatedAt`]: now
+        };
+        return clientRef.update(updates).then(() => {
+          showToast('✓ Referência atualizada');
+        }).catch(e => {
+          console.warn('[saveReference] update erro:', e);
+          showToast('Não consegui salvar. Tenta de novo.');
+          throw e;
+        });
+      } else {
+        // Create
+        const reference = {
+          id: refId,
+          title,
+          copy,
+          notes,
+          category,
+          mediaBase64,
+          createdBy: 'isabelle',
+          createdAt: now,
+          updatedAt: now
+        };
+        return clientRef.child(`references/${refId}`).set(reference).then(() => {
+          showToast('✓ Referência criada');
+        }).catch(e => {
+          console.warn('[saveReference] create erro:', e);
+          showToast('Não consegui criar. Tenta de novo.');
+          throw e;
+        });
+      }
+    }
+
+    function deleteReference(refId) {
+      if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
+      return clientRef.child(`references/${refId}`).remove().then(() => {
+        showToast('✓ Referência apagada');
+      }).catch(e => {
+        console.warn('[deleteReference] erro:', e);
+        showToast('Não consegui apagar. Tenta de novo.');
+        throw e;
+      });
+    }
+
+
     function renderGaleriaHTML() {
-      const refs = getCardsReferencia();
+      // C5.1: lê de references/ direto (não filtra mais cards postados).
+      // Referências são cards-exemplo criados pela Isabelle, schema próprio.
+      const refs = getReferencesList();
 
       if (refs.length === 0) {
         return `
           <section class="galeria-empty">
             <div class="galeria-empty-icon">★</div>
-            <div class="galeria-empty-title">Nenhuma referência marcada ainda</div>
+            <div class="galeria-empty-title">Nenhuma referência ainda</div>
             <div class="galeria-empty-sub">
-              Quando a Isabelle marcar cards aprovados como padrão, eles aparecem aqui — vira sua coleção de "como o Closet costuma ficar bom".
+              Quando a Isabelle criar referências do padrão Closet, elas aparecem aqui — vira sua coleção de "como deve ficar".
             </div>
           </section>
         `;
@@ -6064,19 +6633,83 @@
 
       return `
         <section class="galeria-grid">
-          ${refs.map(c => {
-            const thumb = c.referenceImage
-              ? `<img class="galeria-item-img" src="${escapeHtml(c.referenceImage)}" alt="" />`
-              : `<div class="galeria-item-placeholder">${escapeHtml((c.title || 'C').charAt(0).toUpperCase())}</div>`;
+          ${refs.map(r => {
+            const thumb = r.mediaBase64
+              ? `<img class="galeria-item-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
+              : `<div class="galeria-item-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
             return `
-              <div class="galeria-item">
+              <button type="button" class="galeria-item" data-ref-open="${escapeHtml(r.id)}">
                 <div class="galeria-item-thumb">${thumb}</div>
-                <div class="galeria-item-title">${escapeHtml(c.title || '(sem título)')}</div>
-              </div>
+                <div class="galeria-item-title">${escapeHtml(r.title || '(sem título)')}</div>
+              </button>
             `;
           }).join('')}
         </section>
       `;
+    }
+
+    function bindGaleriaHandlers() {
+      document.querySelectorAll('[data-ref-open]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const refId = btn.getAttribute('data-ref-open');
+          if (refId) openReferenceModal(refId);
+        });
+      });
+    }
+
+    // Modal de visualização da Referência (POV Jamily). Mostra TUDO:
+    // imagem grande + título + categoria + copy + notas pedagógicas.
+    // z-index 9000 (acima de sheet-overlay 800). Fecha com Esc ou click no overlay.
+    function openReferenceModal(refId) {
+      const ref = getReferenceById(refId);
+      if (!ref) { showToast('Referência sumiu.'); return; }
+
+      const existing = document.getElementById('reference-modal-overlay');
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      const overlay = document.createElement('div');
+      overlay.id = 'reference-modal-overlay';
+      overlay.className = 'reference-modal-overlay';
+      overlay.innerHTML = `
+        <div class="reference-modal" role="dialog" aria-modal="true">
+          <button type="button" class="reference-modal-close" aria-label="Fechar">×</button>
+          ${ref.mediaBase64
+            ? `<div class="reference-modal-image-wrap">
+                 <img class="reference-modal-image" src="${escapeHtml(ref.mediaBase64)}" alt="" />
+               </div>`
+            : `<div class="reference-modal-image-placeholder">${escapeHtml((ref.title || 'R').charAt(0).toUpperCase())}</div>`
+          }
+          <div class="reference-modal-body">
+            ${ref.category ? `<div class="reference-modal-category">${escapeHtml(ref.category)}</div>` : ''}
+            <div class="reference-modal-title">${escapeHtml(ref.title || '(sem título)')}</div>
+            ${ref.copy ? `
+              <div class="reference-modal-section">
+                <div class="reference-modal-section-kicker">Copy sugerida</div>
+                <div class="reference-modal-section-text">${escapeHtml(ref.copy)}</div>
+              </div>` : ''}
+            ${ref.notes ? `
+              <div class="reference-modal-section reference-modal-section-notes">
+                <div class="reference-modal-section-kicker">Por que funciona</div>
+                <div class="reference-modal-section-text">${escapeHtml(ref.notes)}</div>
+              </div>` : ''}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      const close = () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        document.removeEventListener('keydown', escHandler);
+      };
+      const escHandler = (e) => { if (e.key === 'Escape') close(); };
+      overlay.addEventListener('click', (e) => {
+        // Fecha se clicou fora do .reference-modal (no overlay) ou no botão de close
+        if (e.target === overlay || e.target.closest('.reference-modal-close')) {
+          close();
+        }
+      });
+      document.addEventListener('keydown', escHandler);
     }
 
 
@@ -8658,6 +9291,7 @@
       if (tab === 'hub')     bindHubJamilyHandlers();
       if (tab === 'criar')   bindCriarCardHandlers();
       if (tab === 'refazer') bindRefazerListaHandlers();
+      if (tab === 'galeria') bindGaleriaHandlers();
     }
 
     // Render do conteúdo central conforme aba ativa.
@@ -8701,6 +9335,24 @@
     // submitar com sucesso ou ao trocar de aba.
     let pendingImageBase64 = null;
     let pendingOrigin = 'pauta';
+
+    // C5.1: estado do form de Referência. mode = 'list' | 'create' | 'edit'.
+    // editingId só usado em 'edit'. pendingImage é base64 sobrevive re-renders.
+    let referenciaFormState = {
+      mode: 'list',
+      editingId: null,
+      fields: { title: '', copy: '', notes: '', category: '' },
+      pendingImage: null
+    };
+
+    function resetReferenciaFormState() {
+      referenciaFormState = {
+        mode: 'list',
+        editingId: null,
+        fields: { title: '', copy: '', notes: '', category: '' },
+        pendingImage: null
+      };
+    }
 
     function renderCriarCardHTML(prefillCard) {
       // C4.1: se em modo refazer e prefill não veio explícito, busca pelo state.
@@ -9221,9 +9873,10 @@
 
         <div class="sheet-body delegacao-sheet-body">
           <div class="delegacao-tabs" role="tablist">
-            <button type="button" class="delegacao-tab ${tab === 'pauta' ? 'active' : ''}" data-deleg-tab="pauta" role="tab">Pauta do dia</button>
-            <button type="button" class="delegacao-tab ${tab === 'fila' ? 'active' : ''}" data-deleg-tab="fila" role="tab">Fila bulk</button>
-            <button type="button" class="delegacao-tab ${tab === 'historico' ? 'active' : ''}" data-deleg-tab="historico" role="tab">Histórico de pautas</button>
+            <button type="button" class="delegacao-tab ${tab === 'pauta' ? 'active' : ''}" data-deleg-tab="pauta" role="tab">Pauta</button>
+            <button type="button" class="delegacao-tab ${tab === 'fila' ? 'active' : ''}" data-deleg-tab="fila" role="tab">Fila</button>
+            <button type="button" class="delegacao-tab ${tab === 'referencias' ? 'active' : ''}" data-deleg-tab="referencias" role="tab">Referências</button>
+            <button type="button" class="delegacao-tab ${tab === 'historico' ? 'active' : ''}" data-deleg-tab="historico" role="tab">Histórico</button>
           </div>
 
           <div class="delegacao-body">
@@ -9243,18 +9896,25 @@
       document.querySelectorAll('[data-deleg-tab]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          delegacaoSheetTab = btn.getAttribute('data-deleg-tab');
+          const newTab = btn.getAttribute('data-deleg-tab');
+          // C5.1: ao sair da tab referencias, reseta form pra não voltar mid-edit
+          if (delegacaoSheetTab === 'referencias' && newTab !== 'referencias') {
+            resetReferenciaFormState();
+          }
+          delegacaoSheetTab = newTab;
           openDelegacaoSheet(); // re-render
         });
       });
 
       // Bind específico por tab
-      if (tab === 'pauta' && hasExecutora) bindPautaPanelHandlers();
-      if (tab === 'fila'  && hasExecutora) bindFilaBulkHandlers();
+      if (tab === 'pauta'       && hasExecutora) bindPautaPanelHandlers();
+      if (tab === 'fila'        && hasExecutora) bindFilaBulkHandlers();
+      if (tab === 'referencias' && hasExecutora) bindReferenciasTabHandlers();
     }
 
     // Render do conteúdo de cada tab. C2 plugou 'pauta' e 'historico'.
     // C3 substitui 'fila', C4 não muda (sub-fluxo dentro da fila).
+    // C5.1 adiciona 'referencias' (biblioteca pedagógica POV Isabelle).
     function renderDelegacaoTabContent(tab, data) {
       data = data || {};
       if (tab === 'pauta') {
@@ -9262,6 +9922,9 @@
       }
       if (tab === 'fila') {
         return renderFilaBulkHTML();
+      }
+      if (tab === 'referencias') {
+        return renderReferenciasTabHTML();
       }
       if (tab === 'historico') {
         return renderPautaHistoricoHTML(data.historico);
@@ -9558,6 +10221,348 @@
           } catch (err) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Enviar ajuste';
+          }
+        });
+      }
+    }
+
+    // ----- C5.1: Aba Referências (POV Isabelle) — lista + form criar/editar -----
+
+    function renderReferenciasTabHTML() {
+      if (referenciaFormState.mode === 'create' || referenciaFormState.mode === 'edit') {
+        return renderReferenciaFormHTML();
+      }
+      return renderReferenciasListaHTML();
+    }
+
+    function renderReferenciasListaHTML() {
+      const refs = getReferencesList();
+      const header = `
+        <div class="ref-list-header">
+          <div class="ref-list-kicker">Biblioteca de referências</div>
+          <div class="ref-list-sub">Exemplos do padrão Closet pra Jamily consultar. Aparecem na Galeria dela.</div>
+        </div>
+      `;
+
+      if (refs.length === 0) {
+        return `
+          ${header}
+          <div class="ref-list-empty">
+            <div class="ref-list-empty-icon">★</div>
+            <div class="ref-list-empty-title">Nenhuma referência ainda</div>
+            <div class="ref-list-empty-sub">Cria a primeira pra Jamily começar a estudar o padrão.</div>
+          </div>
+          <button type="button" class="ref-create-btn" id="ref-create-btn">+ Criar referência</button>
+        `;
+      }
+
+      return `
+        ${header}
+        <div class="ref-list">
+          ${refs.map(r => {
+            const cat = r.category ? `<span class="ref-item-category">${escapeHtml(r.category)}</span>` : '';
+            const thumbHtml = r.mediaBase64
+              ? `<img class="ref-item-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
+              : `<div class="ref-item-thumb-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
+            return `
+              <button type="button" class="ref-item" data-ref-edit="${escapeHtml(r.id)}">
+                <div class="ref-item-thumb">${thumbHtml}</div>
+                <div class="ref-item-info">
+                  <div class="ref-item-title">${escapeHtml(r.title || '(sem título)')}</div>
+                  <div class="ref-item-meta">criada ${escapeHtml(formatTimeAgo(r.createdAt || 0))}</div>
+                  ${cat}
+                </div>
+                <div class="ref-item-chevron">›</div>
+              </button>
+            `;
+          }).join('')}
+        </div>
+        <button type="button" class="ref-create-btn" id="ref-create-btn">+ Criar referência</button>
+      `;
+    }
+
+    function renderReferenciaFormHTML() {
+      const isEdit = referenciaFormState.mode === 'edit';
+      const existing = isEdit && referenciaFormState.editingId
+        ? getReferenceById(referenciaFormState.editingId)
+        : null;
+
+      // Se modo edit mas ref sumiu (deletada em outra aba), volta pra lista
+      if (isEdit && !existing) {
+        resetReferenciaFormState();
+        return renderReferenciasListaHTML();
+      }
+
+      // Valores: prioriza fields em memória (digitação), senão existing, senão vazio
+      const fields = referenciaFormState.fields || {};
+      const titleVal = fields.title || existing?.title || '';
+      const copyVal = fields.copy || existing?.copy || '';
+      const notesVal = fields.notes || existing?.notes || '';
+      const categoryVal = fields.category || existing?.category || '';
+      const previewSrc = referenciaFormState.pendingImage != null
+        ? referenciaFormState.pendingImage
+        : (existing?.mediaBase64 || '');
+
+      const headerLabel = isEdit ? 'Editar referência' : 'Nova referência';
+      const submitLabel = isEdit ? 'Salvar alterações' : 'Criar referência';
+
+      return `
+        <div class="ref-form-screen">
+          <button type="button" class="ref-form-back" id="ref-form-back-btn">← Voltar pra lista</button>
+
+          <div class="ref-form-header">
+            <div class="ref-form-kicker">${isEdit ? 'Editando' : 'Criando'}</div>
+            <div class="ref-form-title">${escapeHtml(headerLabel)}</div>
+          </div>
+
+          <!-- Upload de mídia -->
+          <div class="ref-form-field">
+            <label class="ref-form-label">Mídia ${isEdit ? '(troca se quiser)' : '(opcional, mas recomendado)'}</label>
+            <div class="ref-form-upload ${previewSrc ? 'has-preview' : ''}" id="ref-form-upload-zone">
+              ${previewSrc
+                ? `<img src="${previewSrc}" alt="Pré-visualização" class="ref-form-preview" />
+                   <button type="button" class="ref-form-remove" id="ref-form-remove-img" aria-label="Remover imagem">×</button>`
+                : `<div class="ref-form-upload-placeholder">
+                     <div class="ref-form-upload-icon">📸</div>
+                     <div class="ref-form-upload-cta">Foto / print do exemplo</div>
+                     <div class="ref-form-upload-hint">JPEG/PNG até ~5MB. Comprime automaticamente.</div>
+                   </div>`
+              }
+              <input type="file" id="ref-form-file" accept="image/*" style="display: none;" />
+            </div>
+          </div>
+
+          <!-- Título -->
+          <div class="ref-form-field">
+            <label class="ref-form-label" for="ref-form-title-input">Título</label>
+            <input
+              type="text"
+              id="ref-form-title-input"
+              class="ref-form-input"
+              maxlength="${REFERENCE_LIMITS.title}"
+              placeholder="Ex: Story usando preço como gancho"
+              value="${escapeHtml(titleVal)}"
+            />
+          </div>
+
+          <!-- Copy -->
+          <div class="ref-form-field">
+            <label class="ref-form-label" for="ref-form-copy-input">Copy sugerida</label>
+            <textarea
+              id="ref-form-copy-input"
+              class="ref-form-textarea"
+              maxlength="${REFERENCE_LIMITS.copy}"
+              rows="3"
+              placeholder="Texto que você escreveria nesse story."
+            >${escapeHtml(copyVal)}</textarea>
+          </div>
+
+          <!-- Notas pedagógicas -->
+          <div class="ref-form-field">
+            <label class="ref-form-label" for="ref-form-notes-input">Notas pedagógicas <span class="ref-form-label-aux">(por que funciona)</span></label>
+            <textarea
+              id="ref-form-notes-input"
+              class="ref-form-textarea"
+              maxlength="${REFERENCE_LIMITS.notes}"
+              rows="4"
+              placeholder="Ex: o ângulo de baixo valoriza o caimento. O preço grande chama atenção sem ser apelativo."
+            >${escapeHtml(notesVal)}</textarea>
+          </div>
+
+          <!-- Categoria -->
+          <div class="ref-form-field">
+            <label class="ref-form-label" for="ref-form-category-input">Categoria <span class="ref-form-label-aux">(opcional)</span></label>
+            <input
+              type="text"
+              id="ref-form-category-input"
+              class="ref-form-input"
+              maxlength="${REFERENCE_LIMITS.category}"
+              placeholder="Ex: iluminação, tom, enquadramento"
+              value="${escapeHtml(categoryVal)}"
+            />
+          </div>
+
+          <!-- Footer: submit + delete (só edit) -->
+          <div class="ref-form-footer">
+            <button type="button" class="btn-primary ref-form-submit" id="ref-form-submit-btn">${escapeHtml(submitLabel)}</button>
+            ${isEdit ? `<button type="button" class="ref-form-delete" id="ref-form-delete-btn">Apagar referência</button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function bindReferenciasTabHandlers() {
+      if (referenciaFormState.mode === 'create' || referenciaFormState.mode === 'edit') {
+        bindReferenciaFormHandlers();
+      } else {
+        bindReferenciasListaHandlers();
+      }
+    }
+
+    function bindReferenciasListaHandlers() {
+      const createBtn = document.getElementById('ref-create-btn');
+      if (createBtn) {
+        createBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          referenciaFormState.mode = 'create';
+          referenciaFormState.editingId = null;
+          referenciaFormState.fields = { title: '', copy: '', notes: '', category: '' };
+          referenciaFormState.pendingImage = null;
+          openDelegacaoSheet();
+        });
+      }
+      document.querySelectorAll('[data-ref-edit]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const refId = btn.getAttribute('data-ref-edit');
+          const existing = getReferenceById(refId);
+          if (!existing) { showToast('Referência sumiu.'); return; }
+          referenciaFormState.mode = 'edit';
+          referenciaFormState.editingId = refId;
+          referenciaFormState.fields = {
+            title: existing.title || '',
+            copy: existing.copy || '',
+            notes: existing.notes || '',
+            category: existing.category || ''
+          };
+          referenciaFormState.pendingImage = null; // null = "usa existente"; só vira string se trocou
+          openDelegacaoSheet();
+        });
+      });
+    }
+
+    function bindReferenciaFormHandlers() {
+      const uploadZone = document.getElementById('ref-form-upload-zone');
+      const fileInput = document.getElementById('ref-form-file');
+      const removeBtn = document.getElementById('ref-form-remove-img');
+      const titleInput = document.getElementById('ref-form-title-input');
+      const copyInput = document.getElementById('ref-form-copy-input');
+      const notesInput = document.getElementById('ref-form-notes-input');
+      const categoryInput = document.getElementById('ref-form-category-input');
+      const submitBtn = document.getElementById('ref-form-submit-btn');
+      const deleteBtn = document.getElementById('ref-form-delete-btn');
+      const backBtn = document.getElementById('ref-form-back-btn');
+
+      // Helper — sincroniza inputs pra state.fields (chamado antes de re-renders)
+      function syncFieldsFromInputs() {
+        referenciaFormState.fields = {
+          title: titleInput?.value || '',
+          copy: copyInput?.value || '',
+          notes: notesInput?.value || '',
+          category: categoryInput?.value || ''
+        };
+      }
+
+      // Voltar pra lista (descarta alterações não salvas — sem confirm,
+      // formulário ainda pequeno o suficiente pra não justificar atrito)
+      if (backBtn) {
+        backBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          resetReferenciaFormState();
+          openDelegacaoSheet();
+        });
+      }
+
+      // Upload zone abre file picker
+      if (uploadZone && fileInput) {
+        uploadZone.addEventListener('click', (e) => {
+          if (e.target.closest('#ref-form-remove-img')) return;
+          // Se já tem preview (pending ou existing) só permite trocar via remove primeiro
+          const hasPreview = referenciaFormState.pendingImage != null
+            || (referenciaFormState.mode === 'edit' && !!(getReferenceById(referenciaFormState.editingId)?.mediaBase64));
+          if (!hasPreview) fileInput.click();
+        });
+      }
+
+      if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          try {
+            showToast('Comprimindo imagem…');
+            const base64 = await compressImageToBase64(file, 1200, 0.7);
+            syncFieldsFromInputs();
+            referenciaFormState.pendingImage = base64;
+            openDelegacaoSheet();
+          } catch (err) {
+            console.warn('[ref upload] erro:', err);
+            showToast('Não consegui ler essa imagem.');
+          }
+          fileInput.value = '';
+        });
+      }
+
+      // Remover imagem — limpa pending. Em modo edit, marca string vazia
+      // pra distinguir "removeu" de "não trocou".
+      if (removeBtn) {
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          syncFieldsFromInputs();
+          referenciaFormState.pendingImage = '';
+          openDelegacaoSheet();
+        });
+      }
+
+      // Submit
+      if (submitBtn) {
+        submitBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          syncFieldsFromInputs();
+          const isEdit = referenciaFormState.mode === 'edit';
+          const editingId = referenciaFormState.editingId;
+          // Decide qual imagem mandar:
+          //  - pendingImage === null  → usa existing (não enviar campo no update)
+          //  - pendingImage === ''    → apagou (envia '')
+          //  - pendingImage string    → nova base64 (envia)
+          let mediaBase64;
+          if (isEdit) {
+            if (referenciaFormState.pendingImage === null) {
+              const ex = getReferenceById(editingId);
+              mediaBase64 = ex?.mediaBase64 || '';
+            } else {
+              mediaBase64 = referenciaFormState.pendingImage || '';
+            }
+          } else {
+            mediaBase64 = referenciaFormState.pendingImage || '';
+          }
+
+          submitBtn.disabled = true;
+          const origLabel = submitBtn.textContent;
+          submitBtn.textContent = isEdit ? 'Salvando…' : 'Criando…';
+          try {
+            await saveReference({
+              title: referenciaFormState.fields.title,
+              copy: referenciaFormState.fields.copy,
+              notes: referenciaFormState.fields.notes,
+              category: referenciaFormState.fields.category,
+              mediaBase64
+            }, editingId);
+            resetReferenciaFormState();
+            openDelegacaoSheet();
+          } catch (err) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = origLabel;
+          }
+        });
+      }
+
+      // Deletar (só edit)
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const editingId = referenciaFormState.editingId;
+          if (!editingId) return;
+          if (!confirm('Apagar essa referência? A Jamily não vê mais na Galeria.')) return;
+          deleteBtn.disabled = true;
+          const origLabel = deleteBtn.textContent;
+          deleteBtn.textContent = 'Apagando…';
+          try {
+            await deleteReference(editingId);
+            resetReferenciaFormState();
+            openDelegacaoSheet();
+          } catch (err) {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = origLabel;
           }
         });
       }
