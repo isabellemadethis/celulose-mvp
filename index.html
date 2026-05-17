@@ -4646,15 +4646,39 @@
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
+    /* C5.1 polish1: <button> precisa reset + profundidade visual */
     .galeria-item {
+      /* reset do button default */
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+      /* visual de card */
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
+      padding: 6px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      box-shadow: 0 2px 8px rgba(38, 28, 30, 0.05);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .galeria-item:hover {
+      transform: translateY(-2px);
+      border-color: var(--mauve);
+      box-shadow: 0 8px 22px rgba(122, 76, 96, 0.16);
+    }
+    .galeria-item:active {
+      transform: translateY(0);
     }
     .galeria-item-thumb {
       width: 100%;
       aspect-ratio: 1 / 1;
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       overflow: hidden;
       background: linear-gradient(135deg, var(--mauve), var(--rose));
       display: flex;
@@ -4672,12 +4696,31 @@
       color: var(--white);
       letter-spacing: -0.02em;
     }
-    .galeria-item-title {
-      font-size: 12px;
+    .galeria-item-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 2px 4px 4px;
+    }
+    .galeria-item-category {
+      align-self: flex-start;
+      font-size: 9px;
       font-weight: 500;
-      color: var(--mauve-text);
-      line-height: 1.3;
-      padding: 0 2px;
+      letter-spacing: 0.06em;
+      text-transform: lowercase;
+      color: var(--mauve);
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      padding: 2px 7px;
+      line-height: 1.4;
+    }
+    .galeria-item-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+      line-height: 1.35;
       word-break: break-word;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -6053,6 +6096,7 @@
         if (sheetState.open) return;
         if (blockModalState && blockModalState.open) return;
         if (blockCreateState && blockCreateState.open) return;
+        if (referenceModalState && referenceModalState.open) return;
         renderForCurrentMode();
       });
     }
@@ -6637,10 +6681,16 @@
             const thumb = r.mediaBase64
               ? `<img class="galeria-item-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
               : `<div class="galeria-item-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
+            const cat = r.category
+              ? `<span class="galeria-item-category">${escapeHtml(r.category)}</span>`
+              : '';
             return `
               <button type="button" class="galeria-item" data-ref-open="${escapeHtml(r.id)}">
                 <div class="galeria-item-thumb">${thumb}</div>
-                <div class="galeria-item-title">${escapeHtml(r.title || '(sem título)')}</div>
+                <div class="galeria-item-body">
+                  ${cat}
+                  <div class="galeria-item-title">${escapeHtml(r.title || '(sem título)')}</div>
+                </div>
               </button>
             `;
           }).join('')}
@@ -6658,9 +6708,14 @@
       });
     }
 
+    // C5.1 polish1: state flag pra modal de referência (guarda contra
+    // re-render do listener Firebase que pode quebrar o overlay).
+    let referenceModalState = { open: false };
+
     // Modal de visualização da Referência (POV Jamily). Mostra TUDO:
     // imagem grande + título + categoria + copy + notas pedagógicas.
-    // z-index 9000 (acima de sheet-overlay 800). Fecha com Esc ou click no overlay.
+    // z-index 9100 (acima de sheet-overlay 800 e do image-modal 9000).
+    // Fecha com Esc ou click no overlay.
     function openReferenceModal(refId) {
       const ref = getReferenceById(refId);
       if (!ref) { showToast('Referência sumiu.'); return; }
@@ -6698,17 +6753,33 @@
       `;
       document.body.appendChild(overlay);
 
+      referenceModalState.open = true;
       const close = () => {
+        referenceModalState.open = false;
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         document.removeEventListener('keydown', escHandler);
       };
       const escHandler = (e) => { if (e.key === 'Escape') close(); };
-      overlay.addEventListener('click', (e) => {
-        // Fecha se clicou fora do .reference-modal (no overlay) ou no botão de close
-        if (e.target === overlay || e.target.closest('.reference-modal-close')) {
-          close();
-        }
-      });
+      // Click dentro do .reference-modal (corpo) NÃO fecha. Botão close sim.
+      const modal = overlay.querySelector('.reference-modal');
+      if (modal) {
+        modal.addEventListener('mousedown', (e) => {
+          if (e.target.closest('.reference-modal-close')) {
+            close();
+            return;
+          }
+          // Bloqueia bubble pro overlay (que fecharia)
+          e.stopPropagation();
+        });
+      }
+      // Atrelar o close-on-backdrop em mousedown DEPOIS do tick atual (evita
+      // que o click original do botão da galeria bubble até aqui e feche imediato)
+      setTimeout(() => {
+        overlay.addEventListener('mousedown', (e) => {
+          // Só fecha se mousedown foi diretamente no overlay (backdrop)
+          if (e.target === overlay) close();
+        });
+      }, 0);
       document.addEventListener('keydown', escHandler);
     }
 
