@@ -4317,6 +4317,102 @@
     }
 
     /* ============================================================ */
+    /* Fase 3 — Banner "o que você perdeu" (Isabelle + Jamily) */
+    /* ============================================================ */
+
+    .delta-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--blush-light);
+      border: 1px solid var(--rose-soft);
+      border-left: 4px solid var(--mauve);
+      border-radius: var(--radius-md);
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(122, 76, 96, 0.06);
+    }
+    .delta-banner-icon {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--blush-light);
+      background: var(--mauve);
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .delta-banner-body {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .delta-banner-kicker {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--mauve);
+    }
+    .delta-banner-items {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .delta-banner-item {
+      font-size: 13px;
+      color: var(--deep);
+      line-height: 1.4;
+      letter-spacing: -0.005em;
+    }
+    .delta-banner-dismiss {
+      flex-shrink: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--mauve);
+      background: var(--white);
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      transition: all 0.15s ease;
+    }
+    .delta-banner-dismiss:hover {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+
+    /* Versão compacta dentro do shell Jamily (mobile 480px) */
+    .executora-shell .delta-banner {
+      margin: 12px 16px 0;
+      padding: 10px 12px;
+      gap: 10px;
+    }
+    .executora-shell .delta-banner-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+    }
+    .executora-shell .delta-banner-item {
+      font-size: 12px;
+    }
+    .executora-shell .delta-banner-dismiss {
+      padding: 6px 10px;
+      font-size: 10px;
+    }
+
+    /* ============================================================ */
     /* S2.5* C4.1 — Refazer ajustes (banner Hub + lista + form header) */
     /* ============================================================ */
 
@@ -9662,6 +9758,8 @@
             <button type="button" class="executora-logout" id="executora-logout-btn" aria-label="Sair">Sair</button>
           </header>
 
+          ${renderDeltaBannerHTML('jamily')}
+
           <main class="executora-main">
             ${renderExecutoraTabContent(tab, { pautaHoje, historico: historicoExt })}
           </main>
@@ -9713,6 +9811,8 @@
       if (tab === 'criar')   bindCriarCardHandlers();
       if (tab === 'refazer') bindRefazerListaHandlers();
       if (tab === 'galeria') bindGaleriaHandlers();
+      // Fase 3: banner "o que você perdeu" — sempre tenta bindar (no-op se ausente)
+      bindDeltaBannerHandlers('jamily');
     }
 
     // Render do conteúdo central conforme aba ativa.
@@ -9788,6 +9888,181 @@
     function resetGaleriaState() {
       galeriaState = { pieceFilter: [], shotFilter: [], expandedRefId: null };
     }
+
+    // ============================================================
+    // Fase 3 — Infra "o que você perdeu" (sem servidor, Caminho 2)
+    // ============================================================
+    // localStorage por (slug, role): cd:lastSeen:{slug}:{role}
+    // Roles: 'isabelle' (master/editor) e 'jamily' (executora). Segrega na
+    // mesma máquina pra Isabelle/Jamily logadas no mesmo navegador.
+
+    function getLastSeenKey(slug, role) {
+      return `cd:lastSeen:${slug}:${role}`;
+    }
+
+    function getLastSeen(slug, role) {
+      try {
+        const raw = localStorage.getItem(getLastSeenKey(slug, role));
+        if (raw == null) return null;
+        const ts = parseInt(raw, 10);
+        return Number.isFinite(ts) ? ts : null;
+      } catch (e) { return null; }
+    }
+
+    function markSeen(slug, role) {
+      try {
+        localStorage.setItem(getLastSeenKey(slug, role), String(Date.now()));
+      } catch (e) {}
+    }
+
+    // Computa delta de atividade desde lastSeen pro role indicado.
+    // Primeira visita (sem localStorage) → marca silenciosamente e retorna
+    // sem delta (banner não aparece, é primeira impressão limpa).
+    // Role 'isabelle': novos cards na fila + ajustes resolvidos + postados.
+    // Role 'jamily':   pauta nova + aprovados pra postar + ajustes pedidos + refs novas.
+    function getDeltaSinceLastSeen(slug, role) {
+      const lastSeen = getLastSeen(slug, role);
+      if (lastSeen == null) {
+        markSeen(slug, role);
+        return { hasDelta: false, isFirstVisit: true, lastSeen: null, items: [] };
+      }
+      const cd = state.clientData || {};
+      const cards = Object.values(cd.cards || {});
+      const adjustments = cd.adjustments || {};
+      const pautas = cd.pautas || {};
+      const references = cd.references || {};
+      const items = [];
+
+      if (role === 'isabelle') {
+        // Cards novos na fila Bulk (review + executoraInterna + sentForReviewAt > lastSeen
+        // + sem ajuste pendente — cards com ajuste pendente ficam fora da fila visível dela)
+        const novosFila = cards.filter(c =>
+          c &&
+          c.status === 'review' &&
+          c.createdByRole === ROLES.EXECUTORA_INTERNA &&
+          (c.sentForReviewAt || 0) > lastSeen &&
+          !isCardComAjustePendente(c)
+        );
+        if (novosFila.length > 0) {
+          items.push({
+            kind: 'novos-fila',
+            count: novosFila.length,
+            label: `${novosFila.length} card${novosFila.length === 1 ? '' : 's'} novo${novosFila.length === 1 ? '' : 's'} na fila`
+          });
+        }
+        // Ajustes resolvidos (Jamily reenviou)
+        let ajResolvidos = 0;
+        Object.values(adjustments).forEach(byCardId => {
+          if (!byCardId) return;
+          Object.values(byCardId).forEach(adj => {
+            if (adj && adj.resolved === true && (adj.resolvedAt || 0) > lastSeen) {
+              ajResolvidos += 1;
+            }
+          });
+        });
+        if (ajResolvidos > 0) {
+          items.push({
+            kind: 'ajustes-resolvidos',
+            count: ajResolvidos,
+            label: `${ajResolvidos} ajuste${ajResolvidos === 1 ? '' : 's'} resolvido${ajResolvidos === 1 ? '' : 's'} (de volta na fila)`
+          });
+        }
+        // Cards postados pela Jamily (escopo executora)
+        const postados = cards.filter(c =>
+          c &&
+          (c.postedAt || 0) > lastSeen &&
+          c.createdByRole === ROLES.EXECUTORA_INTERNA
+        );
+        if (postados.length > 0) {
+          items.push({
+            kind: 'postados',
+            count: postados.length,
+            label: `${postados.length} card${postados.length === 1 ? '' : 's'} postado${postados.length === 1 ? '' : 's'} pela Jamily`
+          });
+        }
+      } else if (role === 'jamily') {
+        // Pauta de hoje atualizada
+        const todayKey = getPautaTodayKey();
+        const pautaHoje = pautas[todayKey];
+        if (pautaHoje && (pautaHoje.updatedAt || 0) > lastSeen) {
+          items.push({ kind: 'pauta-nova', count: 1, label: 'Pauta de hoje atualizada' });
+        }
+        // Cards aprovados prontos pra postar (Isabelle aprovou desde lastSeen)
+        const aprovadosNovos = cards.filter(c =>
+          c &&
+          c.status === 'published' &&
+          !c.postedAt &&
+          c.createdByRole === ROLES.EXECUTORA_INTERNA &&
+          (c.updatedAt || 0) > lastSeen
+        );
+        if (aprovadosNovos.length > 0) {
+          items.push({
+            kind: 'aprovados-novos',
+            count: aprovadosNovos.length,
+            label: `${aprovadosNovos.length} card${aprovadosNovos.length === 1 ? '' : 's'} aprovado${aprovadosNovos.length === 1 ? '' : 's'} pra postar`
+          });
+        }
+        // Ajustes novos pedidos pela Isabelle (pra Jamily refazer)
+        const ajustesPedidos = cards.filter(c => {
+          if (!c || !c.lastAdjustmentId || c.createdByRole !== ROLES.EXECUTORA_INTERNA) return false;
+          const adj = (adjustments[c.id] && adjustments[c.id][c.lastAdjustmentId]) || null;
+          return !!(adj && adj.resolved === false && (adj.requestedAt || 0) > lastSeen);
+        });
+        if (ajustesPedidos.length > 0) {
+          items.push({
+            kind: 'ajustes-pedidos',
+            count: ajustesPedidos.length,
+            label: `${ajustesPedidos.length} ajuste${ajustesPedidos.length === 1 ? '' : 's'} novo${ajustesPedidos.length === 1 ? '' : 's'} pra refazer`
+          });
+        }
+        // Referências novas na Galeria
+        const refsNovas = Object.values(references).filter(r => r && (r.createdAt || 0) > lastSeen);
+        if (refsNovas.length > 0) {
+          items.push({
+            kind: 'refs-novas',
+            count: refsNovas.length,
+            label: `${refsNovas.length} referência${refsNovas.length === 1 ? '' : 's'} nova${refsNovas.length === 1 ? '' : 's'} na Galeria`
+          });
+        }
+      }
+
+      return { hasDelta: items.length > 0, isFirstVisit: false, lastSeen, items };
+    }
+
+    function renderDeltaBannerHTML(role) {
+      const slug = state.clientSlug || '';
+      const delta = getDeltaSinceLastSeen(slug, role);
+      if (!delta.hasDelta) return '';
+      const agoLabel = delta.lastSeen ? formatTimeAgo(delta.lastSeen) : '';
+      return `
+        <div class="delta-banner" id="delta-banner" data-role="${escapeHtml(role)}">
+          <div class="delta-banner-icon">✦</div>
+          <div class="delta-banner-body">
+            <div class="delta-banner-kicker">Desde sua última visita ${escapeHtml(agoLabel)}</div>
+            <div class="delta-banner-items">
+              ${delta.items.map(i => `<span class="delta-banner-item">${escapeHtml(i.label)}</span>`).join('')}
+            </div>
+          </div>
+          <button type="button" class="delta-banner-dismiss" id="delta-banner-dismiss" aria-label="Marcar como visto">
+            ✓ Visto
+          </button>
+        </div>
+      `;
+    }
+
+    function bindDeltaBannerHandlers(role) {
+      const slug = state.clientSlug || '';
+      const btn = document.getElementById('delta-banner-dismiss');
+      if (!btn) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        markSeen(slug, role);
+        // Dismiss otimista — remove sem full re-render
+        const banner = document.getElementById('delta-banner');
+        if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+      });
+    }
+
 
     function renderCriarCardHTML(prefillCard) {
       // C4.1: se em modo refazer e prefill não veio explícito, busca pelo state.
@@ -12545,6 +12820,8 @@
             </div>
           </div>
 
+          ${renderDeltaBannerHTML('isabelle')}
+
           <div class="editor-meta-row">
             <span class="editor-meta-pill"><strong>${dayTotal}</strong> cards no ${escapeHtml(getDayDisplayLabel(currentDay))}</span>
             <span class="editor-meta-pill"><strong>${totalCards}</strong> cards no total</span>
@@ -12779,6 +13056,9 @@
       if (openDelegacaoBtn) {
         openDelegacaoBtn.addEventListener('click', openDelegacaoSheet);
       }
+
+      // Fase 3: bind banner "o que você perdeu" (POV Isabelle)
+      bindDeltaBannerHandlers('isabelle');
 
       // Handler do botão "⊕ Clonar sprint" removido no refactor HARD-LITE.
       // Clone foi descontinuado junto com o conceito de sprint.
