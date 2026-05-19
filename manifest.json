@@ -1,7 +1,7 @@
 {
-  "name": "Celulose Digital",
-  "short_name": "Celulose",
-  "description": "App MVP Ponte v1.5 — aprovação de conteúdo entre Isabelle Cardoso (Celulose Digital) e clientes.",
+  "name": "Sinapse",
+  "short_name": "Sinapse",
+  "description": "Sinapse — central de produção de conteúdo da Celulose Digital. Conecta Isabelle (planejamento), executora interna (operação) e fundadores (validação).",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
