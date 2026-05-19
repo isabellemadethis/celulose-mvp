@@ -4412,6 +4412,171 @@
       font-size: 10px;
     }
 
+    /* ----- Toast de pedir permissão de notificação ----- */
+    .notif-perm-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 400px;
+      background: var(--white);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 32px rgba(38, 28, 30, 0.16);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 9050;
+      animation: notifToastSlideUp 0.25s ease;
+    }
+    @keyframes notifToastSlideUp {
+      from { opacity: 0; transform: translate(-50%, 20px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .notif-perm-toast-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .notif-perm-toast-sub {
+      font-size: 12px;
+      color: var(--mauve-text);
+      line-height: 1.4;
+    }
+    .notif-perm-toast-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .notif-perm-toast-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border-radius: 999px;
+      transition: all 0.15s ease;
+    }
+    .notif-perm-toast-btn-no {
+      color: var(--gray);
+      background: transparent;
+      border: 1px solid var(--border-soft);
+    }
+    .notif-perm-toast-btn-no:hover {
+      color: var(--deep);
+      border-color: var(--deep);
+    }
+    .notif-perm-toast-btn-yes {
+      color: var(--blush-light);
+      background: var(--mauve);
+      border: 1px solid var(--mauve);
+    }
+    .notif-perm-toast-btn-yes:hover {
+      background: var(--deep);
+      border-color: var(--deep);
+    }
+
+    /* ----- Overlay "bem-vinda de volta" (Jamily, segunda/terça) ----- */
+    .welcome-back-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(38, 28, 30, 0.85);
+      z-index: 9200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: welcomeFadeIn 0.3s ease;
+    }
+    @keyframes welcomeFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .welcome-back-modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      max-width: 380px;
+      width: 100%;
+      padding: 32px 28px 24px;
+      text-align: center;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .welcome-back-icon {
+      font-size: 52px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .welcome-back-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+    .welcome-back-sub {
+      font-size: 13px;
+      color: var(--mauve-text);
+      line-height: 1.5;
+    }
+    .welcome-back-list {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
+    .welcome-back-list li {
+      font-size: 13px;
+      color: var(--deep);
+      padding: 10px 14px;
+      background: var(--blush-light);
+      border-left: 3px solid var(--mauve);
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+    .welcome-back-empty {
+      font-size: 13px;
+      color: var(--mauve-text);
+      font-style: italic;
+      padding: 12px;
+      background: var(--blush-light);
+      border-radius: var(--radius-sm);
+    }
+    .welcome-back-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 12px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--blush-light);
+      background: var(--mauve);
+      border: none;
+      border-radius: var(--radius-md);
+      transition: all 0.15s ease;
+    }
+    .welcome-back-btn:hover {
+      background: var(--deep);
+    }
+    .welcome-back-btn:active {
+      transform: scale(0.97);
+    }
+
     /* ============================================================ */
     /* S2.5* C4.1 — Refazer ajustes (banner Hub + lista + form header) */
     /* ============================================================ */
@@ -6385,6 +6550,15 @@
         if (data && data.cards) {
           data.cards = applyV151DefaultsBulk(data.cards);
         }
+        // Fase 3 commit 2: diff-aware notifs locais — compara snapshot anterior
+        // com novo, dispara showLocalNotif pra deltas relevantes (Caminho 2).
+        try {
+          detectAndNotifyDeltas(lastClientDataSnap, data);
+        } catch (e) {
+          console.warn('[diff-notif] erro:', e);
+        }
+        lastClientDataSnap = data;
+
         state.clientData = data;
         // legado: mantém state.data espelhado pra código antigo não crashar até ele migrar
         state.data = data;
@@ -6430,6 +6604,9 @@
       // (home, editor, master) não devem manter o listener vazado.
       const goingToCard = state.mode === 'viewer' && state.viewer === 'card' && state.currentCardId;
       if (!goingToCard) detachCommentsListener();
+
+      // Fase 3 commit 2: limpa timer da janela se sair do editor
+      if (state.mode !== 'editor' && typeof clearJanelaReminder === 'function') clearJanelaReminder();
 
       if (state.mode === 'editor')      { document.body.classList.add('editor-mode'); document.body.classList.remove('master-mode'); document.body.classList.remove('is-manage-mode'); document.body.classList.remove('executora-mode'); renderEditor(); }
       else if (state.mode === 'master') { document.body.classList.remove('editor-mode'); document.body.classList.add('master-mode'); document.body.classList.remove('executora-mode'); renderMasterDashboard?.(); }
@@ -7373,6 +7550,8 @@
         updatedBy: 'isabelle'
       }).then(() => {
         showToast('✓ Pauta de hoje salva');
+        // Fase 3: pede permissão de notif no primeiro save (contextual — momento bom)
+        try { maybeAskNotifPermission(state.clientSlug || ''); } catch (e) {}
         // Re-render do sheet pra atualizar UI (refetch via state.clientData
         // pode demorar — listener de cliente cobre, mas trazemos imediato
         // chamando openDelegacaoSheet de novo)
@@ -7477,6 +7656,8 @@
 
       return clientRef.child('cards/' + cardId).set(card).then(() => {
         showToast('✓ Enviado pra fila');
+        // Fase 3: pede permissão de notif no primeiro send (contextual)
+        try { maybeAskNotifPermission(state.clientSlug || ''); } catch (e) {}
       }).catch(e => {
         console.warn('[criarCardJamily] erro:', e);
         showToast('Não consegui salvar. Tenta de novo.');
@@ -9813,6 +9994,9 @@
       if (tab === 'galeria') bindGaleriaHandlers();
       // Fase 3: banner "o que você perdeu" — sempre tenta bindar (no-op se ausente)
       bindDeltaBannerHandlers('jamily');
+
+      // Fase 3 commit 2: overlay "bem-vinda de volta" pós-folga (segunda/terça, uma vez por dia)
+      try { maybeShowWelcomeBack(); } catch (e) { console.warn('[welcome back]', e); }
     }
 
     // Render do conteúdo central conforme aba ativa.
@@ -10057,10 +10241,346 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         markSeen(slug, role);
-        // Dismiss otimista — remove sem full re-render
         const banner = document.getElementById('delta-banner');
         if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
       });
+    }
+
+    // ============================================================
+    // Fase 3 commit 2 — Notifs locais (sem servidor) + lembretes janelas + bem-vinda
+    // ============================================================
+
+    // Estado de notificação. notifPermAsked salvo no localStorage (não pede 2x na mesma máquina).
+    // welcomeShown salvo por (slug, dia) — overlay "bem-vinda" só uma vez por dia pra Jamily.
+    function getNotifPermAskedKey(slug) { return `cd:notifPermAsked:${slug}`; }
+    function wasNotifPermAsked(slug) {
+      try { return localStorage.getItem(getNotifPermAskedKey(slug)) === '1'; } catch (e) { return false; }
+    }
+    function markNotifPermAsked(slug) {
+      try { localStorage.setItem(getNotifPermAskedKey(slug), '1'); } catch (e) {}
+    }
+
+    // Pede permissão com toast contextual (Caminho A: lazy, no primeiro evento relevante).
+    // Não pede se já tem decisão (granted/denied) OU se já perguntou antes.
+    function maybeAskNotifPermission(slug) {
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'default') return;
+      if (wasNotifPermAsked(slug)) return;
+      markNotifPermAsked(slug);
+      // Toast simpático com 2 botões
+      const existing = document.getElementById('notif-perm-toast');
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+      const toast = document.createElement('div');
+      toast.id = 'notif-perm-toast';
+      toast.className = 'notif-perm-toast';
+      toast.innerHTML = `
+        <div class="notif-perm-toast-body">
+          <div class="notif-perm-toast-title">Quer receber lembretes?</div>
+          <div class="notif-perm-toast-sub">Te avisa quando bater janela ou rolar novidade — mesmo com o app em outra aba.</div>
+        </div>
+        <div class="notif-perm-toast-actions">
+          <button type="button" class="notif-perm-toast-btn notif-perm-toast-btn-no" id="notif-perm-no">Agora não</button>
+          <button type="button" class="notif-perm-toast-btn notif-perm-toast-btn-yes" id="notif-perm-yes">Permitir</button>
+        </div>
+      `;
+      document.body.appendChild(toast);
+      const dismiss = () => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      };
+      document.getElementById('notif-perm-no')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dismiss();
+      });
+      document.getElementById('notif-perm-yes')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try {
+          await Notification.requestPermission();
+        } catch (err) {
+          console.warn('[notif] erro pedindo permissão:', err);
+        }
+        dismiss();
+      });
+    }
+
+    // Dispara notificação local via Service Worker (preferido — funciona com app em background)
+    // ou via Notification API direta (fallback).
+    function showLocalNotif(title, body, opts) {
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'granted') return;
+      const options = Object.assign({
+        body: body || '',
+        icon: './icon.svg',
+        badge: './icon.svg',
+        tag: 'celulose-local',
+        requireInteraction: false
+      }, opts || {});
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, options).catch(err => {
+              console.warn('[notif] sw showNotification erro:', err);
+            });
+          }).catch(() => {
+            // Fallback direto
+            new Notification(title, options);
+          });
+        } else {
+          new Notification(title, options);
+        }
+      } catch (e) {
+        console.warn('[notif] erro:', e);
+      }
+    }
+
+    // ----- Lembretes das janelas (POV Isabelle) -----
+    // setTimeout pra próxima janela ativa. Quando dispara, mostra notif local
+    // + re-agenda pra próxima. Cancelado ao sair do editor.
+    let janelaReminderTimeoutId = null;
+
+    function clearJanelaReminder() {
+      if (janelaReminderTimeoutId) {
+        clearTimeout(janelaReminderTimeoutId);
+        janelaReminderTimeoutId = null;
+      }
+    }
+
+    // Calcula ms até próxima janela (apenas no dia de hoje, futuras). Retorna null se nenhuma.
+    function msAteProximaJanelaFutura() {
+      const janelas = (Array.isArray(janelasAprovacao) && janelasAprovacao.length)
+        ? janelasAprovacao : JANELAS_FALLBACK;
+      const now = new Date();
+      const nowMs = now.getTime();
+      const todayY = now.getFullYear();
+      const todayM = now.getMonth();
+      const todayD = now.getDate();
+      for (const h of janelas) {
+        const [hh, mm] = h.split(':').map(Number);
+        const target = new Date(todayY, todayM, todayD, hh, mm, 0, 0).getTime();
+        if (target > nowMs) return { hora: h, ms: target - nowMs };
+      }
+      return null;
+    }
+
+    function scheduleJanelaReminder() {
+      clearJanelaReminder();
+      if (state.mode !== 'editor') return; // só Isabelle no editor
+      const next = msAteProximaJanelaFutura();
+      if (!next) return; // sem janela futura hoje
+      janelaReminderTimeoutId = setTimeout(() => {
+        // Conta cards na fila no momento que dispara (pode ter mudado)
+        const cardsNaFila = (typeof getCardsNaFilaBulk === 'function') ? getCardsNaFilaBulk() : [];
+        const n = cardsNaFila.length;
+        const body = n === 0
+          ? 'Hora da janela — nada novo na fila ainda.'
+          : `${n} card${n === 1 ? '' : 's'} aguardando aprovação.`;
+        showLocalNotif(`Janela das ${next.hora}`, body, { tag: 'celulose-janela' });
+        // Re-agenda pra próxima
+        scheduleJanelaReminder();
+      }, next.ms);
+    }
+
+    // ----- Diff-aware notifications (via attachClientListener) -----
+    // Mantém snapshot anterior pra comparar e disparar notifs locais quando algo
+    // muda enquanto app está aberto. Pula a primeira chamada (sem comparação válida).
+    let lastClientDataSnap = null;
+
+    function detectAndNotifyDeltas(prevData, newData) {
+      if (!prevData || !newData) return; // primeira chamada — pula
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'granted') return;
+
+      const role = state.mode === 'executora' ? 'jamily'
+                 : (state.mode === 'editor' || state.mode === 'master') ? 'isabelle'
+                 : null;
+      if (!role) return;
+
+      const prevCards = prevData.cards || {};
+      const newCards = newData.cards || {};
+      const prevAdjs = prevData.adjustments || {};
+      const newAdjs = newData.adjustments || {};
+      const prevPautas = prevData.pautas || {};
+      const newPautas = newData.pautas || {};
+      const prevRefs = prevData.references || {};
+      const newRefs = newData.references || {};
+
+      if (role === 'isabelle') {
+        // Card novo na fila (criado pela Jamily)
+        Object.keys(newCards).forEach(cardId => {
+          const newC = newCards[cardId];
+          const oldC = prevCards[cardId];
+          if (!newC || newC.createdByRole !== ROLES.EXECUTORA_INTERNA) return;
+          if (newC.status !== 'review') return;
+          if (!oldC) {
+            // Card novo
+            const title = newC.title || newC.concept?.slice(0, 40) || 'sem título';
+            showLocalNotif('Jamily mandou um card novo', `"${title}"`, { tag: `card-novo-${cardId}` });
+          }
+        });
+        // Ajuste resolvido (card reenviado pós-ajuste)
+        Object.keys(newAdjs).forEach(cardId => {
+          const newByCard = newAdjs[cardId] || {};
+          const oldByCard = prevAdjs[cardId] || {};
+          Object.keys(newByCard).forEach(adjId => {
+            const newA = newByCard[adjId];
+            const oldA = oldByCard[adjId];
+            if (newA && newA.resolved === true && (!oldA || oldA.resolved !== true)) {
+              const card = newCards[cardId];
+              const title = card?.title || 'card';
+              showLocalNotif('Ajuste resolvido', `"${title}" tá de volta na fila`, { tag: `ajuste-resolvido-${adjId}` });
+            }
+          });
+        });
+      } else if (role === 'jamily') {
+        // Pauta nova de hoje
+        const todayKey = getPautaTodayKey();
+        const newPauta = newPautas[todayKey];
+        const oldPauta = prevPautas[todayKey];
+        if (newPauta && (!oldPauta || (newPauta.updatedAt || 0) > (oldPauta.updatedAt || 0))) {
+          showLocalNotif('Pauta de hoje atualizada', 'A Isabelle mexeu na pauta. Dá uma olhada.', { tag: `pauta-${todayKey}` });
+        }
+        // Card aprovado novo (status: review→published)
+        Object.keys(newCards).forEach(cardId => {
+          const newC = newCards[cardId];
+          const oldC = prevCards[cardId];
+          if (!newC || newC.createdByRole !== ROLES.EXECUTORA_INTERNA) return;
+          if (newC.status === 'published' && !newC.postedAt && oldC && oldC.status !== 'published') {
+            const title = newC.title || 'card';
+            showLocalNotif('Card aprovado pra postar', `"${title}" pode ir no ar`, { tag: `aprovado-${cardId}` });
+          }
+        });
+        // Ajuste novo pedido
+        Object.keys(newAdjs).forEach(cardId => {
+          const newByCard = newAdjs[cardId] || {};
+          const oldByCard = prevAdjs[cardId] || {};
+          Object.keys(newByCard).forEach(adjId => {
+            const newA = newByCard[adjId];
+            const oldA = oldByCard[adjId];
+            if (newA && !newA.resolved && !oldA) {
+              const card = newCards[cardId];
+              const title = card?.title || 'card';
+              showLocalNotif('Isabelle pediu ajuste', `"${title}" — abre o app pra ver`, { tag: `ajuste-pedido-${adjId}` });
+            }
+          });
+        });
+      }
+    }
+
+    // ----- Overlay "bem-vinda de volta" pra Jamily pós-folga -----
+    // Aparece se hoje é segunda OU terça E ainda não foi mostrado hoje.
+    // Conteúdo: saudação + resumo do que rolou nos dias de folga (dom + seg).
+    function getWelcomeBackKey(slug) { return `cd:lastWelcomeDismiss:${slug}`; }
+    function wasWelcomeShownToday(slug) {
+      try {
+        const last = localStorage.getItem(getWelcomeBackKey(slug));
+        return last === getPautaTodayKey();
+      } catch (e) { return false; }
+    }
+    function markWelcomeShownToday(slug) {
+      try { localStorage.setItem(getWelcomeBackKey(slug), getPautaTodayKey()); } catch (e) {}
+    }
+
+    function shouldShowWelcomeBack() {
+      // Só pra Jamily em dia útil pós-folga.
+      // Folga atual: dom + qua. Pós-folga = segunda (após dom) ou quinta (após qua).
+      if (state.mode !== 'executora') return false;
+      const today = new Date();
+      const dow = today.getDay(); // 0=dom, 1=seg, 2=ter, 3=qua, 4=qui
+      if (dow !== 1 && dow !== 4) return false;
+      const slug = state.clientSlug || '';
+      return !wasWelcomeShownToday(slug);
+    }
+
+    function computeWelcomeBackResumo() {
+      // Resumo do que rolou na folga (24h da folga + 4h de margem).
+      // Folga atual: dom OU qua (1 dia). Janela de 28h cobre confortavelmente.
+      const janelaFolga = Date.now() - (28 * 60 * 60 * 1000);
+      const cd = state.clientData || {};
+      const cards = Object.values(cd.cards || {});
+      const adjs = cd.adjustments || {};
+      const pautas = cd.pautas || {};
+
+      const aprovadosPostar = cards.filter(c =>
+        c && c.status === 'published' && !c.postedAt &&
+        c.createdByRole === ROLES.EXECUTORA_INTERNA &&
+        (c.updatedAt || 0) > janelaFolga
+      ).length;
+
+      let ajustesPedidos = 0;
+      Object.values(adjs).forEach(byCardId => {
+        Object.values(byCardId || {}).forEach(adj => {
+          if (adj && !adj.resolved && (adj.requestedAt || 0) > janelaFolga) {
+            ajustesPedidos += 1;
+          }
+        });
+      });
+
+      const pautasRecentes = Object.entries(pautas)
+        .filter(([k, p]) => p && (p.updatedAt || 0) > janelaFolga)
+        .length;
+
+      return { aprovadosPostar, ajustesPedidos, pautasRecentes };
+    }
+
+    function renderWelcomeBackOverlayHTML() {
+      const exec = state.currentExecutora || {};
+      const nome = exec.name || 'Jamily';
+      const resumo = computeWelcomeBackResumo();
+      const items = [];
+      if (resumo.aprovadosPostar > 0) {
+        items.push(`${resumo.aprovadosPostar} card${resumo.aprovadosPostar === 1 ? '' : 's'} aprovado${resumo.aprovadosPostar === 1 ? '' : 's'} esperando pra postar`);
+      }
+      if (resumo.ajustesPedidos > 0) {
+        items.push(`${resumo.ajustesPedidos} ajuste${resumo.ajustesPedidos === 1 ? '' : 's'} pedido${resumo.ajustesPedidos === 1 ? '' : 's'} pra refazer`);
+      }
+      if (resumo.pautasRecentes > 0) {
+        items.push(`${resumo.pautasRecentes} pauta${resumo.pautasRecentes === 1 ? '' : 's'} nova${resumo.pautasRecentes === 1 ? '' : 's'} pra olhar`);
+      }
+
+      const itemsHtml = items.length > 0
+        ? `<ul class="welcome-back-list">${items.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
+        : `<div class="welcome-back-empty">Tudo calmo na folga. Bom dia!</div>`;
+
+      const dow = new Date().getDay();
+      const greeting = dow === 1 ? 'Bom segunda-feira' : 'Bom quinta-feira';
+
+      return `
+        <div class="welcome-back-overlay" id="welcome-back-overlay">
+          <div class="welcome-back-modal">
+            <div class="welcome-back-icon">👋</div>
+            <div class="welcome-back-title">${escapeHtml(greeting)}, ${escapeHtml(nome)}</div>
+            <div class="welcome-back-sub">Aqui o resumo do que rolou enquanto você descansou:</div>
+            ${itemsHtml}
+            <button type="button" class="welcome-back-btn" id="welcome-back-dismiss">Bom voltar 👋</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function maybeShowWelcomeBack() {
+      if (!shouldShowWelcomeBack()) return;
+      const slug = state.clientSlug || '';
+      const existing = document.getElementById('welcome-back-overlay');
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+      const wrap = document.createElement('div');
+      wrap.innerHTML = renderWelcomeBackOverlayHTML();
+      const overlay = wrap.firstElementChild;
+      document.body.appendChild(overlay);
+      const close = () => {
+        markWelcomeShownToday(slug);
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      };
+      document.getElementById('welcome-back-dismiss')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        close();
+      });
+      // Esc fecha também
+      const escHandler = (e) => {
+        if (e.key === 'Escape') {
+          close();
+          document.removeEventListener('keydown', escHandler);
+        }
+      };
+      document.addEventListener('keydown', escHandler);
     }
 
 
@@ -13059,6 +13579,9 @@
 
       // Fase 3: bind banner "o que você perdeu" (POV Isabelle)
       bindDeltaBannerHandlers('isabelle');
+
+      // Fase 3 commit 2: agenda lembrete da próxima janela
+      try { scheduleJanelaReminder(); } catch (e) { console.warn('[janela reminder]', e); }
 
       // Handler do botão "⊕ Clonar sprint" removido no refactor HARD-LITE.
       // Clone foi descontinuado junto com o conceito de sprint.
