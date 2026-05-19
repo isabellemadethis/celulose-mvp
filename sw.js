@@ -3,7 +3,7 @@
 // ============================================================
 // Versao: bump quando shell muda — força clientes a refazer cache.
 // CACHE_NAME inclui versao pra invalidar antigos automaticamente.
-const CACHE_VERSION = 'v4-2026-05-19-sinapse-textos';
+const CACHE_VERSION = 'v5-2026-05-19-logo-png';
 const CACHE_NAME = 'celulose-mvp-' + CACHE_VERSION;
 
 // Shell minimo cacheado no install. Firebase + Google Fonts ficam fora
@@ -12,7 +12,9 @@ const SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-notif.png',
+  './icon-192.png'
 ];
 
 // ============================================================
@@ -89,7 +91,7 @@ self.addEventListener('fetch', (event) => {
 // Formato esperado do payload do push (acordo com Cloud Function futura):
 //   { title: string, body: string, icon?: string, url?: string, tag?: string }
 self.addEventListener('push', (event) => {
-  let payload = { title: 'Celulose', body: 'Nova notificacao' };
+  let payload = { title: 'Sinapse', body: 'Nova notificacao' };
   try {
     if (event.data) payload = Object.assign(payload, event.data.json());
   } catch (e) {
@@ -98,9 +100,9 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: payload.body,
-    icon: payload.icon || './icon.svg',
-    badge: './icon.svg',
-    tag: payload.tag || 'celulose-default',
+    icon: payload.icon || './icon-notif.png',
+    badge: './icon-notif.png',
+    tag: payload.tag || 'sinapse-default',
     data: { url: payload.url || './' },
     requireInteraction: false
   };

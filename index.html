@@ -9,16 +9,16 @@
   <meta name="theme-color" content="#FDF0F5">
   <title>Sinapse</title>
 
-  <!-- Favicon Celulose Digital — SVG inline (círculo dark com C verde).
+  <!-- Favicon Sinapse — PNG transparente com hexágono verde da Celulose Plastic Noise.
+       2026-05-19: substituiu o SVG inline ("C" verde) pelo PNG da logo oficial.
        É trocado dinamicamente via setFavicon() quando carrega um cliente
-       (passa a usar branding.logoUrl) e voltado pro padrão Celulose ao
+       (passa a usar branding.logoUrl) e voltado pro padrão Sinapse ao
        abrir master / entry gate / master pin gate. -->
-  <link rel="icon" type="image/svg+xml" id="favicon-link"
-    href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='29' fill='%230a0a0a' stroke='%2307d375' stroke-width='3'/><text x='32' y='42' font-family='system-ui,sans-serif' font-size='32' font-weight='600' fill='white' text-anchor='middle'>C</text></svg>" />
+  <link rel="icon" type="image/png" id="favicon-link" href="icon-192.png" />
 
   <!-- N-B PWA: manifest + apple-touch-icon (precondição pra Service Worker + Push). -->
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-notif.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10339,9 +10339,9 @@
       if (Notification.permission !== 'granted') return;
       const options = Object.assign({
         body: body || '',
-        icon: './icon.svg',
-        badge: './icon.svg',
-        tag: 'celulose-local',
+        icon: './icon-notif.png',
+        badge: './icon-notif.png',
+        tag: 'sinapse-local',
         requireInteraction: false
       }, opts || {});
       try {
@@ -12013,9 +12013,10 @@
     // Cor default por persona quando branding.personaColors não tem a key.
     const DEFAULT_PERSONA_COLOR = '#888';
 
-    // Favicon Celulose (default quando não tem cliente carregado — master,
-    // entry gate, master pin gate). Mesma SVG do <link rel="icon"> inicial.
-    const CELULOSE_FAVICON_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='29' fill='%230a0a0a' stroke='%2307d375' stroke-width='3'/><text x='32' y='42' font-family='system-ui,sans-serif' font-size='32' font-weight='600' fill='white' text-anchor='middle'>C</text></svg>";
+    // Favicon Sinapse (default quando não tem cliente carregado — master,
+    // entry gate, master pin gate). 2026-05-19: trocado de SVG inline pra PNG da logo.
+    // Nome da constante mantido por compat com call sites; apontava pra "C" verde, agora aponta pra hexágono verde.
+    const CELULOSE_FAVICON_SVG = "./icon-192.png";
 
     function setFavicon(href) {
       let link = document.getElementById('favicon-link');
@@ -14674,9 +14675,9 @@
       if (!('Notification' in window) || Notification.permission !== 'granted') return false;
       const opts = Object.assign({
         body: body || '',
-        icon: './icon.svg',
-        badge: './icon.svg',
-        tag: 'celulose-default'
+        icon: './icon-notif.png',
+        badge: './icon-notif.png',
+        tag: 'sinapse-default'
       }, options || {});
       try {
         // Preferencial: via SW registration (suporta badge, actions, persiste no tray).
