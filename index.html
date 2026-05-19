@@ -1881,6 +1881,36 @@
       margin-bottom: 6px;
     }
 
+    /* Polish: header-info agora é flex column pra acomodar botão "← Master" */
+    .editor-header-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .editor-back-master-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 6px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      background: transparent;
+      border: 1px solid var(--rose-soft);
+      border-radius: 999px;
+      transition: all 0.15s ease;
+    }
+    .editor-back-master-btn:hover {
+      background: var(--mauve);
+      color: var(--blush-light);
+      border-color: var(--mauve);
+    }
+
     .editor-subtitle {
       color: var(--mauve-text);
       font-size: 14px;
@@ -10541,16 +10571,16 @@
         : `<div class="welcome-back-empty">Tudo calmo na folga. Bom dia!</div>`;
 
       const dow = new Date().getDay();
-      const greeting = dow === 1 ? 'Bom segunda-feira' : 'Bom quinta-feira';
+      const greeting = dow === 1 ? 'Boa segunda-feira' : 'Boa quinta-feira';
 
       return `
         <div class="welcome-back-overlay" id="welcome-back-overlay">
           <div class="welcome-back-modal">
-            <div class="welcome-back-icon">👋</div>
+            <div class="welcome-back-icon">👋🏼</div>
             <div class="welcome-back-title">${escapeHtml(greeting)}, ${escapeHtml(nome)}</div>
             <div class="welcome-back-sub">Aqui o resumo do que rolou enquanto você descansou:</div>
             ${itemsHtml}
-            <button type="button" class="welcome-back-btn" id="welcome-back-dismiss">Bom voltar 👋</button>
+            <button type="button" class="welcome-back-btn" id="welcome-back-dismiss">Vamos para cima! 👹🤘🏻🔥</button>
           </div>
         </div>
       `;
@@ -12986,9 +13016,10 @@
       app.innerHTML = `
         <div class="editor-shell">
           <div class="editor-header">
-            <div>
+            <div class="editor-header-info">
               <div class="editor-kicker" data-brand-logo>${escapeHtml(clientName)} · Modo editor</div>
               <div class="editor-title">Painel da Isabelle</div>
+              <button type="button" class="editor-back-master-btn" id="editor-back-master-btn-empty">← Master</button>
             </div>
           </div>
 
@@ -13012,7 +13043,13 @@
           </div>
         </div>
       `;
-      const submitBtn = document.getElementById('new-day-submit');
+      const submitBtn = // Polish: botão "Sair pro Master" no empty state
+      document.getElementById('editor-back-master-btn-empty')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.search = '?master=1';
+      });
+
+      document.getElementById('new-day-submit');
       submitBtn.addEventListener('click', () => {
         const date = document.getElementById('new-day-date').value;
         const label = document.getElementById('new-day-label').value.trim();
@@ -13326,9 +13363,10 @@
       app.innerHTML = `
         <div class="editor-shell">
           <div class="editor-header">
-            <div>
+            <div class="editor-header-info">
               <div class="editor-kicker" data-brand-logo>${escapeHtml(clientName)} · Modo editor</div>
               <div class="editor-title">Painel da Isabelle</div>
+              <button type="button" class="editor-back-master-btn" id="editor-back-master-btn">← Master</button>
             </div>
             <div class="editor-day-tabs">
               ${days.map(d => `
@@ -13579,6 +13617,12 @@
 
       // Fase 3: bind banner "o que você perdeu" (POV Isabelle)
       bindDeltaBannerHandlers('isabelle');
+
+      // Polish: botão "Sair pro Master" — limpa search e leva pra ?master=1 (gate de PIN cuida)
+      document.getElementById('editor-back-master-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.search = '?master=1';
+      });
 
       // Fase 3 commit 2: agenda lembrete da próxima janela
       try { scheduleJanelaReminder(); } catch (e) { console.warn('[janela reminder]', e); }
