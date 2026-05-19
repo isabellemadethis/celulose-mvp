@@ -13044,9 +13044,18 @@
         </div>
       `;
       const submitBtn = // Polish: botão "Sair pro Master" no empty state
-      document.getElementById('editor-back-master-btn-empty')?.addEventListener('click', (e) => {
+      document.getElementById('editor-back-master-btn-empty')?.addEventListener('click', async (e) => {
         e.stopPropagation();
-        window.location.search = '?master=1';
+        // Polish 2026-05-19: já que ela está no editor (PIN OK), busca o PIN do master
+        // direto do Firebase e embute na URL pra pular o gate. Fallback: sem pin → gate normal.
+        try {
+          const pinSnap = await db.ref(ROOT_PATH + '/_master/pin').once('value');
+          const masterPin = pinSnap.val() || '';
+          window.location.search = masterPin ? `?master=1&pin=${encodeURIComponent(masterPin)}` : '?master=1';
+        } catch (err) {
+          console.warn('[master-back-empty] pin fetch falhou, caindo no gate', err);
+          window.location.search = '?master=1';
+        }
       });
 
       document.getElementById('new-day-submit');
@@ -13618,10 +13627,18 @@
       // Fase 3: bind banner "o que você perdeu" (POV Isabelle)
       bindDeltaBannerHandlers('isabelle');
 
-      // Polish: botão "Sair pro Master" — limpa search e leva pra ?master=1 (gate de PIN cuida)
-      document.getElementById('editor-back-master-btn')?.addEventListener('click', (e) => {
+      // Polish 2026-05-19: botão "Sair pro Master" — busca PIN do master direto e embute na URL.
+      // Já que ela está no editor (PIN OK), não faz sentido redigitar Z9Y8. Fallback: gate normal.
+      document.getElementById('editor-back-master-btn')?.addEventListener('click', async (e) => {
         e.stopPropagation();
-        window.location.search = '?master=1';
+        try {
+          const pinSnap = await db.ref(ROOT_PATH + '/_master/pin').once('value');
+          const masterPin = pinSnap.val() || '';
+          window.location.search = masterPin ? `?master=1&pin=${encodeURIComponent(masterPin)}` : '?master=1';
+        } catch (err) {
+          console.warn('[master-back] pin fetch falhou, caindo no gate', err);
+          window.location.search = '?master=1';
+        }
       });
 
       // Fase 3 commit 2: agenda lembrete da próxima janela
