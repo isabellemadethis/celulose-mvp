@@ -6298,7 +6298,7 @@
   <div id="app">
     <!-- PROMPT 12 / D-12.1: splash inicial. Substituído quando route() chama um render. -->
     <div class="boot-splash" id="boot-state">
-      <div class="boot-splash-kicker">Celulose Digital</div>
+      <div class="boot-splash-kicker">Sinapse</div>
       <div class="boot-splash-title">Carregando</div>
       <div class="boot-spinner" aria-hidden="true"></div>
     </div>
@@ -12030,19 +12030,21 @@
     }
 
     // Title contextual da aba — útil quando Isabelle tem várias abas abertas.
-    // Master: "Celulose Digital · Master"
-    // Editor: "{cliente} · Editor — Celulose Digital"
-    // Viewer: "{cliente} — Celulose Digital"
-    // Sem cliente / gate: "Celulose Digital"
+    // 2026-05-19: rebranding Sinapse — app vira "Sinapse", agência ("Celulose Digital")
+    // continua só nos welcome screens / PIN gates (contexto institucional).
+    // Master: "Sinapse · Master"
+    // Editor: "{cliente} · Editor — Sinapse"
+    // Viewer: "{cliente} — Sinapse"
+    // Sem cliente / gate: "Sinapse"
     function updatePageTitle() {
       const clientName = (state.clientData && state.clientData.meta && state.clientData.meta.name) || '';
-      let title = 'Celulose Digital';
+      let title = 'Sinapse';
       if (state.mode === 'master') {
-        title = 'Celulose Digital · Master';
+        title = 'Sinapse · Master';
       } else if (state.mode === 'editor' && clientName) {
-        title = clientName + ' · Editor — Celulose Digital';
+        title = clientName + ' · Editor — Sinapse';
       } else if (state.mode === 'viewer' && clientName) {
-        title = clientName + ' — Celulose Digital';
+        title = clientName + ' — Sinapse';
       }
       document.title = title;
     }
@@ -12298,7 +12300,7 @@
         <div class="master-shell">
           <div class="master-header">
             <div class="master-header-text">
-              <div class="master-kicker">Celulose Digital · Master</div>
+              <div class="master-kicker">Sinapse · Master</div>
               <div class="master-title">Olá, Isabelle</div>
               <div class="master-subtitle">${clients.length} ${clients.length === 1 ? 'cliente ativo' : 'clientes ativos'}</div>
             </div>
@@ -14696,9 +14698,9 @@
       const perm = await requestNotificationPermission();
       if (perm === 'granted') {
         const ok = await showNativeNotification(
-          'Celulose · Notificacoes ativas',
-          'Tudo certo! Voce vai receber alertas de aprovacao, ajuste e insight quando o backend (FCM) for ligado.',
-          { tag: 'celulose-test' }
+          'Sinapse · Notificações ativas',
+          'Tudo certo! Você vai receber alertas de aprovação, ajuste e insight quando o backend (FCM) for ligado.',
+          { tag: 'sinapse-test' }
         );
         showToast(ok ? 'Notificacao enviada' : 'Falha ao enviar');
       }
