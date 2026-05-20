@@ -3,7 +3,7 @@
 // ============================================================
 // Versao: bump quando shell muda — força clientes a refazer cache.
 // CACHE_NAME inclui versao pra invalidar antigos automaticamente.
-const CACHE_VERSION = 'v11-2026-05-19-sprint-s28-storage-explorer';
+const CACHE_VERSION = 'v11-2-2026-05-19-modal-zindex-fix';
 const CACHE_NAME = 'celulose-mvp-' + CACHE_VERSION;
 
 // Shell minimo cacheado no install. Firebase + Google Fonts ficam fora

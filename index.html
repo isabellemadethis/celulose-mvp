@@ -6008,7 +6008,7 @@
     .img-modal-overlay {
       position: fixed;
       inset: 0;
-      z-index: 9000;
+      z-index: 10001;
       background: rgba(0, 0, 0, 0.92);
       display: flex;
       align-items: center;
@@ -7705,16 +7705,24 @@
 
     // Lista TODOS os vídeos do Storage agrupados por cliente.
     // Cada item: { ref, path, slug, name, size, timeCreated, contentType, downloadUrl }
-    // Custo: 1 listAll() no root + 1 listAll() por slug + 1 getMetadata() por arquivo.
-    // Botão "Atualizar" no UI permite refazer manualmente sem auto-poll.
+    // BUG FIX: itera nos slugs conhecidos do masterData em vez de listAll() no root
+    // videos/ — as Storage Rules da S2.6 só cobrem match /videos/{slug}/{...},
+    // não permitem listar a pasta root pra descobrir slugs. Iterar pelos slugs
+    // conhecidos contorna a regra e funciona pra qualquer cliente cadastrado.
+    // Custo: 1 listAll() por slug + 1 getMetadata() + 1 getDownloadURL() por arquivo.
     async function listAllVideosFromStorage() {
       if (!storage) throw new Error('Storage não inicializado.');
       const result = [];
-      const rootListing = await storage.ref('videos').listAll();
-      for (const prefix of rootListing.prefixes) {
-        const slug = prefix.name;
+      const clientsObj = (state.masterData && state.masterData.clients) || {};
+      const slugs = Object.keys(clientsObj).filter(s => s && clientsObj[s]);
+      if (slugs.length === 0) {
+        console.warn('[listAllVideos] nenhum slug em state.masterData.clients');
+        return result;
+      }
+      for (const slug of slugs) {
         try {
-          const slugListing = await prefix.listAll();
+          const slugRef = storage.ref('videos/' + slug);
+          const slugListing = await slugRef.listAll();
           for (const item of slugListing.items) {
             try {
               const [metadata, url] = await Promise.all([
@@ -7736,7 +7744,11 @@
             }
           }
         } catch (e) {
-          console.warn('[listAllVideos] slug erro:', slug, e);
+          // Erro 404 (pasta não existe ainda) é esperado pra clientes sem vídeo.
+          // Só loga se for erro de permissão ou outro.
+          if (e && e.code !== 'storage/object-not-found') {
+            console.warn('[listAllVideos] slug erro:', slug, e);
+          }
         }
       }
       // Mais recentes primeiro
@@ -7748,21 +7760,44 @@
       return result;
     }
 
+    // Extrai o path canônico (videos/{slug}/{name.ext}) de uma URL do Firebase Storage.
+    // URL típica: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/videos%2F{slug}%2F{file}?alt=media&token=...
+    // Retorna 'videos/{slug}/{file}' ou null se não conseguiu extrair.
+    function extractStoragePath(url) {
+      if (!url || typeof url !== 'string') return null;
+      const m = url.match(/\/o\/([^?]+)/);
+      if (!m) return null;
+      try {
+        return decodeURIComponent(m[1]);
+      } catch (e) {
+        return null;
+      }
+    }
+
     // Cruza URL com DB pra achar quem usa esse vídeo (card, ref ou adjustment).
     // Retorna null se órfão (vídeo subido mas não referenciado em nada).
+    // BUG FIX: compara via path canônico extraído da URL (não a URL inteira),
+    // porque tokens de auth podem variar entre regen do downloadURL.
     function findOwnerForVideoUrl(url, masterData) {
       if (!url || !masterData || !masterData.clients) return null;
+      const targetPath = extractStoragePath(url);
+      const sameVideo = (otherUrl) => {
+        if (!otherUrl) return false;
+        if (otherUrl === url) return true;  // match exato
+        const otherPath = extractStoragePath(otherUrl);
+        return !!(targetPath && otherPath && targetPath === otherPath);
+      };
       for (const [slug, c] of Object.entries(masterData.clients)) {
         if (!c) continue;
         const cards = c.cards || {};
         for (const card of Object.values(cards)) {
-          if (card && card.videoUrl === url) {
+          if (card && sameVideo(card.videoUrl)) {
             return { type: 'card', slug, id: card.id, title: card.title || '(sem título)', personaId: card.personaId };
           }
         }
         const refs = c.references || {};
         for (const ref of Object.values(refs)) {
-          if (ref && ref.videoUrl === url) {
+          if (ref && sameVideo(ref.videoUrl)) {
             return { type: 'reference', slug, id: ref.id, title: ref.title || '(sem título)' };
           }
         }
@@ -7770,7 +7805,7 @@
         for (const [cardId, cardAdjs] of Object.entries(adjsObj)) {
           if (cardAdjs && typeof cardAdjs === 'object') {
             for (const adj of Object.values(cardAdjs)) {
-              if (adj && adj.videoUrl === url) {
+              if (adj && sameVideo(adj.videoUrl)) {
                 const linkedCard = cards[cardId];
                 return {
                   type: 'adjustment',
@@ -15802,7 +15837,7 @@
     // Roda apos 'load' pra nao concorrer com bootstrap inicial.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20260519-s28-storage-explorer').then((reg) => {
+        navigator.serviceWorker.register('sw.js?v=20260519-modal-zindex-fix').then((reg) => {
           console.log('[SW] registrado, scope:', reg.scope);
         }).catch((err) => {
           console.warn('[SW] registro falhou:', err);
