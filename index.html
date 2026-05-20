@@ -26,6 +26,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
   <style>
     /* ============================================================ */
@@ -6332,6 +6333,7 @@
     const ROOT_PATH = 'celulose-app';
 
     let db = null;
+    let storage = null;       // firebase.storage()  — setado no init (S2.6)
     let masterRef = null;     // db.ref('celulose-app/_master')  — setado no init
     let clientRef = null;     // db.ref('celulose-app/clients/{slug}')  — setado no route()
     let storageRef = null;    // pra logo + referência (SDK ainda não incluído; TODO próxima área)
@@ -6340,9 +6342,10 @@
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.database();
+      storage = firebase.storage();
       masterRef = db.ref(ROOT_PATH + '/_master');
-      // Storage SDK NÃO incluído — exige plano Blaze. Logo é base64 inline
-      // (mesmo pattern do referenceImage), comprimido via compressImage().
+      // Storage ativado em S2.6 — Blaze + bucket us-central1 (Always Free 5GB).
+      // Vídeo sobe via uploadVideoToStorage (helper abaixo). Imagens seguem base64 inline.
       firebaseReady = true;
     } catch (e) {
       console.error('[Firebase init falhou]', e);
@@ -6987,9 +6990,10 @@
       return executora.diasDescanso.indexOf(dias[ref.getDay()]) >= 0;
     }
 
-    // Defaults no read pra cards v1.5.1 — cards antigos (sem origin/postedAt/
-    // isReference/createdByRole/lastAdjustmentId) continuam válidos. Aplicar
+    // Defaults no read pra cards v1.5.1+ — cards antigos (sem origin/postedAt/
+    // isReference/createdByRole/lastAdjustmentId/videoUrl) continuam válidos. Aplicar
     // na borda evita undefined espalhado pelo render.
+    // v1.5.4 (Sprint S2.6): videoUrl adicionado pra cards com vídeo no Storage.
     function applyV151Defaults(card) {
       if (!card) return card;
       return Object.assign({}, card, {
@@ -6997,7 +7001,8 @@
         postedAt:         card.postedAt         != null ? card.postedAt         : null,
         isReference:      card.isReference      != null ? card.isReference      : false,
         createdByRole:    card.createdByRole    != null ? card.createdByRole    : ROLES.MASTER,
-        lastAdjustmentId: card.lastAdjustmentId != null ? card.lastAdjustmentId : null
+        lastAdjustmentId: card.lastAdjustmentId != null ? card.lastAdjustmentId : null,
+        videoUrl:         card.videoUrl         != null ? card.videoUrl         : ''
       });
     }
 
@@ -7630,6 +7635,71 @@
       });
     }
 
+    // ----- S2.6: Vídeo helpers (Firebase Storage, bucket us-central1) -----
+
+    // Limites de validação confirmados pela Isabelle em 19/05 (D1/D2/D3).
+    const VIDEO_MAX_BYTES = 100 * 1024 * 1024;   // 100MB (D2)
+    const VIDEO_ALLOWED_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
+    const VIDEO_ALLOWED_EXT_FALLBACK = ['mp4', 'mov', 'webm']; // fallback p/ mobile que manda mime vazio
+
+    // Valida arquivo de vídeo antes de subir. Retorna { ok: bool, error?: string }.
+    function validateVideo(file) {
+      if (!file) {
+        return { ok: false, error: 'Nenhum arquivo selecionado.' };
+      }
+      const mime = (file.type || '').toLowerCase();
+      const name = (file.name || '').toLowerCase();
+      const ext = name.includes('.') ? name.split('.').pop() : '';
+      const mimeOk = VIDEO_ALLOWED_MIMES.indexOf(mime) >= 0;
+      const extOk = VIDEO_ALLOWED_EXT_FALLBACK.indexOf(ext) >= 0;
+      if (!mimeOk && !extOk) {
+        return { ok: false, error: 'Formato não aceito. Use .mp4, .mov ou .webm.' };
+      }
+      if (file.size > VIDEO_MAX_BYTES) {
+        const mb = Math.round(file.size / (1024 * 1024));
+        return { ok: false, error: 'Vídeo muito grande (' + mb + 'MB). Exporte primeiro do rascunho do Instagram pra ficar leve (limite 100MB).' };
+      }
+      return { ok: true };
+    }
+
+    // Sobe vídeo pro Storage. Path: videos/{clientSlug}/{cardId}-{ts}.{ext}
+    // Retorna Promise<string> com a downloadURL.
+    // onProgress(pct) é chamado a cada update (0-100).
+    function uploadVideoToStorage(file, clientSlug, cardId, onProgress) {
+      if (!storage) {
+        return Promise.reject(new Error('Storage não inicializado. Recarrega a página.'));
+      }
+      const safeSlug = (clientSlug || state.clientSlug || 'unknown').trim();
+      const safeCardId = (cardId || generateCardId()).trim();
+      if (!safeSlug || !safeCardId) {
+        return Promise.reject(new Error('Cliente/card inválido pra upload.'));
+      }
+      const ts = Date.now();
+      const ext = ((file.name || '').includes('.') ? file.name.split('.').pop() : 'mp4').toLowerCase();
+      const path = 'videos/' + safeSlug + '/' + safeCardId + '-' + ts + '.' + ext;
+      const ref = storage.ref(path);
+      const task = ref.put(file, { contentType: file.type || 'video/mp4' });
+      return new Promise((resolve, reject) => {
+        task.on('state_changed',
+          function (snapshot) {
+            if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
+              const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              onProgress(pct);
+            }
+          },
+          function (error) {
+            console.warn('[uploadVideoToStorage] erro:', error);
+            reject(error);
+          },
+          function () {
+            task.snapshot.ref.getDownloadURL()
+              .then(function (url) { resolve(url); })
+              .catch(function (e) { reject(e); });
+          }
+        );
+      });
+    }
+
     // ID estilo card_{ts}_{rand6} (segue convenção do schema)
     function generateCardId() {
       const rand = Math.random().toString(36).slice(2, 8);
@@ -7639,7 +7709,7 @@
     // Cria card vindo da Jamily — fluxo simplificado da delegação.
     // Status já vai pra 'review', sem approvalByPersona (Isabelle aprova direto na Fila).
     // Persona owner default = 'closet' (a marca). dayId = day de hoje ou o mais recente.
-    function criarCardJamily({ title, concept, origin, referenceImage }) {
+    function criarCardJamily({ title, concept, origin, referenceImage, videoUrl }) {
       if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
       const t = (title || '').trim();
       const c = (concept || '').trim();
@@ -7666,6 +7736,7 @@
         captionTone: '',
         anchorPhrase: '',
         referenceImage: referenceImage || '',
+        videoUrl: videoUrl || '',
         checklist: [],
         // S2.5* / v1.5.1
         origin: origin || 'pauta',
@@ -7732,7 +7803,7 @@
     // Pedir ajuste = escreve adjustment + atualiza lastAdjustmentId no card.
     // Status do card NÃO muda (continua 'review'). Card some da Fila Isabelle
     // até Jamily marcar adjustment.resolved=true.
-    function pedirAjusteCard(cardId, tags, comment) {
+    function pedirAjusteCard(cardId, tags, comment, videoUrl) {
       if (!clientRef) { showToast('Cliente não carregado.'); return Promise.reject(); }
       const c = (comment || '').trim();
       if (c.length < 10) { showToast('Comentário precisa ter pelo menos 10 caracteres.'); return Promise.reject(); }
@@ -7744,6 +7815,7 @@
         cardId: cardId,
         tags: Array.isArray(tags) ? tags : [],
         comment: c,
+        videoUrl: videoUrl || '',  // S2.6 — vídeo de direcionamento (opcional)
         requestedBy: 'isabelle',
         requestedAt: now,
         resolved: false
@@ -7758,7 +7830,7 @@
       return clientRef.update(updates).then(() => {
         showToast('✓ Ajuste enviado');
         // Reset estado local + volta pra fila normal
-        pedirAjusteState = { cardId: null, tags: [], comment: '' };
+        pedirAjusteState = { cardId: null, tags: [], comment: '', videoUrl: '', videoMeta: null };
         if (sheetState.open && sheetState.type === 'delegacao') {
           openDelegacaoSheet();
         }
@@ -7834,7 +7906,7 @@
 
     // Estado local do form de ajuste — sobrevive a re-renders durante a edição.
     // Reset quando submit OK ou quando usuário cancela (botão Voltar).
-    let pedirAjusteState = { cardId: null, tags: [], comment: '' };
+    let pedirAjusteState = { cardId: null, tags: [], comment: '', videoUrl: '', videoMeta: null };
     // C4.1 — Jamily refazendo card pós-ajuste. Quando cardId != null, a tab
     // 'criar' renderiza form pré-preenchido com header de ajuste, e o submit
     // chama reenviarCardAjustado em vez de criarCardJamily.
@@ -8689,13 +8761,23 @@
           </div>
 
           <div class="card-view-body">
-            <div class="card-hero is-state-${effective} ${canVote ? 'is-armed' : ''} ${isPublished ? 'is-completed' : ''}" id="card-hero" ${c.referenceImage ? 'data-has-image="1"' : ''}>
-              ${c.referenceImage
-                ? `<img src="${c.referenceImage}" alt="referência">`
-                : `<div class="card-hero-empty">Sem referência visual</div>`}
+            <div class="card-hero is-state-${effective} ${canVote ? 'is-armed' : ''} ${isPublished ? 'is-completed' : ''}" id="card-hero" ${(c.videoUrl || c.referenceImage) ? 'data-has-image="1"' : ''}>
+              ${c.videoUrl
+                ? `<video src="${escapeHtml(c.videoUrl)}" controls preload="metadata" playsinline style="width: 100%; height: 100%; object-fit: cover; display: block; background: #000;"></video>`
+                : (c.referenceImage
+                    ? `<img src="${c.referenceImage}" alt="referência">`
+                    : `<div class="card-hero-empty">Sem referência visual</div>`)
+              }
               ${heroHint ? `<div class="card-hero-overlay-hint">${escapeHtml(heroHint)}</div>` : ''}
               <div class="card-heart" id="card-heart">♥</div>
             </div>
+            ${c.videoUrl && c.referenceImage
+              ? `<div style="margin: 12px 0 0; padding: 12px; background: var(--card-bg, #1A1A1A); border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                   <img src="${c.referenceImage}" alt="referência" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" />
+                   <div style="font-size: 13px; color: var(--text-secondary, #A0A0A0);">Imagem de referência</div>
+                 </div>`
+              : ''
+            }
 
             <div class="card-role-row">
               ${getCardRolePill(c)}
@@ -10005,6 +10087,8 @@
           if (refazerCardState.cardId && newTab !== 'criar') {
             refazerCardState = { cardId: null };
             pendingImageBase64 = null;
+            pendingVideoUrl = '';
+            pendingVideoMeta = null;
             pendingOrigin = 'pauta';
           }
           // C5.2: sair da Galeria reseta o expand (mas mantém filtros — útil
@@ -10069,6 +10153,8 @@
     // form (ex: digitando texto não perde a thumb selecionada). Reset ao
     // submitar com sucesso ou ao trocar de aba.
     let pendingImageBase64 = null;
+    let pendingVideoUrl = '';
+    let pendingVideoMeta = null;  // { name, size, mime } pra mostrar info no preview
     let pendingOrigin = 'pauta';
 
     // C5.1+C5.2: estado do form de Referência. mode = 'list' | 'create' | 'edit'.
@@ -10651,6 +10737,11 @@
                 <div class="criar-card-refazer-comment-kicker">Comentário</div>
                 <div class="criar-card-refazer-comment-text">${escapeHtml(adj.comment)}</div>
               </div>` : ''}
+            ${adj?.videoUrl ? `
+              <div class="criar-card-refazer-comment">
+                <div class="criar-card-refazer-comment-kicker">Vídeo de direcionamento</div>
+                <video src="${escapeHtml(adj.videoUrl)}" controls preload="metadata" playsinline style="width: 100%; max-height: 320px; margin-top: 8px; border-radius: 8px; background: #000;"></video>
+              </div>` : ''}
           </div>
         `;
       } else {
@@ -10683,6 +10774,34 @@
               }
               <input type="file" id="criar-card-file" accept="image/*" style="display: none;" />
             </div>
+          </div>
+
+          <!-- Upload de vídeo (S2.6) -->
+          <div class="criar-card-field">
+            <label class="criar-card-label">Vídeo (opcional)</label>
+            <div class="criar-card-upload ${pendingVideoUrl ? 'has-preview' : ''}" id="criar-video-zone" style="min-height: 80px;">
+              ${pendingVideoUrl
+                ? `<div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; width: 100%;">
+                     <div style="font-size: 24px;">📹</div>
+                     <div style="flex: 1; min-width: 0;">
+                       <div style="font-weight: 600; font-size: 14px; color: var(--text, #F2F2F2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                         ${escapeHtml(pendingVideoMeta?.name || 'vídeo.mp4')}
+                       </div>
+                       <div style="font-size: 12px; color: var(--text-secondary, #A0A0A0); margin-top: 2px;">
+                         ${pendingVideoMeta?.size ? Math.round(pendingVideoMeta.size / (1024 * 1024)) + 'MB · ' : ''}Anexado
+                       </div>
+                     </div>
+                     <button type="button" class="criar-card-remove" id="criar-remove-video" aria-label="Remover vídeo" style="position: static;">×</button>
+                   </div>`
+                : `<div class="criar-card-upload-placeholder">
+                     <div class="criar-card-upload-icon">📹</div>
+                     <div class="criar-card-upload-cta">Toca pra anexar vídeo</div>
+                     <div class="criar-card-upload-hint">MP4/MOV/WEBM até 100MB. Exporte do rascunho do Instagram.</div>
+                   </div>`
+              }
+              <input type="file" id="criar-card-video-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" style="display: none;" />
+            </div>
+            <div id="criar-card-video-progress" style="display: none; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #A0A0A0);">Subindo… <span id="criar-card-video-pct">0</span>%</div>
           </div>
 
           <!-- Peça (title curto) -->
@@ -10800,6 +10919,85 @@
         });
       }
 
+      // ----- S2.6: Handlers de upload de vídeo -----
+      const videoZone = document.getElementById('criar-video-zone');
+      const videoInput = document.getElementById('criar-card-video-file');
+      const videoRemoveBtn = document.getElementById('criar-remove-video');
+      const videoProgress = document.getElementById('criar-card-video-progress');
+      const videoPct = document.getElementById('criar-card-video-pct');
+
+      if (videoZone && videoInput) {
+        videoZone.addEventListener('click', (e) => {
+          if (e.target.closest('#criar-remove-video')) return;
+          if (!pendingVideoUrl) videoInput.click();
+        });
+      }
+
+      if (videoInput) {
+        videoInput.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const val = validateVideo(file);
+          if (!val.ok) {
+            showToast(val.error);
+            videoInput.value = '';
+            return;
+          }
+          // Mostra progress, esconde zona enquanto sobe
+          if (videoProgress) videoProgress.style.display = 'block';
+          if (videoZone) videoZone.style.opacity = '0.5';
+          try {
+            const tempCardId = refazerCardState.cardId || generateCardId();
+            const url = await uploadVideoToStorage(
+              file,
+              state.clientSlug || 'unknown',
+              tempCardId,
+              (pct) => { if (videoPct) videoPct.textContent = Math.round(pct); }
+            );
+            pendingVideoUrl = url;
+            pendingVideoMeta = { name: file.name, size: file.size, mime: file.type };
+            showToast('✓ Vídeo anexado');
+            // Re-render preservando inputs
+            const titleVal = (document.getElementById('criar-card-title-input') || {}).value || '';
+            const conceptVal = (document.getElementById('criar-card-concept-input') || {}).value || '';
+            const main = document.querySelector('.executora-main');
+            if (main) {
+              main.innerHTML = renderCriarCardHTML();
+              bindCriarCardHandlers();
+              const nt = document.getElementById('criar-card-title-input');
+              const nc = document.getElementById('criar-card-concept-input');
+              if (nt) nt.value = titleVal;
+              if (nc) nc.value = conceptVal;
+            }
+          } catch (err) {
+            console.warn('[uploadVideo] erro:', err);
+            showToast('Não consegui subir o vídeo. Tenta de novo.');
+            if (videoProgress) videoProgress.style.display = 'none';
+            if (videoZone) videoZone.style.opacity = '1';
+          }
+          videoInput.value = '';
+        });
+      }
+
+      if (videoRemoveBtn) {
+        videoRemoveBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          pendingVideoUrl = '';
+          pendingVideoMeta = null;
+          const titleVal = (document.getElementById('criar-card-title-input') || {}).value || '';
+          const conceptVal = (document.getElementById('criar-card-concept-input') || {}).value || '';
+          const main = document.querySelector('.executora-main');
+          if (main) {
+            main.innerHTML = renderCriarCardHTML();
+            bindCriarCardHandlers();
+            const nt = document.getElementById('criar-card-title-input');
+            const nc = document.getElementById('criar-card-concept-input');
+            if (nt) nt.value = titleVal;
+            if (nc) nc.value = conceptVal;
+          }
+        });
+      }
+
       // Chips de origem
       document.querySelectorAll('[data-origin]').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -10839,11 +11037,14 @@
                 title,
                 concept,
                 origin: pendingOrigin,
-                referenceImage: pendingImageBase64 || ''
+                referenceImage: pendingImageBase64 || '',
+                videoUrl: pendingVideoUrl || ''
               });
               // Reset estado refazer + criar
               refazerCardState = { cardId: null };
               pendingImageBase64 = null;
+              pendingVideoUrl = '';
+              pendingVideoMeta = null;
               pendingOrigin = 'pauta';
               // Decide pra onde voltar: se ainda tem outros pra refazer, lista;
               // caso contrário, Hub.
@@ -10855,10 +11056,13 @@
                 title,
                 concept,
                 origin: pendingOrigin,
-                referenceImage: pendingImageBase64 || ''
+                referenceImage: pendingImageBase64 || '',
+                videoUrl: pendingVideoUrl || ''
               });
               // Reset
               pendingImageBase64 = null;
+              pendingVideoUrl = '';
+              pendingVideoMeta = null;
               pendingOrigin = 'pauta';
               // Volta pro Hub (mostra que entrou na fila)
               state.executoraTab = 'hub';
@@ -10880,6 +11084,8 @@
       if (!card) { showToast('Card não encontrado.'); return; }
       refazerCardState = { cardId };
       pendingImageBase64 = card.referenceImage || null;
+      pendingVideoUrl = card.videoUrl || '';
+      pendingVideoMeta = card.videoUrl ? { name: 'vídeo anterior', size: 0, mime: '' } : null;
       pendingOrigin = card.origin || 'pauta';
       state.executoraTab = 'criar';
       renderExecutoraShell();
@@ -10888,6 +11094,8 @@
     function cancelarRefazer() {
       refazerCardState = { cardId: null };
       pendingImageBase64 = null;
+      pendingVideoUrl = '';
+      pendingVideoMeta = null;
       pendingOrigin = 'pauta';
       state.executoraTab = 'refazer';
       renderExecutoraShell();
@@ -11324,7 +11532,7 @@
     // C4: ativa "modo ajuste" da aba Fila (mesma sheet, conteúdo substitui).
     // renderFilaBulkHTML checa pedirAjusteState.cardId e decide qual tela renderizar.
     function openPedirAjusteSheet(cardId) {
-      pedirAjusteState = { cardId: cardId, tags: [], comment: '' };
+      pedirAjusteState = { cardId: cardId, tags: [], comment: '', videoUrl: '', videoMeta: null };
       // Reabre o sheet pra re-renderizar com o novo estado
       if (sheetState.open && sheetState.type === 'delegacao') {
         openDelegacaoSheet();
@@ -11332,7 +11540,7 @@
     }
 
     function cancelarPedirAjuste() {
-      pedirAjusteState = { cardId: null, tags: [], comment: '' };
+      pedirAjusteState = { cardId: null, tags: [], comment: '', videoUrl: '', videoMeta: null };
       if (sheetState.open && sheetState.type === 'delegacao') {
         openDelegacaoSheet();
       }
@@ -11403,6 +11611,35 @@
             </div>
           </div>
 
+          <!-- S2.6: vídeo de direcionamento opcional -->
+          <div class="ajuste-section">
+            <div class="ajuste-section-title">Vídeo de direcionamento (opcional)</div>
+            <div class="ajuste-section-hint">Manda um vídeo curto mostrando o que tem que mudar. Ex: regravação de cena de referência.</div>
+            <div class="criar-card-upload ${pedirAjusteState.videoUrl ? 'has-preview' : ''}" id="ajuste-video-zone" style="min-height: 80px;">
+              ${pedirAjusteState.videoUrl
+                ? `<div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; width: 100%;">
+                     <div style="font-size: 24px;">📹</div>
+                     <div style="flex: 1; min-width: 0;">
+                       <div style="font-weight: 600; font-size: 14px; color: var(--text, #F2F2F2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                         ${escapeHtml(pedirAjusteState.videoMeta?.name || 'vídeo.mp4')}
+                       </div>
+                       <div style="font-size: 12px; color: var(--text-secondary, #A0A0A0); margin-top: 2px;">
+                         ${pedirAjusteState.videoMeta?.size ? Math.round(pedirAjusteState.videoMeta.size / (1024 * 1024)) + 'MB · ' : ''}Anexado
+                       </div>
+                     </div>
+                     <button type="button" class="criar-card-remove" id="ajuste-remove-video" aria-label="Remover vídeo" style="position: static;">×</button>
+                   </div>`
+                : `<div class="criar-card-upload-placeholder">
+                     <div class="criar-card-upload-icon">📹</div>
+                     <div class="criar-card-upload-cta">Toca pra anexar vídeo</div>
+                     <div class="criar-card-upload-hint">MP4/MOV/WEBM até 100MB.</div>
+                   </div>`
+              }
+              <input type="file" id="ajuste-video-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" style="display: none;" />
+            </div>
+            <div id="ajuste-video-progress" style="display: none; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #A0A0A0);">Subindo… <span id="ajuste-video-pct">0</span>%</div>
+          </div>
+
           <div class="ajuste-footer">
             <button type="button" class="btn-secondary" id="ajuste-cancel-btn">Cancelar</button>
             <button type="button" class="btn-primary ajuste-submit" id="ajuste-submit-btn" ${canSubmit ? '' : 'disabled'}>
@@ -11464,6 +11701,67 @@
         });
       }
 
+      // ----- S2.6: handlers de upload de vídeo de direcionamento -----
+      const ajVideoZone = document.getElementById('ajuste-video-zone');
+      const ajVideoInput = document.getElementById('ajuste-video-file');
+      const ajVideoRemove = document.getElementById('ajuste-remove-video');
+      const ajVideoProgress = document.getElementById('ajuste-video-progress');
+      const ajVideoPct = document.getElementById('ajuste-video-pct');
+
+      if (ajVideoZone && ajVideoInput) {
+        ajVideoZone.addEventListener('click', (e) => {
+          if (e.target.closest('#ajuste-remove-video')) return;
+          if (!pedirAjusteState.videoUrl) ajVideoInput.click();
+        });
+      }
+
+      if (ajVideoInput) {
+        ajVideoInput.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const val = validateVideo(file);
+          if (!val.ok) {
+            showToast(val.error);
+            ajVideoInput.value = '';
+            return;
+          }
+          if (ajVideoProgress) ajVideoProgress.style.display = 'block';
+          if (ajVideoZone) ajVideoZone.style.opacity = '0.5';
+          try {
+            const url = await uploadVideoToStorage(
+              file,
+              state.clientSlug || 'unknown',
+              pedirAjusteState.cardId || 'unknown',
+              (pct) => { if (ajVideoPct) ajVideoPct.textContent = Math.round(pct); }
+            );
+            pedirAjusteState.videoUrl = url;
+            pedirAjusteState.videoMeta = { name: file.name, size: file.size, mime: file.type };
+            showToast('✓ Vídeo anexado');
+            // Reabre sheet pra refletir o vídeo no estado
+            if (sheetState.open && sheetState.type === 'delegacao') {
+              openDelegacaoSheet();
+            }
+          } catch (err) {
+            console.warn('[ajuste uploadVideo] erro:', err);
+            showToast('Não consegui subir o vídeo. Tenta de novo.');
+            if (ajVideoProgress) ajVideoProgress.style.display = 'none';
+            if (ajVideoZone) ajVideoZone.style.opacity = '1';
+          }
+          ajVideoInput.value = '';
+        });
+      }
+
+      if (ajVideoRemove) {
+        ajVideoRemove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          pedirAjusteState.videoUrl = '';
+          pedirAjusteState.videoMeta = null;
+          if (sheetState.open && sheetState.type === 'delegacao') {
+            openDelegacaoSheet();
+          }
+        });
+      }
+
       // Submit
       if (submitBtn) {
         submitBtn.addEventListener('click', async (e) => {
@@ -11475,7 +11773,8 @@
             await pedirAjusteCard(
               pedirAjusteState.cardId,
               pedirAjusteState.tags,
-              pedirAjusteState.comment
+              pedirAjusteState.comment,
+              pedirAjusteState.videoUrl
             );
             // sucesso: pedirAjusteCard já reseta state + re-renderiza
           } catch (err) {
@@ -14758,7 +15057,7 @@
     // Roda apos 'load' pra nao concorrer com bootstrap inicial.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then((reg) => {
+        navigator.serviceWorker.register('sw.js?v=20260519-s26-video').then((reg) => {
           console.log('[SW] registrado, scope:', reg.scope);
         }).catch((err) => {
           console.warn('[SW] registro falhou:', err);
