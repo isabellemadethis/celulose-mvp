@@ -11136,9 +11136,21 @@
               });
               const comment = adjustment.comment || '';
               const requestedLabel = formatTimeAgo(adjustment.requestedAt || 0);
-              const thumbHtml = card.referenceImage
-                ? `<img class="refazer-item-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
-                : `<div class="refazer-item-thumb-placeholder">${escapeHtml((title || 'C').charAt(0).toUpperCase())}</div>`;
+              // S2.6 bug-fix: thumb com badge 📹 quando tem vídeo (não clicável aqui — botão pai navega pro Refazer)
+              let thumbHtml;
+              if (card.videoUrl && card.referenceImage) {
+                thumbHtml = `<img class="refazer-item-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />
+                             <div style="position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 12px; padding: 2px 6px; font-size: 11px;">📹</div>`;
+              } else if (card.videoUrl) {
+                thumbHtml = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: #1A1A1A; color: #F2F2F2; gap: 4px;">
+                               <div style="font-size: 24px;">📹</div>
+                               <div style="font-size: 9px; color: #A0A0A0; letter-spacing: 0.5px;">VÍDEO</div>
+                             </div>`;
+              } else if (card.referenceImage) {
+                thumbHtml = `<img class="refazer-item-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`;
+              } else {
+                thumbHtml = `<div class="refazer-item-thumb-placeholder">${escapeHtml((title || 'C').charAt(0).toUpperCase())}</div>`;
+              }
               return `
                 <button type="button" class="refazer-item" data-refazer-card="${escapeHtml(card.id)}">
                   <div class="refazer-item-thumb">${thumbHtml}</div>
@@ -11441,12 +11453,27 @@
       const ageMs = card.sentForReviewAt || card.createdAt || Date.now();
       const ageLabel = formatTimeAgo(ageMs);
 
-      // Thumb: imagem se tem, senão gradient mauve→rose com initial.
-      // data-img-expand sinaliza pra abrir em modal full-screen ao clicar.
-      const thumbHtml = card.referenceImage
-        ? `<img class="fila-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
-        : `<div class="fila-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
-      const thumbAttr = card.referenceImage ? `data-img-expand="${escapeHtml(card.referenceImage)}"` : '';
+      // Thumb: vídeo > imagem > placeholder com inicial.
+      // data-img-expand abre modal de imagem; data-video-expand abre modal de vídeo.
+      // Quando há vídeo + imagem, prioriza vídeo (mais relevante) e mostra badge 📹.
+      let thumbHtml, thumbAttr;
+      if (card.videoUrl && card.referenceImage) {
+        thumbHtml = `<img class="fila-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />
+                     <div style="position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 12px; padding: 2px 6px; font-size: 11px; pointer-events: none;">📹</div>`;
+        thumbAttr = `data-video-expand="${escapeHtml(card.videoUrl)}" style="position: relative;"`;
+      } else if (card.videoUrl) {
+        thumbHtml = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: #1A1A1A; color: #F2F2F2; gap: 4px;">
+                       <div style="font-size: 28px;">📹</div>
+                       <div style="font-size: 10px; color: #A0A0A0; letter-spacing: 0.5px;">VÍDEO</div>
+                     </div>`;
+        thumbAttr = `data-video-expand="${escapeHtml(card.videoUrl)}"`;
+      } else if (card.referenceImage) {
+        thumbHtml = `<img class="fila-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`;
+        thumbAttr = `data-img-expand="${escapeHtml(card.referenceImage)}"`;
+      } else {
+        thumbHtml = `<div class="fila-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
+        thumbAttr = '';
+      }
 
       // Tag "Pedido fundador" destacada
       const originObj = CARD_ORIGINS.find(o => o.id === card.origin);
@@ -11507,6 +11534,14 @@
           if (src) openImageModal(src);
         });
       });
+      // S2.6 bug-fix: click no thumb de vídeo abre player em modal
+      document.querySelectorAll('[data-video-expand]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const src = el.getAttribute('data-video-expand');
+          if (src) openVideoModal(src);
+        });
+      });
     }
 
     // ----- Modal de imagem expandida (Polish C5) -----
@@ -11526,6 +11561,30 @@
       };
       const escHandler = (e) => { if (e.key === 'Escape') close(); };
       overlay.addEventListener('click', close);
+      document.addEventListener('keydown', escHandler);
+    }
+
+    // S2.6 bug-fix: modal pra tocar vídeo em fullscreen ao clicar no thumb.
+    // Mesma UX do openImageModal (click em qualquer lugar fora do vídeo fecha).
+    function openVideoModal(src) {
+      const overlay = document.createElement('div');
+      overlay.className = 'img-modal-overlay';
+      overlay.innerHTML = `
+        <video class="img-modal-img" src="${escapeHtml(src)}" controls autoplay playsinline style="max-width: 96vw; max-height: 92vh; background: #000;"></video>
+        <button type="button" class="img-modal-close" aria-label="Fechar">×</button>
+      `;
+      document.body.appendChild(overlay);
+      const videoEl = overlay.querySelector('video');
+      const close = () => {
+        if (videoEl) { try { videoEl.pause(); } catch (e) {} }
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        document.removeEventListener('keydown', escHandler);
+      };
+      const escHandler = (e) => { if (e.key === 'Escape') close(); };
+      // Click no overlay fecha — mas NÃO no vídeo (pra não fechar ao clicar play/pause).
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target.classList.contains('img-modal-close')) close();
+      });
       document.addEventListener('keydown', escHandler);
     }
 
@@ -11558,10 +11617,25 @@
       }
 
       const personaName = state.clientData?.personas?.[card.personaId]?.name || card.personaId || '';
-      const thumbHtml = card.referenceImage
-        ? `<img class="ajuste-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`
-        : `<div class="ajuste-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
-      const ajThumbAttr = card.referenceImage ? `data-img-expand="${escapeHtml(card.referenceImage)}"` : '';
+      // S2.6 bug-fix: thumb com vídeo > imagem > placeholder, com handler em todos
+      let thumbHtml, ajThumbAttr;
+      if (card.videoUrl && card.referenceImage) {
+        thumbHtml = `<img class="ajuste-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />
+                     <div style="position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 12px; padding: 2px 6px; font-size: 11px; pointer-events: none;">📹</div>`;
+        ajThumbAttr = `data-video-expand="${escapeHtml(card.videoUrl)}" style="position: relative;"`;
+      } else if (card.videoUrl) {
+        thumbHtml = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: #1A1A1A; color: #F2F2F2; gap: 4px;">
+                       <div style="font-size: 28px;">📹</div>
+                       <div style="font-size: 10px; color: #A0A0A0; letter-spacing: 0.5px;">VÍDEO</div>
+                     </div>`;
+        ajThumbAttr = `data-video-expand="${escapeHtml(card.videoUrl)}"`;
+      } else if (card.referenceImage) {
+        thumbHtml = `<img class="ajuste-thumb-img" src="${escapeHtml(card.referenceImage)}" alt="" />`;
+        ajThumbAttr = `data-img-expand="${escapeHtml(card.referenceImage)}"`;
+      } else {
+        thumbHtml = `<div class="ajuste-thumb-placeholder">${escapeHtml((card.title || 'C').charAt(0).toUpperCase())}</div>`;
+        ajThumbAttr = '';
+      }
 
       const selectedTags = pedirAjusteState.tags || [];
       const commentVal = pedirAjusteState.comment || '';
@@ -11657,6 +11731,14 @@
           e.stopPropagation();
           const src = el.getAttribute('data-img-expand');
           if (src) openImageModal(src);
+        });
+      });
+      // S2.6 bug-fix: click no thumb com vídeo abre player em modal
+      document.querySelectorAll('[data-video-expand]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const src = el.getAttribute('data-video-expand');
+          if (src) openVideoModal(src);
         });
       });
       const backBtn = document.getElementById('ajuste-back-btn');
@@ -13345,7 +13427,7 @@
           </div>
         </div>
       `;
-      const submitBtn = // Polish: botão "Sair pro Master" no empty state
+      // Polish: botão "Sair pro Master" no empty state
       document.getElementById('editor-back-master-btn-empty')?.addEventListener('click', async (e) => {
         e.stopPropagation();
         // Polish 2026-05-19: já que ela está no editor (PIN OK), busca o PIN do master
@@ -13360,7 +13442,9 @@
         }
       });
 
-      document.getElementById('new-day-submit');
+      // Bug-fix 2026-05-19: submitBtn era undefined (declaração quebrada por comentário inline)
+      const submitBtn = document.getElementById('new-day-submit');
+      if (!submitBtn) { console.warn('[renderEditorEmptyDays] submitBtn não encontrado'); return; }
       submitBtn.addEventListener('click', () => {
         const date = document.getElementById('new-day-date').value;
         const label = document.getElementById('new-day-label').value.trim();
@@ -15057,7 +15141,7 @@
     // Roda apos 'load' pra nao concorrer com bootstrap inicial.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20260519-s26-video').then((reg) => {
+        navigator.serviceWorker.register('sw.js?v=20260519-empty-days-fix').then((reg) => {
           console.log('[SW] registrado, scope:', reg.scope);
         }).catch((err) => {
           console.warn('[SW] registro falhou:', err);
