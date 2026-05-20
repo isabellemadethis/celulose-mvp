@@ -7114,6 +7114,7 @@
       const pieceTypes = Array.isArray(fields.pieceTypes) ? fields.pieceTypes.filter(Boolean) : [];
       const shotTypes  = Array.isArray(fields.shotTypes)  ? fields.shotTypes.filter(Boolean)  : [];
       const mediaBase64 = typeof fields.mediaBase64 === 'string' ? fields.mediaBase64 : '';
+      const videoUrl = typeof fields.videoUrl === 'string' ? fields.videoUrl : '';  // S2.6 Sessão 2
 
       const now = Date.now();
       const refId = existingId || generateRefId();
@@ -7127,6 +7128,7 @@
           [`references/${refId}/pieceTypes`]: pieceTypes,
           [`references/${refId}/shotTypes`]: shotTypes,
           [`references/${refId}/mediaBase64`]: mediaBase64,
+          [`references/${refId}/videoUrl`]: videoUrl,
           [`references/${refId}/updatedAt`]: now
         };
         return clientRef.update(updates).then(() => {
@@ -7146,6 +7148,7 @@
           pieceTypes,
           shotTypes,
           mediaBase64,
+          videoUrl,
           createdBy: 'isabelle',
           createdAt: now,
           updatedAt: now
@@ -7292,9 +7295,21 @@
               ...shotLabels.map(l =>  `<span class="galeria-lista-tag galeria-lista-tag-shot">${escapeHtml(l)}</span>`)
             ].join('');
             const notesSnippet = r.notes ? r.notes.slice(0, 120) + (r.notes.length > 120 ? '…' : '') : '';
-            const thumb = r.mediaBase64
-              ? `<img class="galeria-lista-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
-              : `<div class="galeria-lista-thumb-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
+            // S2.6 Sessão 2: badge 📹 quando ref tem vídeo
+            let thumb;
+            if (r.videoUrl && r.mediaBase64) {
+              thumb = `<img class="galeria-lista-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />
+                       <div style="position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 12px; padding: 2px 6px; font-size: 11px; pointer-events: none;">📹</div>`;
+            } else if (r.videoUrl) {
+              thumb = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: #1A1A1A; color: #F2F2F2; gap: 4px;">
+                         <div style="font-size: 28px;">📹</div>
+                         <div style="font-size: 10px; color: #A0A0A0; letter-spacing: 0.5px;">VÍDEO</div>
+                       </div>`;
+            } else if (r.mediaBase64) {
+              thumb = `<img class="galeria-lista-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`;
+            } else {
+              thumb = `<div class="galeria-lista-thumb-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
+            }
             return `
               <button type="button" class="galeria-lista-item" data-ref-expand="${escapeHtml(r.id)}">
                 <div class="galeria-lista-thumb">${thumb}</div>
@@ -7326,11 +7341,27 @@
         const t = SHOT_TYPES.find(x => x.id === id);
         return t ? t.label : id;
       });
-      const imgBlock = ref.mediaBase64
-        ? `<div class="galeria-expand-media">
+      // S2.6 Sessão 2: vídeo > imagem > placeholder; quando há ambos, mostra os dois
+      let imgBlock;
+      if (ref.videoUrl) {
+        imgBlock = `
+          <div class="galeria-expand-media" style="background: #000;">
+            <video src="${escapeHtml(ref.videoUrl)}" controls preload="metadata" playsinline style="width: 100%; max-height: 70vh; display: block; background: #000;"></video>
+          </div>
+          ${ref.mediaBase64
+            ? `<div style="margin: 12px 0 0; padding: 12px; background: var(--white, #fff); border: 1px solid var(--border-soft, #eadbe0); border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                 <img src="${escapeHtml(ref.mediaBase64)}" alt="referência" data-img-expand="${escapeHtml(ref.mediaBase64)}" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0; cursor: zoom-in;" />
+                 <div style="font-size: 13px; color: var(--mauve-text, #A0A0A0);">Imagem de referência</div>
+               </div>`
+            : ''}
+        `;
+      } else if (ref.mediaBase64) {
+        imgBlock = `<div class="galeria-expand-media">
              <img class="galeria-expand-img" src="${escapeHtml(ref.mediaBase64)}" alt="" data-img-expand="${escapeHtml(ref.mediaBase64)}" />
-           </div>`
-        : `<div class="galeria-expand-media-placeholder">${escapeHtml((ref.title || 'R').charAt(0).toUpperCase())}</div>`;
+           </div>`;
+      } else {
+        imgBlock = `<div class="galeria-expand-media-placeholder">${escapeHtml((ref.title || 'R').charAt(0).toUpperCase())}</div>`;
+      }
 
       const tagsBlock = (pieceLabels.length || shotLabels.length) ? `
         <div class="galeria-expand-tags">
@@ -7662,9 +7693,18 @@
       return { ok: true };
     }
 
+    // S2.6 Sessão 2: formata ETA em string curta ("12s" / "2min").
+    function formatUploadEta(etaSec) {
+      if (!isFinite(etaSec) || etaSec < 0) return '';
+      if (etaSec < 60) return 'faltam ~' + Math.max(1, Math.round(etaSec)) + 's';
+      const min = Math.round(etaSec / 60);
+      return 'faltam ~' + min + (min === 1 ? 'min' : 'min');
+    }
+
     // Sobe vídeo pro Storage. Path: videos/{clientSlug}/{cardId}-{ts}.{ext}
     // Retorna Promise<string> com a downloadURL.
-    // onProgress(pct) é chamado a cada update (0-100).
+    // onProgress(pct, etaSec) é chamado a cada update — etaSec só é confiável
+    // após ~1s de upload (precisa de baseline de velocidade).
     function uploadVideoToStorage(file, clientSlug, cardId, onProgress) {
       if (!storage) {
         return Promise.reject(new Error('Storage não inicializado. Recarrega a página.'));
@@ -7679,12 +7719,20 @@
       const path = 'videos/' + safeSlug + '/' + safeCardId + '-' + ts + '.' + ext;
       const ref = storage.ref(path);
       const task = ref.put(file, { contentType: file.type || 'video/mp4' });
+      const startTime = Date.now();
       return new Promise((resolve, reject) => {
         task.on('state_changed',
           function (snapshot) {
             if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
               const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              onProgress(pct);
+              const elapsed = (Date.now() - startTime) / 1000;
+              let etaSec = NaN;
+              if (elapsed > 1 && snapshot.bytesTransferred > 0) {
+                const bytesPerSec = snapshot.bytesTransferred / elapsed;
+                const remaining = snapshot.totalBytes - snapshot.bytesTransferred;
+                etaSec = remaining / bytesPerSec;
+              }
+              onProgress(pct, etaSec);
             }
           },
           function (error) {
@@ -7889,6 +7937,10 @@
       updates[`cards/${cardId}/origin`] = fields.origin || card.origin || 'pauta';
       if (typeof fields.referenceImage === 'string') {
         updates[`cards/${cardId}/referenceImage`] = fields.referenceImage;
+      }
+      // S2.6 bug-fix: videoUrl também precisa ser persistido no refazer
+      if (typeof fields.videoUrl === 'string') {
+        updates[`cards/${cardId}/videoUrl`] = fields.videoUrl;
       }
       updates[`cards/${cardId}/sentForReviewAt`] = now;
       updates[`cards/${cardId}/updatedAt`] = now;
@@ -10164,7 +10216,9 @@
       mode: 'list',
       editingId: null,
       fields: { title: '', copy: '', notes: '', pieceTypes: [], shotTypes: [] },
-      pendingImage: null
+      pendingImage: null,
+      pendingVideoUrl: null,    // null=usa existente, ''=removido, string=novo URL
+      pendingVideoMeta: null
     };
 
     function resetReferenciaFormState() {
@@ -10172,7 +10226,9 @@
         mode: 'list',
         editingId: null,
         fields: { title: '', copy: '', notes: '', pieceTypes: [], shotTypes: [] },
-        pendingImage: null
+        pendingImage: null,
+        pendingVideoUrl: null,
+        pendingVideoMeta: null
       };
     }
 
@@ -10801,7 +10857,15 @@
               }
               <input type="file" id="criar-card-video-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" style="display: none;" />
             </div>
-            <div id="criar-card-video-progress" style="display: none; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #A0A0A0);">Subindo… <span id="criar-card-video-pct">0</span>%</div>
+            <div id="criar-card-video-progress" style="display: none; margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary, #A0A0A0); margin-bottom: 4px;">
+                <span>Subindo… <span id="criar-card-video-pct">0</span>%</span>
+                <span id="criar-card-video-eta"></span>
+              </div>
+              <div style="height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;">
+                <div id="criar-card-video-bar" style="height: 100%; width: 0%; background: #07D379; transition: width 0.2s ease;"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Peça (title curto) -->
@@ -10948,11 +11012,17 @@
           if (videoZone) videoZone.style.opacity = '0.5';
           try {
             const tempCardId = refazerCardState.cardId || generateCardId();
+            const videoBar = document.getElementById('criar-card-video-bar');
+            const videoEta = document.getElementById('criar-card-video-eta');
             const url = await uploadVideoToStorage(
               file,
               state.clientSlug || 'unknown',
               tempCardId,
-              (pct) => { if (videoPct) videoPct.textContent = Math.round(pct); }
+              (pct, etaSec) => {
+                if (videoPct) videoPct.textContent = Math.round(pct);
+                if (videoBar) videoBar.style.width = pct + '%';
+                if (videoEta) videoEta.textContent = formatUploadEta(etaSec);
+              }
             );
             pendingVideoUrl = url;
             pendingVideoMeta = { name: file.name, size: file.size, mime: file.type };
@@ -11711,7 +11781,15 @@
               }
               <input type="file" id="ajuste-video-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" style="display: none;" />
             </div>
-            <div id="ajuste-video-progress" style="display: none; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #A0A0A0);">Subindo… <span id="ajuste-video-pct">0</span>%</div>
+            <div id="ajuste-video-progress" style="display: none; margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary, #A0A0A0); margin-bottom: 4px;">
+                <span>Subindo… <span id="ajuste-video-pct">0</span>%</span>
+                <span id="ajuste-video-eta"></span>
+              </div>
+              <div style="height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;">
+                <div id="ajuste-video-bar" style="height: 100%; width: 0%; background: #07D379; transition: width 0.2s ease;"></div>
+              </div>
+            </div>
           </div>
 
           <div class="ajuste-footer">
@@ -11810,11 +11888,17 @@
           if (ajVideoProgress) ajVideoProgress.style.display = 'block';
           if (ajVideoZone) ajVideoZone.style.opacity = '0.5';
           try {
+            const ajVideoBar = document.getElementById('ajuste-video-bar');
+            const ajVideoEta = document.getElementById('ajuste-video-eta');
             const url = await uploadVideoToStorage(
               file,
               state.clientSlug || 'unknown',
               pedirAjusteState.cardId || 'unknown',
-              (pct) => { if (ajVideoPct) ajVideoPct.textContent = Math.round(pct); }
+              (pct, etaSec) => {
+                if (ajVideoPct) ajVideoPct.textContent = Math.round(pct);
+                if (ajVideoBar) ajVideoBar.style.width = pct + '%';
+                if (ajVideoEta) ajVideoEta.textContent = formatUploadEta(etaSec);
+              }
             );
             pedirAjusteState.videoUrl = url;
             pedirAjusteState.videoMeta = { name: file.name, size: file.size, mime: file.type };
@@ -11918,9 +12002,21 @@
                    ${allTags.map(t => `<span class="ref-item-tag ref-item-tag-${t.kind}">${escapeHtml(t.label)}</span>`).join('')}
                  </div>`
               : '';
-            const thumbHtml = r.mediaBase64
-              ? `<img class="ref-item-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`
-              : `<div class="ref-item-thumb-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
+            // S2.6 Sessão 2: badge 📹 quando ref tem vídeo
+            let thumbHtml;
+            if (r.videoUrl && r.mediaBase64) {
+              thumbHtml = `<img class="ref-item-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />
+                           <div style="position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 12px; padding: 2px 6px; font-size: 11px; pointer-events: none;">📹</div>`;
+            } else if (r.videoUrl) {
+              thumbHtml = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: #1A1A1A; color: #F2F2F2; gap: 4px;">
+                             <div style="font-size: 24px;">📹</div>
+                             <div style="font-size: 9px; color: #A0A0A0; letter-spacing: 0.5px;">VÍDEO</div>
+                           </div>`;
+            } else if (r.mediaBase64) {
+              thumbHtml = `<img class="ref-item-thumb-img" src="${escapeHtml(r.mediaBase64)}" alt="" />`;
+            } else {
+              thumbHtml = `<div class="ref-item-thumb-placeholder">${escapeHtml((r.title || 'R').charAt(0).toUpperCase())}</div>`;
+            }
             return `
               <button type="button" class="ref-item" data-ref-edit="${escapeHtml(r.id)}">
                 <div class="ref-item-thumb">${thumbHtml}</div>
@@ -11988,6 +12084,50 @@
               }
               <input type="file" id="ref-form-file" accept="image/*" style="display: none;" />
             </div>
+          </div>
+
+          <!-- S2.6 Sessão 2: upload de vídeo de referência -->
+          <div class="ref-form-field">
+            <label class="ref-form-label">Vídeo de referência (opcional)</label>
+            ${(() => {
+              const refVideoUrl = referenciaFormState.pendingVideoUrl != null
+                ? referenciaFormState.pendingVideoUrl
+                : (existing?.videoUrl || '');
+              const refVideoMeta = referenciaFormState.pendingVideoMeta;
+              return `
+                <div class="ref-form-upload ${refVideoUrl ? 'has-preview' : ''}" id="ref-form-video-zone" style="min-height: 80px;">
+                  ${refVideoUrl
+                    ? `<div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; width: 100%;">
+                         <div style="font-size: 24px;">📹</div>
+                         <div style="flex: 1; min-width: 0;">
+                           <div style="font-weight: 600; font-size: 14px; color: var(--deep, #1A1A1A); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                             ${escapeHtml(refVideoMeta?.name || 'vídeo anexado')}
+                           </div>
+                           <div style="font-size: 12px; color: var(--mauve-text, #A0A0A0); margin-top: 2px;">
+                             ${refVideoMeta?.size ? Math.round(refVideoMeta.size / (1024 * 1024)) + 'MB · ' : ''}Anexado
+                           </div>
+                         </div>
+                         <button type="button" class="ref-form-remove" id="ref-form-remove-video" aria-label="Remover vídeo" style="position: static;">×</button>
+                       </div>`
+                    : `<div class="ref-form-upload-placeholder">
+                         <div class="ref-form-upload-icon">📹</div>
+                         <div class="ref-form-upload-cta">Anexar vídeo de exemplo</div>
+                         <div class="ref-form-upload-hint">MP4/MOV/WEBM até 100MB. Jamily vê na Galeria.</div>
+                       </div>`
+                  }
+                  <input type="file" id="ref-form-video-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" style="display: none;" />
+                </div>
+                <div id="ref-form-video-progress" style="display: none; margin-top: 10px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--mauve-text, #A0A0A0); margin-bottom: 4px;">
+                    <span>Subindo… <span id="ref-form-video-pct">0</span>%</span>
+                    <span id="ref-form-video-eta"></span>
+                  </div>
+                  <div style="height: 4px; background: rgba(0,0,0,0.08); border-radius: 2px; overflow: hidden;">
+                    <div id="ref-form-video-bar" style="height: 100%; width: 0%; background: var(--mauve, #A6546A); transition: width 0.2s ease;"></div>
+                  </div>
+                </div>
+              `;
+            })()}
           </div>
 
           <!-- Título -->
@@ -12083,6 +12223,8 @@
           referenciaFormState.editingId = null;
           referenciaFormState.fields = { title: '', copy: '', notes: '', pieceTypes: [], shotTypes: [] };
           referenciaFormState.pendingImage = null;
+          referenciaFormState.pendingVideoUrl = null;
+          referenciaFormState.pendingVideoMeta = null;
           openDelegacaoSheet();
         });
       }
@@ -12102,6 +12244,8 @@
             shotTypes: Array.isArray(existing.shotTypes) ? existing.shotTypes.slice() : []
           };
           referenciaFormState.pendingImage = null; // null = "usa existente"; só vira string se trocou
+          referenciaFormState.pendingVideoUrl = null;  // mesma semântica
+          referenciaFormState.pendingVideoMeta = existing.videoUrl ? { name: 'vídeo anterior', size: 0, mime: '' } : null;
           openDelegacaoSheet();
         });
       });
@@ -12212,6 +12356,83 @@
         });
       }
 
+      // ----- S2.6 Sessão 2: handlers de upload de vídeo de referência -----
+      const refVideoZone = document.getElementById('ref-form-video-zone');
+      const refVideoInput = document.getElementById('ref-form-video-file');
+      const refVideoRemove = document.getElementById('ref-form-remove-video');
+      const refVideoProgress = document.getElementById('ref-form-video-progress');
+      const refVideoPct = document.getElementById('ref-form-video-pct');
+
+      // Helper: tem vídeo? (pending novo OU existente do DB em modo edit)
+      function refHasVideo() {
+        if (referenciaFormState.pendingVideoUrl === '') return false; // removido
+        if (referenciaFormState.pendingVideoUrl) return true;
+        if (referenciaFormState.mode === 'edit') {
+          const ex = getReferenceById(referenciaFormState.editingId);
+          return !!(ex?.videoUrl);
+        }
+        return false;
+      }
+
+      if (refVideoZone && refVideoInput) {
+        refVideoZone.addEventListener('click', (e) => {
+          if (e.target.closest('#ref-form-remove-video')) return;
+          if (!refHasVideo()) refVideoInput.click();
+        });
+      }
+
+      if (refVideoInput) {
+        refVideoInput.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const val = validateVideo(file);
+          if (!val.ok) {
+            showToast(val.error);
+            refVideoInput.value = '';
+            return;
+          }
+          if (refVideoProgress) refVideoProgress.style.display = 'block';
+          if (refVideoZone) refVideoZone.style.opacity = '0.5';
+          try {
+            syncFieldsFromInputs();
+            // Path namespaced em 'refs/{slug}/{refId}-{ts}' pra separar de cards
+            const refId = referenciaFormState.editingId || generateRefId();
+            const refVideoBar = document.getElementById('ref-form-video-bar');
+            const refVideoEta = document.getElementById('ref-form-video-eta');
+            const url = await uploadVideoToStorage(
+              file,
+              state.clientSlug || 'unknown',
+              'ref-' + refId,
+              (pct, etaSec) => {
+                if (refVideoPct) refVideoPct.textContent = Math.round(pct);
+                if (refVideoBar) refVideoBar.style.width = pct + '%';
+                if (refVideoEta) refVideoEta.textContent = formatUploadEta(etaSec);
+              }
+            );
+            referenciaFormState.pendingVideoUrl = url;
+            referenciaFormState.pendingVideoMeta = { name: file.name, size: file.size, mime: file.type };
+            showToast('✓ Vídeo anexado');
+            openDelegacaoSheet();
+          } catch (err) {
+            console.warn('[ref uploadVideo] erro:', err);
+            showToast('Não consegui subir o vídeo. Tenta de novo.');
+            if (refVideoProgress) refVideoProgress.style.display = 'none';
+            if (refVideoZone) refVideoZone.style.opacity = '1';
+          }
+          refVideoInput.value = '';
+        });
+      }
+
+      if (refVideoRemove) {
+        refVideoRemove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          syncFieldsFromInputs();
+          referenciaFormState.pendingVideoUrl = '';  // marca removido (vs null = não trocou)
+          referenciaFormState.pendingVideoMeta = null;
+          openDelegacaoSheet();
+        });
+      }
+
       // Submit
       if (submitBtn) {
         submitBtn.addEventListener('click', async (e) => {
@@ -12235,6 +12456,19 @@
             mediaBase64 = referenciaFormState.pendingImage || '';
           }
 
+          // S2.6 Sessão 2: mesma lógica null/empty/string pra videoUrl
+          let videoUrl;
+          if (isEdit) {
+            if (referenciaFormState.pendingVideoUrl === null) {
+              const ex = getReferenceById(editingId);
+              videoUrl = ex?.videoUrl || '';
+            } else {
+              videoUrl = referenciaFormState.pendingVideoUrl || '';
+            }
+          } else {
+            videoUrl = referenciaFormState.pendingVideoUrl || '';
+          }
+
           submitBtn.disabled = true;
           const origLabel = submitBtn.textContent;
           submitBtn.textContent = isEdit ? 'Salvando…' : 'Criando…';
@@ -12245,7 +12479,8 @@
               notes: referenciaFormState.fields.notes,
               pieceTypes: referenciaFormState.fields.pieceTypes || [],
               shotTypes: referenciaFormState.fields.shotTypes || [],
-              mediaBase64
+              mediaBase64,
+              videoUrl
             }, editingId);
             resetReferenciaFormState();
             openDelegacaoSheet();
@@ -12678,6 +12913,45 @@
             `;
           }).join('')}</div>`;
 
+      // S2.6 Sessão 2: mini dashboard de uso de Storage (vídeos)
+      // Conta vídeos em cards, references e adjustments de todos os clientes
+      // ativos. Estimativa: 30MB médio por vídeo (aproximação, sem consulta à
+      // API do Storage — economia de custo). Limite Always Free = 5GB.
+      const STORAGE_LIMIT_MB = 5120;
+      const AVG_VIDEO_MB = 30;
+      let videoCount = 0;
+      for (const c of clients) {
+        const cards = Object.values(c.cards || {});
+        videoCount += cards.filter(card => card && card.videoUrl).length;
+        const refs = Object.values(c.references || {});
+        videoCount += refs.filter(r => r && r.videoUrl).length;
+        const adjsObj = c.adjustments || {};
+        for (const cardAdjs of Object.values(adjsObj)) {
+          if (cardAdjs && typeof cardAdjs === 'object') {
+            videoCount += Object.values(cardAdjs).filter(a => a && a.videoUrl).length;
+          }
+        }
+      }
+      const estimatedMB = videoCount * AVG_VIDEO_MB;
+      const pctUsage = Math.min(100, Math.round((estimatedMB / STORAGE_LIMIT_MB) * 100));
+      const isWarning = pctUsage > 80;
+      const isOk = pctUsage <= 50;
+      const barColor = isWarning ? '#D94646' : (isOk ? '#A6546A' : '#D9A646');
+      const storageBlock = `
+        <div class="master-storage" style="margin: 16px 24px; padding: 16px 20px; background: rgba(255,255,255,0.92); border: 1px solid rgba(255,255,255,0.4); border-radius: 12px; backdrop-filter: blur(8px);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #A6546A;">📊 Storage</div>
+            <div style="font-size: 11px; color: #6B3848; opacity: 0.7;">5GB grátis</div>
+          </div>
+          <div style="font-size: 15px; font-weight: 500; color: #3A1E28;">${videoCount} ${videoCount === 1 ? 'vídeo' : 'vídeos'} · ~${estimatedMB}MB estimado</div>
+          <div style="margin-top: 10px; height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden;">
+            <div style="height: 100%; width: ${pctUsage}%; background: ${barColor}; transition: width 0.3s ease;"></div>
+          </div>
+          ${isWarning ? `<div style="margin-top: 8px; font-size: 11px; color: #D94646; font-weight: 500;">⚠️ Acima de 80% do limite. Considere migrar pro Cloudflare R2 ou apagar vídeos antigos.</div>` : ''}
+          <div style="margin-top: 6px; font-size: 10px; color: #6B3848; opacity: 0.6;">Estimativa baseada em ${AVG_VIDEO_MB}MB médio por vídeo. Para valor exato, ver Firebase Storage console.</div>
+        </div>
+      `;
+
       app.innerHTML = `
         <div class="master-shell">
           <div class="master-header">
@@ -12693,6 +12967,7 @@
             <!-- N-B L3: botao pra testar notificacao local (PWA push setup, pre-FCM). -->
             <button type="button" class="master-add-client-btn" id="test-notif-btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2);">🔔 Testar</button>
           </div>
+          ${storageBlock}
           ${cardsHtml}
         </div>
       `;
@@ -15141,7 +15416,7 @@
     // Roda apos 'load' pra nao concorrer com bootstrap inicial.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20260519-empty-days-fix').then((reg) => {
+        navigator.serviceWorker.register('sw.js?v=20260519-s26-sessao2').then((reg) => {
           console.log('[SW] registrado, scope:', reg.scope);
         }).catch((err) => {
           console.warn('[SW] registro falhou:', err);
