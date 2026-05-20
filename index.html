@@ -7693,6 +7693,303 @@
       return { ok: true };
     }
 
+    // ---------- S2.8: Storage Explorer ----------
+
+    // Formata bytes em string curta ("1.2MB", "500KB").
+    function formatStorageBytes(bytes) {
+      if (!bytes || bytes < 1024) return (bytes || 0) + 'B';
+      if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + 'KB';
+      const mb = bytes / (1024 * 1024);
+      return (mb < 10 ? mb.toFixed(1) : Math.round(mb)) + 'MB';
+    }
+
+    // Lista TODOS os vídeos do Storage agrupados por cliente.
+    // Cada item: { ref, path, slug, name, size, timeCreated, contentType, downloadUrl }
+    // Custo: 1 listAll() no root + 1 listAll() por slug + 1 getMetadata() por arquivo.
+    // Botão "Atualizar" no UI permite refazer manualmente sem auto-poll.
+    async function listAllVideosFromStorage() {
+      if (!storage) throw new Error('Storage não inicializado.');
+      const result = [];
+      const rootListing = await storage.ref('videos').listAll();
+      for (const prefix of rootListing.prefixes) {
+        const slug = prefix.name;
+        try {
+          const slugListing = await prefix.listAll();
+          for (const item of slugListing.items) {
+            try {
+              const [metadata, url] = await Promise.all([
+                item.getMetadata(),
+                item.getDownloadURL()
+              ]);
+              result.push({
+                ref: item,
+                path: item.fullPath,
+                slug,
+                name: item.name,
+                size: metadata.size || 0,
+                timeCreated: metadata.timeCreated || null,
+                contentType: metadata.contentType || '',
+                downloadUrl: url
+              });
+            } catch (e) {
+              console.warn('[listAllVideos] item erro:', item.fullPath, e);
+            }
+          }
+        } catch (e) {
+          console.warn('[listAllVideos] slug erro:', slug, e);
+        }
+      }
+      // Mais recentes primeiro
+      result.sort((a, b) => {
+        const ta = a.timeCreated ? new Date(a.timeCreated).getTime() : 0;
+        const tb = b.timeCreated ? new Date(b.timeCreated).getTime() : 0;
+        return tb - ta;
+      });
+      return result;
+    }
+
+    // Cruza URL com DB pra achar quem usa esse vídeo (card, ref ou adjustment).
+    // Retorna null se órfão (vídeo subido mas não referenciado em nada).
+    function findOwnerForVideoUrl(url, masterData) {
+      if (!url || !masterData || !masterData.clients) return null;
+      for (const [slug, c] of Object.entries(masterData.clients)) {
+        if (!c) continue;
+        const cards = c.cards || {};
+        for (const card of Object.values(cards)) {
+          if (card && card.videoUrl === url) {
+            return { type: 'card', slug, id: card.id, title: card.title || '(sem título)', personaId: card.personaId };
+          }
+        }
+        const refs = c.references || {};
+        for (const ref of Object.values(refs)) {
+          if (ref && ref.videoUrl === url) {
+            return { type: 'reference', slug, id: ref.id, title: ref.title || '(sem título)' };
+          }
+        }
+        const adjsObj = c.adjustments || {};
+        for (const [cardId, cardAdjs] of Object.entries(adjsObj)) {
+          if (cardAdjs && typeof cardAdjs === 'object') {
+            for (const adj of Object.values(cardAdjs)) {
+              if (adj && adj.videoUrl === url) {
+                const linkedCard = cards[cardId];
+                return {
+                  type: 'adjustment',
+                  slug,
+                  cardId,
+                  adjId: adj.id,
+                  title: 'Direcionamento de "' + (linkedCard ? (linkedCard.title || cardId) : cardId) + '"'
+                };
+              }
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    // Apaga vídeo do Storage + zera videoUrl no DB se houver dono.
+    // Owner = retorno de findOwnerForVideoUrl (pode ser null pra órfão).
+    async function deleteVideoCompletely(item, owner) {
+      // 1. Zera DB primeiro (se houver dono)
+      if (owner) {
+        let path = null;
+        if (owner.type === 'card') {
+          path = ROOT_PATH + '/clients/' + owner.slug + '/cards/' + owner.id + '/videoUrl';
+        } else if (owner.type === 'reference') {
+          path = ROOT_PATH + '/clients/' + owner.slug + '/references/' + owner.id + '/videoUrl';
+        } else if (owner.type === 'adjustment') {
+          path = ROOT_PATH + '/clients/' + owner.slug + '/adjustments/' + owner.cardId + '/' + owner.adjId + '/videoUrl';
+        }
+        if (path) {
+          await db.ref(path).set('');
+        }
+      }
+      // 2. Apaga arquivo do Storage
+      await item.ref.delete();
+    }
+
+    // S2.8: estado efêmero do explorer (lista + filtros + status)
+    let storageExplorerState = {
+      open: false,
+      loading: false,
+      error: null,
+      items: [],
+      filterSlug: 'all'  // 'all' | slug específico
+    };
+
+    async function openStorageExplorerModal() {
+      // Remove modal anterior se aberto
+      const existing = document.getElementById('storage-explorer-modal');
+      if (existing) existing.remove();
+
+      storageExplorerState = { open: true, loading: true, error: null, items: [], filterSlug: 'all' };
+      renderStorageExplorerModal();
+
+      // Carrega lista (async)
+      try {
+        const items = await listAllVideosFromStorage();
+        storageExplorerState.items = items;
+        storageExplorerState.loading = false;
+        renderStorageExplorerModal();
+      } catch (err) {
+        console.warn('[StorageExplorer] erro:', err);
+        storageExplorerState.loading = false;
+        storageExplorerState.error = err.message || 'Erro ao listar arquivos.';
+        renderStorageExplorerModal();
+      }
+    }
+
+    function closeStorageExplorerModal() {
+      storageExplorerState.open = false;
+      const el = document.getElementById('storage-explorer-modal');
+      if (el) el.remove();
+    }
+
+    function renderStorageExplorerModal() {
+      let modal = document.getElementById('storage-explorer-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'storage-explorer-modal';
+        modal.style.cssText = 'position: fixed; inset: 0; background: rgba(10,10,10,0.85); z-index: 9999; overflow-y: auto; padding: 24px;';
+        document.body.appendChild(modal);
+      }
+
+      const masterData = state.masterData || {};
+      const clientsObj = masterData.clients || {};
+      const slugs = Object.keys(clientsObj);
+
+      const items = storageExplorerState.items || [];
+      const filtered = storageExplorerState.filterSlug === 'all'
+        ? items
+        : items.filter(i => i.slug === storageExplorerState.filterSlug);
+
+      // Filter chips
+      const chipsHtml = ['all', ...slugs].map(s => {
+        const label = s === 'all' ? 'Todos' : (clientsObj[s]?.meta?.name || s);
+        const count = s === 'all' ? items.length : items.filter(i => i.slug === s).length;
+        const isActive = storageExplorerState.filterSlug === s;
+        return `<button type="button" class="storage-filter-chip" data-filter-slug="${escapeHtml(s)}" style="padding: 6px 12px; border-radius: 16px; border: 1px solid ${isActive ? '#07D379' : '#333'}; background: ${isActive ? 'rgba(7,211,121,0.12)' : 'transparent'}; color: ${isActive ? '#07D379' : '#A0A0A0'}; font-size: 12px; font-weight: 500; cursor: pointer;">${escapeHtml(label)} <span style="opacity: 0.6;">(${count})</span></button>`;
+      }).join(' ');
+
+      // Body content
+      let bodyHtml = '';
+      if (storageExplorerState.loading) {
+        bodyHtml = '<div style="text-align: center; padding: 60px 20px; color: #A0A0A0;">Carregando lista do Storage…</div>';
+      } else if (storageExplorerState.error) {
+        bodyHtml = '<div style="padding: 24px; background: rgba(217,70,70,0.1); border: 1px solid rgba(217,70,70,0.3); border-radius: 8px; color: #FF6B6B;">' + escapeHtml(storageExplorerState.error) + '</div>';
+      } else if (filtered.length === 0) {
+        bodyHtml = '<div style="text-align: center; padding: 60px 20px; color: #A0A0A0;">Nenhum vídeo no Storage' + (storageExplorerState.filterSlug !== 'all' ? ' pra este cliente' : '') + '.</div>';
+      } else {
+        bodyHtml = '<div style="display: flex; flex-direction: column; gap: 8px;">' + filtered.map(item => {
+          const owner = findOwnerForVideoUrl(item.downloadUrl, masterData);
+          const clientName = clientsObj[item.slug]?.meta?.name || item.slug;
+          const dateLabel = item.timeCreated ? new Date(item.timeCreated).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+
+          // Pills com info
+          let ownerPills = '';
+          if (owner) {
+            const typeLabel = owner.type === 'card' ? '📄 Card' : (owner.type === 'reference' ? '⭐ Ref' : '✏️ Direcionamento');
+            ownerPills += `<span style="padding: 2px 8px; border-radius: 10px; background: rgba(7,211,121,0.12); color: #07D379; font-size: 10px;">${typeLabel}</span>`;
+            if (owner.title) {
+              ownerPills += `<span style="padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #F2F2F2; font-size: 10px;">${escapeHtml((owner.title || '').slice(0, 30))}${owner.title && owner.title.length > 30 ? '…' : ''}</span>`;
+            }
+            if (owner.personaId) {
+              const personaName = clientsObj[item.slug]?.personas?.[owner.personaId]?.name || owner.personaId;
+              ownerPills += `<span style="padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #A0A0A0; font-size: 10px;">${escapeHtml(personaName)}</span>`;
+            }
+          } else {
+            ownerPills = `<span style="padding: 2px 8px; border-radius: 10px; background: rgba(217,70,70,0.12); color: #D94646; font-size: 10px;">🔗 Órfão</span>`;
+          }
+
+          return `
+            <div class="storage-item" style="padding: 12px 14px; background: #141414; border: 1px solid #222; border-radius: 8px;" data-storage-path="${escapeHtml(item.path)}">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 24px; flex-shrink: 0;">📹</div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;">
+                    <span style="padding: 2px 8px; border-radius: 10px; background: rgba(166,84,106,0.18); color: #E8A8B8; font-size: 10px; font-weight: 500;">${escapeHtml(clientName)}</span>
+                    ${ownerPills}
+                  </div>
+                  <div style="font-size: 12px; color: #A0A0A0; word-break: break-all;">${escapeHtml(item.name)}</div>
+                  <div style="font-size: 11px; color: #6e6e6e; margin-top: 4px;">${formatStorageBytes(item.size)} · ${escapeHtml(dateLabel)}</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
+                  <button type="button" class="storage-preview-btn" data-storage-url="${escapeHtml(item.downloadUrl)}" style="padding: 6px 10px; background: transparent; border: 1px solid #333; border-radius: 6px; color: #F2F2F2; font-size: 11px; cursor: pointer;">▶ Ver</button>
+                  <button type="button" class="storage-delete-btn" data-storage-path="${escapeHtml(item.path)}" data-storage-url="${escapeHtml(item.downloadUrl)}" style="padding: 6px 10px; background: rgba(217,70,70,0.1); border: 1px solid rgba(217,70,70,0.3); border-radius: 6px; color: #D94646; font-size: 11px; cursor: pointer;">🗑 Apagar</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('') + '</div>';
+      }
+
+      const totalSize = filtered.reduce((sum, i) => sum + (i.size || 0), 0);
+
+      modal.innerHTML = `
+        <div style="max-width: 900px; margin: 0 auto; background: #0a0a0a; border: 1px solid #222; border-radius: 12px; padding: 24px; min-height: 400px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #07D379;">📂 Storage Explorer</div>
+              <div style="font-size: 20px; font-weight: 500; color: #F2F2F2; margin-top: 4px;">${filtered.length} ${filtered.length === 1 ? 'arquivo' : 'arquivos'} · ${formatStorageBytes(totalSize)}</div>
+            </div>
+            <button type="button" id="storage-close-btn" style="padding: 8px 12px; background: transparent; border: 1px solid #333; border-radius: 6px; color: #F2F2F2; font-size: 13px; cursor: pointer;">× Fechar</button>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0;">${chipsHtml}</div>
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button type="button" id="storage-refresh-btn" style="padding: 6px 12px; background: transparent; border: 1px solid #333; border-radius: 6px; color: #A0A0A0; font-size: 12px; cursor: pointer;">↻ Atualizar lista</button>
+          </div>
+          ${bodyHtml}
+        </div>
+      `;
+
+      // Handlers
+      const closeBtn = modal.querySelector('#storage-close-btn');
+      if (closeBtn) closeBtn.addEventListener('click', closeStorageExplorerModal);
+
+      const refreshBtn = modal.querySelector('#storage-refresh-btn');
+      if (refreshBtn) refreshBtn.addEventListener('click', openStorageExplorerModal);
+
+      modal.querySelectorAll('.storage-filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          storageExplorerState.filterSlug = chip.getAttribute('data-filter-slug');
+          renderStorageExplorerModal();
+        });
+      });
+
+      modal.querySelectorAll('.storage-preview-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-storage-url');
+          if (url) openVideoModal(url);
+        });
+      });
+
+      modal.querySelectorAll('.storage-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const path = btn.getAttribute('data-storage-path');
+          const url = btn.getAttribute('data-storage-url');
+          const item = storageExplorerState.items.find(i => i.path === path);
+          if (!item) return;
+          const owner = findOwnerForVideoUrl(url, state.masterData);
+          const ownerDesc = owner ? ('vai apagar também a referência em "' + (owner.title || owner.cardId || owner.id) + '"') : 'esse vídeo está órfão (sem referência no DB)';
+          if (!confirm('Apagar esse vídeo permanentemente? ' + ownerDesc + '.')) return;
+          btn.disabled = true;
+          btn.textContent = 'Apagando…';
+          try {
+            await deleteVideoCompletely(item, owner);
+            showToast('✓ Apagado');
+            // Remove do estado local + re-render
+            storageExplorerState.items = storageExplorerState.items.filter(i => i.path !== path);
+            renderStorageExplorerModal();
+          } catch (err) {
+            console.warn('[storage delete] erro:', err);
+            showToast('Não consegui apagar. Tenta de novo.');
+            btn.disabled = false;
+            btn.textContent = '🗑 Apagar';
+          }
+        });
+      });
+    }
+
     // S2.6 Sessão 2: formata ETA em string curta ("12s" / "2min").
     function formatUploadEta(etaSec) {
       if (!isFinite(etaSec) || etaSec < 0) return '';
@@ -12948,6 +13245,7 @@
             <div style="height: 100%; width: ${pctUsage}%; background: ${barColor}; transition: width 0.3s ease;"></div>
           </div>
           ${isWarning ? `<div style="margin-top: 8px; font-size: 11px; color: #D94646; font-weight: 500;">⚠️ Acima de 80% do limite. Considere migrar pro Cloudflare R2 ou apagar vídeos antigos.</div>` : ''}
+          <button type="button" id="storage-explorer-btn" style="margin-top: 12px; width: 100%; padding: 8px 12px; background: rgba(166,84,106,0.08); border: 1px solid rgba(166,84,106,0.2); border-radius: 8px; color: #A6546A; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.15s ease;">📂 Ver todos os arquivos</button>
           <div style="margin-top: 6px; font-size: 10px; color: #6B3848; opacity: 0.6;">Estimativa baseada em ${AVG_VIDEO_MB}MB médio por vídeo. Para valor exato, ver Firebase Storage console.</div>
         </div>
       `;
@@ -12996,6 +13294,10 @@
       // N-B L3: bind do botao "Testar notificacao" (master only).
       const testNotifBtn = app.querySelector('#test-notif-btn');
       if (testNotifBtn) testNotifBtn.addEventListener('click', testNotification);
+
+      // S2.8: bind do botão "Ver todos os arquivos" no bloco Storage
+      const storageExplorerBtn = app.querySelector('#storage-explorer-btn');
+      if (storageExplorerBtn) storageExplorerBtn.addEventListener('click', openStorageExplorerModal);
 
       // D17: toggle Gerenciar — flipa body.is-manage-mode + visual do botao.
       // Estado eh ephemero MAS persiste entre re-renders do master (so reseta
@@ -15500,7 +15802,7 @@
     // Roda apos 'load' pra nao concorrer com bootstrap inicial.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20260519-s27-video-universal').then((reg) => {
+        navigator.serviceWorker.register('sw.js?v=20260519-s28-storage-explorer').then((reg) => {
           console.log('[SW] registrado, scope:', reg.scope);
         }).catch((err) => {
           console.warn('[SW] registro falhou:', err);
