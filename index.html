@@ -17,8 +17,62 @@
   <link rel="icon" type="image/png" id="favicon-link" href="icon-192.png" />
 
   <!-- N-B PWA: manifest + apple-touch-icon (precondição pra Service Worker + Push). -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" id="pwa-manifest-link" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-notif.png">
+
+  <!--
+    S3.1 — Fix PWA iOS: injeta manifest com start_url contendo PIN no HEAD,
+    síncrono, antes do iOS Safari parsear o <link rel="manifest">. Sem isso,
+    o iOS captura o start_url do manifest.json estático (./) no momento do
+    "Adicionar à Tela de Início" e o ícone na home abre sempre sem params,
+    parando no gate de PIN sem ter onde digitar. O swap dinâmico via Blob URL
+    em route() (linha ~8299) continua existindo como upgrade de UX (ícone +
+    nome do cliente), mas o iOS já capturou o start_url certo aqui.
+  -->
+  <script>
+    (function () {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        var cliente = p.get('cliente') || '';
+        var u       = p.get('u') || '';
+        var mode    = p.get('mode') || '';
+        var pin     = p.get('pin') || '';
+        var master  = p.get('master') || '';
+        // Sem nada útil na URL → mantém manifest.json estático (fallback).
+        if (!cliente && !master) return;
+        var parts = [];
+        if (master)  parts.push('master=' + encodeURIComponent(master));
+        if (cliente) parts.push('cliente=' + encodeURIComponent(cliente));
+        if (u)       parts.push('u=' + encodeURIComponent(u));
+        if (mode)    parts.push('mode=' + encodeURIComponent(mode));
+        if (pin)     parts.push('pin=' + encodeURIComponent(pin));
+        var startUrl = './' + (parts.length ? '?' + parts.join('&') : '');
+        var id = (master ? 'master' : cliente) + (u ? '-' + u : '');
+        var manifest = {
+          id: id,
+          name: 'Sinapse',
+          short_name: 'Sinapse',
+          description: 'Sinapse — central de produção de conteúdo da Celulose Digital.',
+          start_url: startUrl,
+          scope: './',
+          display: 'standalone',
+          orientation: 'portrait',
+          background_color: '#0a0a0a',
+          theme_color: '#0a0a0a',
+          lang: 'pt-BR',
+          categories: ['productivity', 'business'],
+          icons: [
+            { src: 'icon-notif.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: 'icon-192.png',   sizes: '192x192', type: 'image/png', purpose: 'any' }
+          ]
+        };
+        var dataUrl = 'data:application/manifest+json;charset=utf-8,' +
+                      encodeURIComponent(JSON.stringify(manifest));
+        var link = document.getElementById('pwa-manifest-link');
+        if (link) link.setAttribute('href', dataUrl);
+      } catch (e) { /* degrade silencioso — manifest.json estático segue ativo */ }
+    })();
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
