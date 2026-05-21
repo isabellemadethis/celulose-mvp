@@ -3,7 +3,7 @@
 // ============================================================
 // Versao: bump quando shell muda — força clientes a refazer cache.
 // CACHE_NAME inclui versao pra invalidar antigos automaticamente.
-const CACHE_VERSION = 'v13-2026-05-21-pwa-ios-manifest-blob-inline';
+const CACHE_VERSION = 'v14-2026-05-21-pwa-ios-client-icon';
 const CACHE_NAME = 'celulose-mvp-' + CACHE_VERSION;
 
 // Shell minimo cacheado no install. Firebase + Google Fonts ficam fora

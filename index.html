@@ -71,31 +71,76 @@
 
         var id = (master ? 'master' : cliente) + (u ? '-' + u : '');
 
-        var manifest = {
-          id: id,
-          name: 'Sinapse',
-          short_name: 'Sinapse',
-          description: 'Sinapse — central de produção de conteúdo da Celulose Digital.',
-          start_url: startUrl,
-          scope: './',
-          display: 'standalone',
-          orientation: 'portrait',
-          background_color: '#0a0a0a',
-          theme_color: '#0a0a0a',
-          lang: 'pt-BR',
-          categories: ['productivity', 'business'],
-          icons: [
-            { src: 'icon-notif.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-            { src: 'icon-192.png',   sizes: '192x192', type: 'image/png', purpose: 'any' }
-          ]
-        };
+        // Helper: monta o manifest com um ícone específico (override do default Sinapse).
+        function buildManifest(iconUrl) {
+          var icons = iconUrl
+            ? [
+                { src: iconUrl,        sizes: '512x512', type: 'image/png', purpose: 'any' },
+                { src: iconUrl,        sizes: '192x192', type: 'image/png', purpose: 'any' },
+                { src: iconUrl,        sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+              ]
+            : [
+                { src: 'icon-notif.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+                { src: 'icon-192.png',   sizes: '192x192', type: 'image/png', purpose: 'any' }
+              ];
+          return {
+            id: id,
+            name: 'Sinapse',
+            short_name: 'Sinapse',
+            description: 'Sinapse — central de produção de conteúdo da Celulose Digital.',
+            start_url: startUrl,
+            scope: './',
+            display: 'standalone',
+            orientation: 'portrait',
+            background_color: '#0a0a0a',
+            theme_color: '#0a0a0a',
+            lang: 'pt-BR',
+            categories: ['productivity', 'business'],
+            icons: icons
+          };
+        }
 
-        var blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-        var blobUrl = URL.createObjectURL(blob);
-        link.setAttribute('href', blobUrl);
+        var _currentBlobUrl = null;
+        function applyManifest(iconUrl) {
+          var blob = new Blob([JSON.stringify(buildManifest(iconUrl))], { type: 'application/manifest+json' });
+          var blobUrl = URL.createObjectURL(blob);
+          if (_currentBlobUrl) { try { URL.revokeObjectURL(_currentBlobUrl); } catch (_) {} }
+          _currentBlobUrl = blobUrl;
+          link.setAttribute('href', blobUrl);
+        }
 
-        // Debug opcional — visível em Safari Web Inspector se conectar via Mac.
+        // 1ª passada: aplica manifest com ícone default Sinapse (rápido, garante
+        // que se o iOS já estiver pronto pro Add to Home Screen, tem algo válido).
+        applyManifest(null);
         try { console.info('[Sinapse PWA] manifest injetado, start_url =', startUrl); } catch(_) {}
+
+        // 2ª passada (async): busca branding do cliente no Firebase RTDB via REST
+        // público — não precisa de auth pra ler o /branding. Quando chega, atualiza
+        // o manifest com o ícone do cliente E o apple-touch-icon (iOS usa esse
+        // último pro Add to Home Screen quando presente, mesmo com manifest).
+        // Como Safari iOS só fetch o manifest no Share menu, normalmente dá tempo.
+        if (cliente) {
+          var brandingUrl = 'https://celulose-digital-default-rtdb.firebaseio.com/celulose-app/clients/'
+                            + encodeURIComponent(cliente) + '/branding.json';
+          fetch(brandingUrl)
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (branding) {
+              var iconUrl = branding && branding.pwaLogoUrl;
+              if (!iconUrl) return;
+              // Atualiza apple-touch-icon (iOS usa esse pro Add to Home Screen).
+              var apple = document.querySelector('link[rel="apple-touch-icon"]');
+              if (apple) apple.setAttribute('href', iconUrl);
+              // Atualiza favicon também (visual no tab/aba).
+              var fav = document.getElementById('favicon-link');
+              if (fav) fav.setAttribute('href', iconUrl);
+              // Rebuilda o manifest com o ícone do cliente.
+              applyManifest(iconUrl);
+              try { console.info('[Sinapse PWA] ícone do cliente aplicado:', iconUrl); } catch(_) {}
+            })
+            .catch(function (e) {
+              try { console.warn('[Sinapse PWA] branding fetch falhou — usando ícone default:', e); } catch(_) {}
+            });
+        }
       } catch (e) {
         // Degrade silencioso — tenta manifest.json estático.
         try {
