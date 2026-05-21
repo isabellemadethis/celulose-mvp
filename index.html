@@ -17,37 +17,60 @@
   <link rel="icon" type="image/png" id="favicon-link" href="icon-192.png" />
 
   <!-- N-B PWA: manifest + apple-touch-icon (precondição pra Service Worker + Push). -->
-  <link rel="manifest" id="pwa-manifest-link" href="manifest.json">
+  <!--
+    S3.2 — Fix PWA iOS (V2): href intencionalmente AUSENTE aqui. O iOS Safari
+    amarra a identidade do PWA ao manifest carregado no HTML inicial. Se a
+    gente coloca href="manifest.json" estático, qualquer swap depois (Blob
+    URL ou data: URL) é ignorado pelo iOS no Add to Home Screen — o ícone
+    fica preso em start_url=./ sem PIN. Solução validada (caso Limehome):
+    deixa o <link> sem href no HTML e injeta via Blob URL no script inline
+    abaixo, antes do iOS parsear o manifest.
+  -->
+  <link rel="manifest" id="pwa-manifest-link">
   <link rel="apple-touch-icon" href="icon-notif.png">
 
   <!--
-    S3.1 — Fix PWA iOS: injeta manifest com start_url contendo PIN no HEAD,
-    síncrono, antes do iOS Safari parsear o <link rel="manifest">. Sem isso,
-    o iOS captura o start_url do manifest.json estático (./) no momento do
-    "Adicionar à Tela de Início" e o ícone na home abre sempre sem params,
-    parando no gate de PIN sem ter onde digitar. O swap dinâmico via Blob URL
-    em route() (linha ~8299) continua existindo como upgrade de UX (ícone +
-    nome do cliente), mas o iOS já capturou o start_url certo aqui.
+    S3.2 — Injeta o manifest no HEAD via Blob URL, síncrono, antes do iOS
+    Safari fetch o manifest (que só ocorre quando user abre o Share menu
+    pra Add to Home Screen). Com PIN/cliente/u embutidos no start_url, o
+    ícone da home abre direto autenticado.
+
+    Por que Blob URL e não data: URL? O caso Limehome (Medium 2022, ainda
+    válido em 2026) validou Blob URL no iOS Safari pra manifest dinâmico.
+    data: URL pra manifest tem suporte inconsistente no WebKit.
+
+    Fallback: URL sem params (ex.: master abrindo o app direto pela 1ª vez)
+    cai pra manifest.json estático (mesma identidade que o Sinapse tinha).
   -->
   <script>
     (function () {
       try {
+        var link = document.getElementById('pwa-manifest-link');
+        if (!link) return;
+
         var p = new URLSearchParams(window.location.search);
         var cliente = p.get('cliente') || '';
         var u       = p.get('u') || '';
         var mode    = p.get('mode') || '';
         var pin     = p.get('pin') || '';
         var master  = p.get('master') || '';
-        // Sem nada útil na URL → mantém manifest.json estático (fallback).
-        if (!cliente && !master) return;
+
+        // Sem nada útil na URL → manifest.json estático (fallback).
+        if (!cliente && !master) {
+          link.setAttribute('href', 'manifest.json');
+          return;
+        }
+
         var parts = [];
         if (master)  parts.push('master=' + encodeURIComponent(master));
         if (cliente) parts.push('cliente=' + encodeURIComponent(cliente));
         if (u)       parts.push('u=' + encodeURIComponent(u));
         if (mode)    parts.push('mode=' + encodeURIComponent(mode));
         if (pin)     parts.push('pin=' + encodeURIComponent(pin));
-        var startUrl = './' + (parts.length ? '?' + parts.join('&') : '');
+        var startUrl = './?' + parts.join('&');
+
         var id = (master ? 'master' : cliente) + (u ? '-' + u : '');
+
         var manifest = {
           id: id,
           name: 'Sinapse',
@@ -66,11 +89,20 @@
             { src: 'icon-192.png',   sizes: '192x192', type: 'image/png', purpose: 'any' }
           ]
         };
-        var dataUrl = 'data:application/manifest+json;charset=utf-8,' +
-                      encodeURIComponent(JSON.stringify(manifest));
-        var link = document.getElementById('pwa-manifest-link');
-        if (link) link.setAttribute('href', dataUrl);
-      } catch (e) { /* degrade silencioso — manifest.json estático segue ativo */ }
+
+        var blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        var blobUrl = URL.createObjectURL(blob);
+        link.setAttribute('href', blobUrl);
+
+        // Debug opcional — visível em Safari Web Inspector se conectar via Mac.
+        try { console.info('[Sinapse PWA] manifest injetado, start_url =', startUrl); } catch(_) {}
+      } catch (e) {
+        // Degrade silencioso — tenta manifest.json estático.
+        try {
+          var lk = document.getElementById('pwa-manifest-link');
+          if (lk && !lk.getAttribute('href')) lk.setAttribute('href', 'manifest.json');
+        } catch(_) {}
+      }
     })();
   </script>
 
@@ -6939,11 +6971,11 @@
       saveAuthLocal(params);
       attachClientListener();
 
-      // S3.0: troca manifest PWA pro deste cliente+persona, com PIN embutido no
-      // start_url. Quando viewer clica "Adicionar à tela inicial", instala app
-      // personalizado que abre direto sem gate de PIN. Ícone vem do logo do
-      // cliente (branding.pwaLogoUrl) ou canvas fallback (inicial + paleta.mauve).
-      swapPwaManifest(state.clientData, params.u, params.pin);
+      // S3.0/S3.2: swap dinâmico DESABILITADO. Mexer no href do <link rel="manifest">
+      // DEPOIS do load inicial quebra a identidade do PWA no iOS Safari (caso
+      // Limehome). O manifest com PIN já foi injetado via Blob URL no HEAD
+      // (script inline no <head>, fix S3.2) — não precisa de swap aqui.
+      // swapPwaManifest(state.clientData, params.u, params.pin);
 
       // (welcome/audioUnlocked + day inference virão no próximo prompt, junto da migração da Home)
       renderHome();
