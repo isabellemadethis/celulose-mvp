@@ -3337,6 +3337,75 @@
       display: flex;
     }
 
+    /* S3.0: bloco de links de instalação PWA por persona — só aparece em manage-mode. */
+    .master-client-persona-links {
+      display: none;
+      margin-top: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+    }
+    body.is-manage-mode .master-client-persona-links {
+      display: block;
+    }
+    .master-client-persona-links-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.5);
+      margin-bottom: 8px;
+    }
+    .master-client-persona-links-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .master-client-persona-link-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      color: var(--deep, #3A1E28);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      text-align: left;
+      width: 100%;
+    }
+    .master-client-persona-link-btn:hover {
+      background: rgba(7, 211, 117, 0.12);
+      border-color: rgba(7, 211, 117, 0.4);
+    }
+    .master-client-persona-link-btn-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .master-client-persona-link-btn-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .master-client-persona-link-btn-hint {
+      font-size: 10px;
+      color: rgba(0, 0, 0, 0.45);
+      flex-shrink: 0;
+    }
+    .master-client-persona-links-empty {
+      font-size: 11px;
+      color: rgba(0, 0, 0, 0.5);
+      font-style: italic;
+      padding: 4px;
+    }
+
     /* ============================================================ */
     /* MODAL (editor card form)                                     */
     /* ============================================================ */
@@ -6798,6 +6867,12 @@
       saveAuthLocal(params);
       attachClientListener();
 
+      // S3.0: troca manifest PWA pro deste cliente+persona, com PIN embutido no
+      // start_url. Quando viewer clica "Adicionar à tela inicial", instala app
+      // personalizado que abre direto sem gate de PIN. Ícone vem do logo do
+      // cliente (branding.pwaLogoUrl) ou canvas fallback (inicial + paleta.mauve).
+      swapPwaManifest(state.clientData, params.u, params.pin);
+
       // (welcome/audioUnlocked + day inference virão no próximo prompt, junto da migração da Home)
       renderHome();
       applyBranding(state.clientData.branding);  // post-paint: aplica logo/saudação no DOM novo
@@ -8078,6 +8153,151 @@
           }
         );
       });
+    }
+
+    // ============================================================
+    // S3.0 — PWA por cliente (logo + PIN embutido)
+    // ============================================================
+
+    // Valida arquivo de logo PWA. Limite 2MB, formatos PNG/JPG/WEBP.
+    // Retorna string de erro OU null se OK.
+    function validateLogo(file) {
+      if (!file) return 'Arquivo inválido.';
+      if (file.size > 2 * 1024 * 1024) return 'Logo muito grande (máx 2MB).';
+      const okTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!okTypes.includes(file.type)) return 'Use PNG, JPG ou WEBP.';
+      return null;
+    }
+
+    // Sobe logo PWA pro Storage. Path: logos/{clientSlug}/logo-{ts}.{ext}
+    // Retorna Promise<string> com a downloadURL. onProgress(pct) opcional.
+    function uploadLogoToStorage(file, clientSlug, onProgress) {
+      if (!storage) {
+        return Promise.reject(new Error('Storage não inicializado. Recarrega a página.'));
+      }
+      const safeSlug = (clientSlug || 'unknown').trim();
+      if (!safeSlug) {
+        return Promise.reject(new Error('Cliente inválido pra upload de logo.'));
+      }
+      const ts = Date.now();
+      const ext = ((file.name || '').includes('.') ? file.name.split('.').pop() : 'png').toLowerCase();
+      const path = 'logos/' + safeSlug + '/logo-' + ts + '.' + ext;
+      const ref = storage.ref(path);
+      const task = ref.put(file, { contentType: file.type || 'image/png' });
+      return new Promise((resolve, reject) => {
+        task.on('state_changed',
+          function (snapshot) {
+            if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
+              const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              onProgress(pct);
+            }
+          },
+          function (error) {
+            console.warn('[uploadLogoToStorage] erro:', error);
+            reject(error);
+          },
+          function () {
+            task.snapshot.ref.getDownloadURL()
+              .then(function (url) { resolve(url); })
+              .catch(function (e) { reject(e); });
+          }
+        );
+      });
+    }
+
+    // Gera ícone de cliente — retorna data URL (PNG) 512x512.
+    // Se client.branding.pwaLogoUrl existe, retorna ela direto (já é URL pronta).
+    // Senão, canvas com paleta.mauve de fundo + inicial branca em SF Pro Bold.
+    function generateClientIcon(client, size) {
+      size = size || 512;
+      const branding = (client && client.branding) || {};
+      if (branding.pwaLogoUrl) return branding.pwaLogoUrl;
+      const meta = (client && client.meta) || {};
+      const name = meta.name || meta.slug || '?';
+      const initial = name.trim().charAt(0).toUpperCase() || '?';
+      const bgColor = (branding.paleta && branding.paleta.mauve) || '#A6546A';
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold ' + Math.round(size * 0.5) + 'px -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initial, size / 2, size / 2 + (size * 0.02));
+      return canvas.toDataURL('image/png');
+    }
+
+    // Monta manifest PWA pra um cliente+persona+pin. Retorna Blob URL pronto
+    // pra setar no href do <link rel="manifest">. Manifest tem id único por
+    // persona pra que cada install vire um app separado na home screen
+    // (mesmo com scope='./' compartilhado no GitHub Pages).
+    function buildManifestForClient(client, personaId, pin) {
+      const meta = (client && client.meta) || {};
+      const branding = (client && client.branding) || {};
+      const slug = meta.slug || 'cliente';
+      const name = meta.name || slug;
+      const themeColor = (branding.paleta && branding.paleta.mauve) || '#A6546A';
+      const bgColor = (branding.paleta && branding.paleta.blushLight) || '#FFF7FA';
+      const icon = generateClientIcon(client, 512);
+
+      let startUrl = './?cliente=' + encodeURIComponent(slug);
+      if (personaId) startUrl += '&u=' + encodeURIComponent(personaId);
+      if (pin) startUrl += '&pin=' + encodeURIComponent(pin);
+
+      const id = slug + (personaId ? '-' + personaId : '');
+
+      const manifest = {
+        id: id,
+        name: name,
+        short_name: name.length > 12 ? name.slice(0, 12) : name,
+        description: 'Sinapse · ' + name,
+        start_url: startUrl,
+        scope: './',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: bgColor,
+        theme_color: themeColor,
+        lang: 'pt-BR',
+        categories: ['productivity', 'business'],
+        icons: [
+          { src: icon, sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: icon, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: icon, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      };
+
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      return URL.createObjectURL(blob);
+    }
+
+    // Swap dinâmico do <link rel="manifest"> no boot. Chamado de route() depois
+    // que state.clientData carrega. Se não bate (sem cliente / sem persona / sem
+    // pin válido), mantém manifest.json estático Sinapse (já no head).
+    // Guarda Blob URL anterior pra revogar e liberar memória.
+    let _pwaManifestBlobUrl = null;
+    function swapPwaManifest(client, personaId, pin) {
+      if (!client || !personaId) return;
+      const link = document.querySelector('link[rel="manifest"]');
+      if (!link) return;
+      try {
+        const newUrl = buildManifestForClient(client, personaId, pin);
+        if (_pwaManifestBlobUrl) {
+          try { URL.revokeObjectURL(_pwaManifestBlobUrl); } catch (e) {}
+        }
+        _pwaManifestBlobUrl = newUrl;
+        link.href = newUrl;
+        // Atualiza favicon e apple-touch-icon pra também refletir o cliente.
+        const icon = generateClientIcon(client, 512);
+        const favicon = document.querySelector('link#favicon-link');
+        if (favicon) favicon.href = icon;
+        const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+        if (appleIcon) appleIcon.href = icon;
+      } catch (e) {
+        console.warn('[swapPwaManifest] falhou — mantendo manifest padrão:', e);
+      }
     }
 
     // ID estilo card_{ts}_{rand6} (segue convenção do schema)
@@ -13185,6 +13405,12 @@
         : `<div class="master-clients">${clients.map(c => {
             const meta = c.meta || {};
             const slug = meta.slug || '';
+            const viewerPin = (c.auth && c.auth.viewerPin) || '';
+
+            // S3.0: lista de personas (ordenadas) pra renderizar botões "Copiar link" PWA por persona.
+            const personasArr = Object.entries(c.personas || {})
+              .map(([id, p]) => ({ id, name: (p && p.name) || id, order: (p && p.order) || 999 }))
+              .sort((a, b) => a.order - b.order);
 
             // HARD-LITE: sprint removido. Mostra contagem de days ativos do cliente
             // como sinal de "tem produção" ou similar.
@@ -13241,6 +13467,16 @@
                 <button type="button" class="master-client-card-edit" data-slug="${escapeHtml(slug)}" aria-label="Editar branding de ${escapeHtml(meta.name || slug)}">⚙</button>
                 <!-- D17: x irmao (HTML valido — nao aninha button-em-button). -->
                 <button type="button" class="master-client-card-delete" data-slug="${escapeHtml(slug)}" aria-label="Apagar ${escapeHtml(meta.name || slug)}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+                <!-- S3.0: lista de links de instalação PWA por persona (só visível em is-manage-mode) -->
+                <div class="master-client-persona-links">
+                  <div class="master-client-persona-links-title">📲 Links de instalação</div>
+                  ${personasArr.length === 0
+                    ? `<div class="master-client-persona-links-empty">Cliente sem personas. Adicione no editor (★ Personas).</div>`
+                    : (!viewerPin
+                      ? `<div class="master-client-persona-links-empty">Sem viewerPin configurado. Edite o cliente (⚙) pra gerar.</div>`
+                      : `<div class="master-client-persona-links-list">${personasArr.map(p => `<button type="button" class="master-client-persona-link-btn" data-slug="${escapeHtml(slug)}" data-persona-id="${escapeHtml(p.id)}" data-persona-name="${escapeHtml(p.name)}" data-viewer-pin="${escapeHtml(viewerPin)}"><span class="master-client-persona-link-btn-icon">📲</span><span class="master-client-persona-link-btn-name">${escapeHtml(p.name)}</span><span class="master-client-persona-link-btn-hint">copiar</span></button>`).join('')}</div>`)
+                  }
+                </div>
               </div>
             `;
           }).join('')}</div>`;
@@ -13371,6 +13607,36 @@
           const slug = btn.getAttribute('data-slug');
           if (!slug) return;
           openEditClientSheet(slug, clientsObj[slug]);
+        });
+      });
+
+      // S3.0: handler dos botões "📲 Copiar link" por persona — gera URL
+      // pronta pra colar no WhatsApp do cliente. URL embute slug+persona+pin
+      // pra entrar direto sem gate quando o cliente instala como PWA.
+      app.querySelectorAll('.master-client-persona-link-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const slug = btn.getAttribute('data-slug');
+          const personaId = btn.getAttribute('data-persona-id');
+          const personaName = btn.getAttribute('data-persona-name') || personaId;
+          const viewerPin = btn.getAttribute('data-viewer-pin');
+          if (!slug || !personaId || !viewerPin) {
+            showToast('Dados incompletos pra gerar link.');
+            return;
+          }
+          const url = window.location.origin + window.location.pathname
+            + '?cliente=' + encodeURIComponent(slug)
+            + '&u=' + encodeURIComponent(personaId)
+            + '&pin=' + encodeURIComponent(viewerPin);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+              showToast('Link de ' + personaName + ' copiado · cole no WhatsApp');
+            }).catch(() => {
+              showToast('Falhou ao copiar. Selecione manualmente: ' + url);
+            });
+          } else {
+            showToast('Clipboard não disponível. URL: ' + url);
+          }
         });
       });
     }
@@ -13902,6 +14168,27 @@
               <div class="form-hint">Aceita base64 inline (data URI) ou URL externa. Deixe vazio pra usar "C" textual.</div>
             </div>
 
+            <!-- S3.0: Logo PWA — ícone do app quando cliente instala como PWA na home screen. -->
+            <div class="form-group">
+              <label class="form-label">Logo PWA (ícone do app instalado)</label>
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div id="ec-pwa-logo-preview" style="width: 72px; height: 72px; border-radius: 14px; background: ${escapeHtml(palette.mauve || '#A6546A')}; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 32px; border: 1px solid rgba(0,0,0,0.08);">
+                  ${branding.pwaLogoUrl ? `<img src="${escapeHtml(branding.pwaLogoUrl)}" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo PWA" />` : escapeHtml((meta.name || slug || '?').trim().charAt(0).toUpperCase())}
+                </div>
+                <div style="flex: 1;">
+                  <label class="image-upload-btn" for="ec-pwa-logo-file" style="cursor: pointer; display: inline-block;">Anexar logo</label>
+                  <input type="file" id="ec-pwa-logo-file" accept="image/png,image/jpeg,image/webp" style="display: none;" />
+                  ${branding.pwaLogoUrl ? `<button type="button" id="ec-pwa-logo-remove" class="btn-secondary" style="margin-left: 8px; padding: 6px 12px; font-size: 12px;">Remover</button>` : ''}
+                  <div id="ec-pwa-logo-status" style="font-size: 11px; color: var(--gray); margin-top: 6px;">${branding.pwaLogoUrl ? '✓ Logo carregado' : 'PNG/JPG/WEBP · máx 2MB · 512×512 ideal'}</div>
+                  <div id="ec-pwa-logo-progress" style="display: none; margin-top: 6px; height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; overflow: hidden;">
+                    <div id="ec-pwa-logo-progress-bar" style="height: 100%; width: 0%; background: var(--mauve); transition: width 0.2s ease;"></div>
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="ec-pwa-logo-url" value="${escapeHtml(branding.pwaLogoUrl || '')}" />
+              <div class="form-hint">Sobe pro Storage. Aparece como ícone na home screen quando cliente instala o app. Deixe vazio pra usar fallback automático (inicial + cor da marca).</div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Features ativas</label>
               <div class="form-hint" style="margin-top: 0; margin-bottom: 12px;">
@@ -13958,11 +14245,57 @@
         });
       });
 
+      // S3.0: handler do upload de Logo PWA (Storage). Atualiza hidden input
+      // e preview ao vivo. Botão Remover limpa hidden e volta pra fallback canvas.
+      const ecPwaFileInput = document.getElementById('ec-pwa-logo-file');
+      const ecPwaUrlInput = document.getElementById('ec-pwa-logo-url');
+      const ecPwaStatus = document.getElementById('ec-pwa-logo-status');
+      const ecPwaPreview = document.getElementById('ec-pwa-logo-preview');
+      const ecPwaProgress = document.getElementById('ec-pwa-logo-progress');
+      const ecPwaProgressBar = document.getElementById('ec-pwa-logo-progress-bar');
+      const ecPwaRemove = document.getElementById('ec-pwa-logo-remove');
+      if (ecPwaFileInput) {
+        ecPwaFileInput.addEventListener('change', async () => {
+          const file = ecPwaFileInput.files && ecPwaFileInput.files[0];
+          if (!file) return;
+          const err = validateLogo(file);
+          if (err) { ecPwaStatus.textContent = '✗ ' + err; ecPwaStatus.style.color = 'var(--red)'; return; }
+          ecPwaStatus.textContent = 'Subindo logo…';
+          ecPwaStatus.style.color = 'var(--gray)';
+          ecPwaProgress.style.display = 'block';
+          try {
+            const url = await uploadLogoToStorage(file, slug, (pct) => {
+              ecPwaProgressBar.style.width = pct.toFixed(0) + '%';
+            });
+            ecPwaUrlInput.value = url;
+            ecPwaPreview.innerHTML = '<img src="' + url + '" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo PWA" />';
+            const kb = Math.round(file.size / 1024);
+            ecPwaStatus.textContent = '✓ ' + file.name + ' (' + kb + ' KB) — salvo no Storage';
+            ecPwaProgress.style.display = 'none';
+          } catch (e) {
+            console.error('[ec-pwa-logo upload]', e);
+            ecPwaStatus.textContent = '✗ Falhou: ' + (e.message || 'erro');
+            ecPwaStatus.style.color = 'var(--red)';
+            ecPwaProgress.style.display = 'none';
+          }
+        });
+      }
+      if (ecPwaRemove) {
+        ecPwaRemove.addEventListener('click', () => {
+          ecPwaUrlInput.value = '';
+          const initial = ((document.getElementById('ec-name').value || slug || '?').trim().charAt(0) || '?').toUpperCase();
+          ecPwaPreview.innerHTML = initial;
+          ecPwaStatus.textContent = 'Logo removido. Salve pra aplicar.';
+          ecPwaRemove.style.display = 'none';
+        });
+      }
+
       document.getElementById('ec-cancel-btn').addEventListener('click', closeSheet);
       document.getElementById('ec-submit-btn').addEventListener('click', async () => {
         const newName = document.getElementById('ec-name').value.trim();
         const newSaudacao = document.getElementById('ec-greeting').value.trim();
         const newLogoUrl = document.getElementById('ec-logo-url').value.trim();
+        const newPwaLogoUrl = (document.getElementById('ec-pwa-logo-url').value || '').trim();
         if (!newName) {
           showToast('Nome eh obrigatorio.');
           return;
@@ -13982,6 +14315,7 @@
           updates[ROOT_PATH + '/clients/' + slug + '/meta/name'] = newName;
           updates[ROOT_PATH + '/clients/' + slug + '/branding/saudacao'] = newSaudacao;
           updates[ROOT_PATH + '/clients/' + slug + '/branding/logoUrl'] = newLogoUrl;
+          updates[ROOT_PATH + '/clients/' + slug + '/branding/pwaLogoUrl'] = newPwaLogoUrl;
           updates[ROOT_PATH + '/clients/' + slug + '/branding/paleta'] = newPaleta;
           // A2: feature flag heroPiece
           const newHeroPieceFlag = document.getElementById('ec-feat-heroPiece').checked;
@@ -15837,7 +16171,7 @@
     // Roda apos 'load' pra nao concorrer com bootstrap inicial.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20260519-modal-zindex-fix').then((reg) => {
+        navigator.serviceWorker.register('sw.js?v=20260520-s30-pwa-pin-icone').then((reg) => {
           console.log('[SW] registrado, scope:', reg.scope);
         }).catch((err) => {
           console.warn('[SW] registro falhou:', err);
