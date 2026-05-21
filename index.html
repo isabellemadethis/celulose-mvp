@@ -6739,6 +6739,24 @@
     async function route() {
       const params = getQueryParams();
 
+      // S3.0 fix: PWA standalone (especialmente iOS Safari) frequentemente perde
+      // a query string ao abrir via ícone da home screen. Se detectamos modo
+      // standalone E sem params, tenta recuperar o último login do localStorage
+      // (saveAuthLocal popula isso a cada entrada bem-sucedida). Redireciona
+      // pra URL completa pra que o restante do route() funcione normalmente.
+      const isPwaStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+        || (window.navigator && window.navigator.standalone === true);
+      if (isPwaStandalone && !params.cliente && !params.master) {
+        const cached = loadAuthLocal();
+        if (cached) {
+          const qs = authLocalToQueryString(cached);
+          if (qs) {
+            window.location.replace(window.location.pathname + '?' + qs);
+            return;
+          }
+        }
+      }
+
       // ---------- 1. MASTER ----------
       if (params.master) {
         const masterPinSnap = await masterRef.child('pin').once('value');
@@ -14162,10 +14180,16 @@
               <div class="form-hint">Use <code>{nome}</code> pra incluir o nome da persona dinâmico. Ex: <code>Olá, {nome}</code> vira "Olá, <strong>Caíque</strong>" pra ele. Sem o <code>{nome}</code>, a saudação aparece literal.</div>
             </div>
 
+            <!-- S3.0 fix: porta o pattern do add-client pra edit-client — anexar arquivo OU URL externa. -->
             <div class="form-group">
-              <label class="form-label">Logo (URL ou base64)</label>
-              <input type="text" class="form-input" id="ec-logo-url" value="${escapeHtml(branding.logoUrl || '')}" placeholder="data:image/png;base64,... ou URL externa" />
-              <div class="form-hint">Aceita base64 inline (data URI) ou URL externa. Deixe vazio pra usar "C" textual.</div>
+              <label class="form-label">Logo (anexar arquivo ou colar URL)</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <label class="image-upload-btn" for="ec-logo-file" style="cursor: pointer;">Anexar arquivo</label>
+                <input type="file" id="ec-logo-file" accept="image/*" style="display: none;" />
+                <span id="ec-logo-status" style="font-size: 11px; color: var(--gray);">${branding.logoUrl ? '✓ Logo já carregado' : 'Nenhum arquivo'}</span>
+              </div>
+              <input type="text" class="form-input" id="ec-logo-url" value="${escapeHtml(branding.logoUrl || '')}" placeholder="ou cole uma URL externa" style="margin-top: 8px;" />
+              <div class="form-hint">Arquivo é comprimido pra ~400px e salvo inline (base64). Sem custo de storage. Deixe vazio pra usar "C" textual.</div>
             </div>
 
             <!-- S3.0: Logo PWA — ícone do app quando cliente instala como PWA na home screen. -->
@@ -14245,6 +14269,43 @@
         });
       });
 
+      // S3.0 fix: handler de upload do logo NORMAL (header app) — comprime
+      // pra ~400px e salva inline (base64). Mesmo pattern do add-client.
+      let ecInlineLogoData = '';
+      const ecLogoFileInput = document.getElementById('ec-logo-file');
+      const ecLogoStatus = document.getElementById('ec-logo-status');
+      const ecLogoUrlInput = document.getElementById('ec-logo-url');
+      if (ecLogoFileInput) {
+        ecLogoFileInput.addEventListener('change', async () => {
+          const file = ecLogoFileInput.files && ecLogoFileInput.files[0];
+          if (!file) return;
+          ecLogoStatus.textContent = 'Comprimindo…';
+          try {
+            ecInlineLogoData = await compressImage(file, 400, 0.85);
+            const kb = Math.round((ecInlineLogoData.length * 3 / 4) / 1024);
+            ecLogoStatus.textContent = '✓ ' + file.name + ' (' + kb + ' KB inline)';
+            ecLogoUrlInput.value = '';
+            ecLogoUrlInput.placeholder = 'arquivo anexado — apague pra usar URL externa';
+          } catch (e) {
+            console.error('[ec compressImage logo]', e);
+            ecLogoStatus.textContent = '✗ falhou: ' + (e.message || 'erro');
+            ecInlineLogoData = '';
+          }
+        });
+      }
+      // Se Isabelle digita URL manualmente, descarta o inline.
+      if (ecLogoUrlInput) {
+        ecLogoUrlInput.addEventListener('input', () => {
+          if (ecLogoUrlInput.value.trim()) {
+            ecInlineLogoData = '';
+            if (ecLogoFileInput && ecLogoFileInput.value) {
+              ecLogoFileInput.value = '';
+              ecLogoStatus.textContent = 'Nenhum arquivo';
+            }
+          }
+        });
+      }
+
       // S3.0: handler do upload de Logo PWA (Storage). Atualiza hidden input
       // e preview ao vivo. Botão Remover limpa hidden e volta pra fallback canvas.
       const ecPwaFileInput = document.getElementById('ec-pwa-logo-file');
@@ -14294,7 +14355,8 @@
       document.getElementById('ec-submit-btn').addEventListener('click', async () => {
         const newName = document.getElementById('ec-name').value.trim();
         const newSaudacao = document.getElementById('ec-greeting').value.trim();
-        const newLogoUrl = document.getElementById('ec-logo-url').value.trim();
+        // S3.0 fix: arquivo anexado tem precedência sobre URL — mesmo pattern do add-client.
+        const newLogoUrl = ecInlineLogoData || document.getElementById('ec-logo-url').value.trim();
         const newPwaLogoUrl = (document.getElementById('ec-pwa-logo-url').value || '').trim();
         if (!newName) {
           showToast('Nome eh obrigatorio.');
@@ -16171,7 +16233,7 @@
     // Roda apos 'load' pra nao concorrer com bootstrap inicial.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20260520-s30-pwa-pin-icone').then((reg) => {
+        navigator.serviceWorker.register('sw.js?v=20260520-pwa-standalone-fallback').then((reg) => {
           console.log('[SW] registrado, scope:', reg.scope);
         }).catch((err) => {
           console.warn('[SW] registro falhou:', err);
