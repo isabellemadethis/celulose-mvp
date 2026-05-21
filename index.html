@@ -109,36 +109,51 @@
           link.setAttribute('href', blobUrl);
         }
 
-        // 1ª passada: aplica manifest com ícone default Sinapse (rápido, garante
-        // que se o iOS já estiver pronto pro Add to Home Screen, tem algo válido).
-        applyManifest(null);
+        function applyClientIcon(iconUrl) {
+          if (!iconUrl) return;
+          var apple = document.querySelector('link[rel="apple-touch-icon"]');
+          if (apple) apple.setAttribute('href', iconUrl);
+          var fav = document.getElementById('favicon-link');
+          if (fav) fav.setAttribute('href', iconUrl);
+          applyManifest(iconUrl);
+        }
+
+        // localStorage cache do ícone — pra que a 2ª visita já tenha o ícone
+        // correto antes do bootstrap completar.
+        var cacheKey = 'sinapse-pwa-icon:' + cliente;
+        var cachedIcon = null;
+        try { cachedIcon = localStorage.getItem(cacheKey); } catch (_) {}
+
+        if (cachedIcon) {
+          applyClientIcon(cachedIcon);
+          try { console.info('[Sinapse PWA] ícone cacheado aplicado:', cachedIcon); } catch(_) {}
+        } else {
+          applyManifest(null);
+        }
+
         try { console.info('[Sinapse PWA] manifest injetado, start_url =', startUrl); } catch(_) {}
 
-        // 2ª passada (async): busca branding do cliente no Firebase RTDB via REST
-        // público — não precisa de auth pra ler o /branding. Quando chega, atualiza
-        // o manifest com o ícone do cliente E o apple-touch-icon (iOS usa esse
-        // último pro Add to Home Screen quando presente, mesmo com manifest).
-        // Como Safari iOS só fetch o manifest no Share menu, normalmente dá tempo.
+        // Fetch async do branding atual no Firebase RTDB (REST público) pra
+        // atualizar o cache. Se mudou (ou primeira visita), aplica e salva.
+        // O swap real do apple-touch-icon depois do auth é feito pelo
+        // swapClientIconsOnly() em route() — esse fetch aqui é só seed do cache.
         if (cliente) {
           var brandingUrl = 'https://celulose-digital-default-rtdb.firebaseio.com/celulose-app/clients/'
                             + encodeURIComponent(cliente) + '/branding.json';
           fetch(brandingUrl)
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (branding) {
-              var iconUrl = branding && branding.pwaLogoUrl;
+              if (!branding) return;
+              var iconUrl = branding.pwaLogoUrl || branding.logoUrl || null;
               if (!iconUrl) return;
-              // Atualiza apple-touch-icon (iOS usa esse pro Add to Home Screen).
-              var apple = document.querySelector('link[rel="apple-touch-icon"]');
-              if (apple) apple.setAttribute('href', iconUrl);
-              // Atualiza favicon também (visual no tab/aba).
-              var fav = document.getElementById('favicon-link');
-              if (fav) fav.setAttribute('href', iconUrl);
-              // Rebuilda o manifest com o ícone do cliente.
-              applyManifest(iconUrl);
-              try { console.info('[Sinapse PWA] ícone do cliente aplicado:', iconUrl); } catch(_) {}
+              if (iconUrl !== cachedIcon) {
+                try { localStorage.setItem(cacheKey, iconUrl); } catch (_) {}
+                applyClientIcon(iconUrl);
+                try { console.info('[Sinapse PWA] ícone atualizado do Firebase:', iconUrl); } catch(_) {}
+              }
             })
             .catch(function (e) {
-              try { console.warn('[Sinapse PWA] branding fetch falhou — usando ícone default:', e); } catch(_) {}
+              try { console.warn('[Sinapse PWA] branding fetch falhou:', e); } catch(_) {}
             });
         }
       } catch (e) {
@@ -7016,11 +7031,14 @@
       saveAuthLocal(params);
       attachClientListener();
 
-      // S3.0/S3.2: swap dinâmico DESABILITADO. Mexer no href do <link rel="manifest">
-      // DEPOIS do load inicial quebra a identidade do PWA no iOS Safari (caso
-      // Limehome). O manifest com PIN já foi injetado via Blob URL no HEAD
-      // (script inline no <head>, fix S3.2) — não precisa de swap aqui.
-      // swapPwaManifest(state.clientData, params.u, params.pin);
+      // S3.0/S3.2: swap do manifest DESABILITADO (mexer no href quebra PWA no
+      // iOS — caso Limehome). MAS a parte de favicon + apple-touch-icon do
+      // antigo swapPwaManifest continua sendo necessária pra mostrar o ícone
+      // do cliente na home screen do iPhone. Separei em swapClientIconsOnly.
+      // S3.3 (2026-05-21): regressão do ícone reportada — quando o swap do
+      // manifest foi desabilitado em S3.2, perdeu junto a atualização do
+      // apple-touch-icon, que é o que iOS usa no Add to Home Screen.
+      swapClientIconsOnly(state.clientData);
 
       // (welcome/audioUnlocked + day inference virão no próximo prompt, junto da migração da Home)
       renderHome();
@@ -8422,10 +8440,30 @@
       return URL.createObjectURL(blob);
     }
 
+    // S3.3 — Swap APENAS favicon + apple-touch-icon (NÃO mexe no manifest).
+    // Atualiza o ícone do cliente na aba e na tela inicial do iPhone. iOS
+    // Safari usa apple-touch-icon pro Add to Home Screen, e iOS aceita
+    // atualizações via JS (caso documentado em blog.notmyhostna.me). Como
+    // não mexe em link[rel=manifest], não quebra a identidade do PWA.
+    function swapClientIconsOnly(client) {
+      if (!client) return;
+      try {
+        const icon = generateClientIcon(client, 512);
+        const favicon = document.querySelector('link#favicon-link');
+        if (favicon) favicon.href = icon;
+        const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+        if (appleIcon) appleIcon.href = icon;
+      } catch (e) {
+        console.warn('[swapClientIconsOnly] falhou:', e);
+      }
+    }
+
     // Swap dinâmico do <link rel="manifest"> no boot. Chamado de route() depois
     // que state.clientData carrega. Se não bate (sem cliente / sem persona / sem
     // pin válido), mantém manifest.json estático Sinapse (já no head).
     // Guarda Blob URL anterior pra revogar e liberar memória.
+    // S3.2: NÃO USAR — mexer no manifest depois do load quebra PWA no iOS.
+    // Mantida só pra referência histórica.
     let _pwaManifestBlobUrl = null;
     function swapPwaManifest(client, personaId, pin) {
       if (!client || !personaId) return;
