@@ -1282,6 +1282,23 @@
     .card-request-btn-soft:active { transform: scale(0.97); }
     .card-request-btn-soft:hover { opacity: 0.92; }
 
+    /* Botão Aprovar (variante soft) — só no card de vídeo. Verde de aprovação. */
+    .card-approve-btn-soft {
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      padding: 11px 28px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      font-family: inherit;
+    }
+    .card-approve-btn-soft:active { transform: scale(0.97); }
+    .card-approve-btn-soft:hover { opacity: 0.92; }
+
     .card-approval-banner {
       text-align: center;
       font-size: 14px;
@@ -9532,7 +9549,7 @@
       let heroHint = '';
       if (isPublished) heroHint = '';
       else if (cardStatus === 'draft') heroHint = 'em rascunho com a celulose';
-      else if (canVote) heroHint = '2 toques pra aprovar';
+      else if (canVote) heroHint = c.videoUrl ? '' : '2 toques pra aprovar';
       else if (myApproval === 'approved') heroHint = 'aprovado por você';
       else if (myApproval === 'requested_changes') heroHint = 'você pediu ajuste';
 
@@ -9690,15 +9707,22 @@
         });
       });
 
-      // hero double-tap = approve (se elegível) ou fullscreen
+      // hero double-tap = approve (se elegível) ou fullscreen.
+      // Vídeo: NÃO liga o gesto — dois toques num <video> abrem o fullscreen nativo.
+      // Aprovação de vídeo é pelo botão "Aprovar" no bloco de ação abaixo.
       const hero = document.getElementById('card-hero');
-      bindCardHero(hero, c, canVote);
+      if (!c.videoUrl) bindCardHero(hero, c, canVote);
 
       // A.4: botão "Aprovar" removido — aprovação acontece via double-tap no hero
       // (bindCardHero acima). Só sobrou "Pedir ajuste" no bloco de ação.
       const requestBtn = document.getElementById('btn-request-changes');
       if (requestBtn) {
         requestBtn.addEventListener('click', () => openRequestChangesSheet(c));
+      }
+      // Botão Aprovar — só aparece no card de vídeo (imagem usa o gesto de 2 toques).
+      const approveBtn = document.getElementById('btn-approve');
+      if (approveBtn) {
+        approveBtn.addEventListener('click', () => triggerApproveAnimation(c));
       }
       const switchVoteBtn = document.getElementById('btn-switch-vote');
       if (switchVoteBtn) {
@@ -9768,8 +9792,15 @@
       // A.4.1: variant `is-vote-soft` — enxuta, texto + botão em linha, sem
       // uppercase, fundo --white (consistente em qualquer paleta cliente).
       if (canVote) {
+        // Vídeo aprova por botão (o gesto de 2 toques conflita com o player).
+        // Imagem continua aprovando por 2 toques no hero — só "Pedir ajuste" aqui.
+        const approveBtnHtml = c.videoUrl
+          ? `<button class="card-approve-btn-soft" id="btn-approve">Aprovar</button>`
+          : '';
+        const questionTxt = c.videoUrl ? 'Curtiu? Aprove ou peça um ajuste.' : 'Quer pedir um ajuste?';
         return `<div class="card-approval-block is-vote-soft">
-          <div class="card-approval-question-soft">Quer pedir um ajuste?</div>
+          <div class="card-approval-question-soft">${questionTxt}</div>
+          ${approveBtnHtml}
           <button class="card-request-btn-soft" id="btn-request-changes">Pedir ajuste</button>
         </div>`;
       }
