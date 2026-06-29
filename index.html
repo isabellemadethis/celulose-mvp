@@ -914,6 +914,31 @@
       bottom: auto;
     }
 
+    /* Pílula "Aprovar" tocável sobre o vídeo (topo, cor da marca).
+       No vídeo o gesto de 2 toques não rola (abre fullscreen), então a
+       aprovação é por esta pílula. Fica no topo pra não cobrir os controles. */
+    .card-hero-approve-pill {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 11px 30px;
+      background: var(--mauve);
+      color: var(--white);
+      border: none;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.28);
+      z-index: 3;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .card-hero-approve-pill:hover { opacity: 0.94; }
+    .card-hero-approve-pill:active { transform: translateX(-50%) scale(0.96); }
+
     .card-heart {
       position: absolute;
       top: 50%;
@@ -1281,23 +1306,6 @@
     }
     .card-request-btn-soft:active { transform: scale(0.97); }
     .card-request-btn-soft:hover { opacity: 0.92; }
-
-    /* Botão Aprovar (variante soft) — só no card de vídeo. Verde de aprovação. */
-    .card-approve-btn-soft {
-      background: var(--green);
-      color: var(--white);
-      border: none;
-      padding: 11px 28px;
-      border-radius: 100px;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease;
-      font-family: inherit;
-    }
-    .card-approve-btn-soft:active { transform: scale(0.97); }
-    .card-approve-btn-soft:hover { opacity: 0.92; }
 
     .card-approval-banner {
       text-align: center;
@@ -9595,6 +9603,7 @@
                     : `<div class="card-hero-empty">Sem referência visual</div>`)
               }
               ${heroHint ? `<div class="card-hero-overlay-hint">${escapeHtml(heroHint)}</div>` : ''}
+              ${c.videoUrl && canVote ? `<button class="card-hero-approve-pill" id="btn-approve-hero">♥ Aprovar</button>` : ''}
               <div class="card-heart" id="card-heart">♥</div>
             </div>
             ${c.videoUrl && c.referenceImage
@@ -9719,10 +9728,10 @@
       if (requestBtn) {
         requestBtn.addEventListener('click', () => openRequestChangesSheet(c));
       }
-      // Botão Aprovar — só aparece no card de vídeo (imagem usa o gesto de 2 toques).
-      const approveBtn = document.getElementById('btn-approve');
-      if (approveBtn) {
-        approveBtn.addEventListener('click', () => triggerApproveAnimation(c));
+      // Pílula "Aprovar" sobre o vídeo (imagem usa o gesto de 2 toques no hero).
+      const approvePill = document.getElementById('btn-approve-hero');
+      if (approvePill) {
+        approvePill.addEventListener('click', () => triggerApproveAnimation(c));
       }
       const switchVoteBtn = document.getElementById('btn-switch-vote');
       if (switchVoteBtn) {
@@ -9792,15 +9801,8 @@
       // A.4.1: variant `is-vote-soft` — enxuta, texto + botão em linha, sem
       // uppercase, fundo --white (consistente em qualquer paleta cliente).
       if (canVote) {
-        // Vídeo aprova por botão (o gesto de 2 toques conflita com o player).
-        // Imagem continua aprovando por 2 toques no hero — só "Pedir ajuste" aqui.
-        const approveBtnHtml = c.videoUrl
-          ? `<button class="card-approve-btn-soft" id="btn-approve">Aprovar</button>`
-          : '';
-        const questionTxt = c.videoUrl ? 'Curtiu? Aprove ou peça um ajuste.' : 'Quer pedir um ajuste?';
         return `<div class="card-approval-block is-vote-soft">
-          <div class="card-approval-question-soft">${questionTxt}</div>
-          ${approveBtnHtml}
+          <div class="card-approval-question-soft">Quer pedir um ajuste?</div>
           <button class="card-request-btn-soft" id="btn-request-changes">Pedir ajuste</button>
         </div>`;
       }
