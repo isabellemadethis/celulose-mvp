@@ -14,3 +14,22 @@ Thumbs.db
 # Editores
 .vscode/
 .idea/
+
+# Segredos — NUNCA subir
+.env
+.env.*
+!.env.example
+
+# Backup do banco (dados reais de clientes) — NUNCA subir (repo é público)
+backups/
+
+# Worker do R2 — não faz parte do site
+r2-porteiro-worker.js
+
+# Artefatos de dev (checklists, smokes, wireframes) — não subir
+checklist-*.md
+checklist-*.html
+*-smoke-checklist.md
+*smoke*.html
+fase*-smoke-*.md
+wireframe-*.html

@@ -6566,6 +6566,72 @@
       console.error('[Firebase init falhou]', e);
     }
 
+    // ===== R2 (Cloudflare) — armazenamento de vídeo + logo =====
+    // Migração 29/06/2026: saiu do Firebase Storage (exigia Blaze) pro R2.
+    // Banco continua no Firebase RTDB. Upload vai DIRETO pro R2 via URL
+    // assinada pelo "porteiro" (Worker). Leitura é pela URL pública.
+    const R2_WORKER = 'https://sinapse-porteiro.isabellecardoso9966.workers.dev';
+    const R2_PUBLIC = 'https://pub-b27d6aa2275145bdb57592240795269b.r2.dev';
+    const R2_APP_TOKEN = 'snp_b482a81218bb2b0cfc6735b579422197aa9c293b';
+
+    // Sobe um arquivo pro R2: pede URL assinada ao porteiro e faz PUT direto.
+    // onProgress(pct, etaSec). Resolve com a URL pública do arquivo.
+    function r2Upload(file, key, onProgress) {
+      return new Promise(function (resolve, reject) {
+        fetch(R2_WORKER + '/sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-app-token': R2_APP_TOKEN },
+          body: JSON.stringify({ key: key, contentType: file.type || 'application/octet-stream' })
+        }).then(function (r) {
+          if (!r.ok) throw new Error('Porteiro recusou (' + r.status + ').');
+          return r.json();
+        }).then(function (data) {
+          const startTime = Date.now();
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', data.url, true);
+          xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+          xhr.upload.onprogress = function (e) {
+            if (typeof onProgress === 'function' && e.lengthComputable && e.total > 0) {
+              const pct = (e.loaded / e.total) * 100;
+              const elapsed = (Date.now() - startTime) / 1000;
+              let etaSec = NaN;
+              if (elapsed > 1 && e.loaded > 0) {
+                etaSec = (e.total - e.loaded) / (e.loaded / elapsed);
+              }
+              onProgress(pct, etaSec);
+            }
+          };
+          xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) resolve(R2_PUBLIC + '/' + key);
+            else reject(new Error('Upload falhou (' + xhr.status + ').'));
+          };
+          xhr.onerror = function () { reject(new Error('Erro de rede no upload.')); };
+          xhr.send(file);
+        }).catch(reject);
+      });
+    }
+
+    // Apaga um objeto do R2 via porteiro (key = videos/slug/arquivo.mp4).
+    async function r2Delete(key) {
+      const r = await fetch(R2_WORKER + '/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-app-token': R2_APP_TOKEN },
+        body: JSON.stringify({ key: key })
+      });
+      if (!r.ok) throw new Error('Delete falhou (' + r.status + ').');
+      return true;
+    }
+
+    // Lista keys de um prefixo no R2 (ex: videos/slug/).
+    async function r2List(prefix) {
+      const r = await fetch(R2_WORKER + '/list?prefix=' + encodeURIComponent(prefix), {
+        headers: { 'x-app-token': R2_APP_TOKEN }
+      });
+      if (!r.ok) throw new Error('List falhou (' + r.status + ').');
+      const data = await r.json();
+      return data.keys || [];
+    }
+
     // PROMPT 12 / D-12.2: listener de conexão. RTDB expõe '.info/connected' como
     // boolean — true quando ws aberto, false quando offline. Mostra banner top
     // persistente até reconectar. Reconexão automática é nativa do Firebase SDK.
@@ -7953,7 +8019,6 @@
     // conhecidos contorna a regra e funciona pra qualquer cliente cadastrado.
     // Custo: 1 listAll() por slug + 1 getMetadata() + 1 getDownloadURL() por arquivo.
     async function listAllVideosFromStorage() {
-      if (!storage) throw new Error('Storage não inicializado.');
       const result = [];
       const clientsObj = (state.masterData && state.masterData.clients) || {};
       const slugs = Object.keys(clientsObj).filter(s => s && clientsObj[s]);
@@ -7962,35 +8027,28 @@
         return result;
       }
       for (const slug of slugs) {
+        let keys = [];
         try {
-          const slugRef = storage.ref('videos/' + slug);
-          const slugListing = await slugRef.listAll();
-          for (const item of slugListing.items) {
-            try {
-              const [metadata, url] = await Promise.all([
-                item.getMetadata(),
-                item.getDownloadURL()
-              ]);
-              result.push({
-                ref: item,
-                path: item.fullPath,
-                slug,
-                name: item.name,
-                size: metadata.size || 0,
-                timeCreated: metadata.timeCreated || null,
-                contentType: metadata.contentType || '',
-                downloadUrl: url
-              });
-            } catch (e) {
-              console.warn('[listAllVideos] item erro:', item.fullPath, e);
-            }
-          }
+          keys = await r2List('videos/' + slug + '/');
         } catch (e) {
-          // Erro 404 (pasta não existe ainda) é esperado pra clientes sem vídeo.
-          // Só loga se for erro de permissão ou outro.
-          if (e && e.code !== 'storage/object-not-found') {
-            console.warn('[listAllVideos] slug erro:', slug, e);
-          }
+          console.warn('[listAllVideos] slug erro:', slug, e);
+          continue;
+        }
+        for (const key of keys) {
+          const name = key.split('/').pop();
+          // timeCreated derivado do timestamp no nome do arquivo (cardId-{ts}.ext)
+          const tsMatch = name.match(/(\d{12,13})/);
+          const timeCreated = tsMatch ? new Date(parseInt(tsMatch[1], 10)).toISOString() : null;
+          result.push({
+            key: key,
+            path: key,
+            slug: slug,
+            name: name,
+            size: 0,
+            timeCreated: timeCreated,
+            contentType: '',
+            downloadUrl: R2_PUBLIC + '/' + key
+          });
         }
       }
       // Mais recentes primeiro
@@ -8007,6 +8065,12 @@
     // Retorna 'videos/{slug}/{file}' ou null se não conseguiu extrair.
     function extractStoragePath(url) {
       if (!url || typeof url !== 'string') return null;
+      // R2 público: https://pub-xxx.r2.dev/videos/slug/arquivo.mp4
+      if (R2_PUBLIC && url.indexOf(R2_PUBLIC + '/') === 0) {
+        const raw = url.slice(R2_PUBLIC.length + 1).split('?')[0];
+        try { return decodeURIComponent(raw); } catch (e) { return raw; }
+      }
+      // Firebase Storage legado: .../o/videos%2Fslug%2Farquivo?...
       const m = url.match(/\/o\/([^?]+)/);
       if (!m) return null;
       try {
@@ -8081,8 +8145,9 @@
           await db.ref(path).set('');
         }
       }
-      // 2. Apaga arquivo do Storage
-      await item.ref.delete();
+      // 2. Apaga arquivo do R2 (via porteiro)
+      const key = item.key || item.path;
+      if (key) await r2Delete(key);
     }
 
     // S2.8: estado efêmero do explorer (lista + filtros + status)
@@ -8280,9 +8345,6 @@
     // onProgress(pct, etaSec) é chamado a cada update — etaSec só é confiável
     // após ~1s de upload (precisa de baseline de velocidade).
     function uploadVideoToStorage(file, clientSlug, cardId, onProgress) {
-      if (!storage) {
-        return Promise.reject(new Error('Storage não inicializado. Recarrega a página.'));
-      }
       const safeSlug = (clientSlug || state.clientSlug || 'unknown').trim();
       const safeCardId = (cardId || generateCardId()).trim();
       if (!safeSlug || !safeCardId) {
@@ -8290,36 +8352,8 @@
       }
       const ts = Date.now();
       const ext = ((file.name || '').includes('.') ? file.name.split('.').pop() : 'mp4').toLowerCase();
-      const path = 'videos/' + safeSlug + '/' + safeCardId + '-' + ts + '.' + ext;
-      const ref = storage.ref(path);
-      const task = ref.put(file, { contentType: file.type || 'video/mp4' });
-      const startTime = Date.now();
-      return new Promise((resolve, reject) => {
-        task.on('state_changed',
-          function (snapshot) {
-            if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
-              const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              const elapsed = (Date.now() - startTime) / 1000;
-              let etaSec = NaN;
-              if (elapsed > 1 && snapshot.bytesTransferred > 0) {
-                const bytesPerSec = snapshot.bytesTransferred / elapsed;
-                const remaining = snapshot.totalBytes - snapshot.bytesTransferred;
-                etaSec = remaining / bytesPerSec;
-              }
-              onProgress(pct, etaSec);
-            }
-          },
-          function (error) {
-            console.warn('[uploadVideoToStorage] erro:', error);
-            reject(error);
-          },
-          function () {
-            task.snapshot.ref.getDownloadURL()
-              .then(function (url) { resolve(url); })
-              .catch(function (e) { reject(e); });
-          }
-        );
-      });
+      const key = 'videos/' + safeSlug + '/' + safeCardId + '-' + ts + '.' + ext;
+      return r2Upload(file, key, onProgress);
     }
 
     // ============================================================
@@ -8339,37 +8373,14 @@
     // Sobe logo PWA pro Storage. Path: logos/{clientSlug}/logo-{ts}.{ext}
     // Retorna Promise<string> com a downloadURL. onProgress(pct) opcional.
     function uploadLogoToStorage(file, clientSlug, onProgress) {
-      if (!storage) {
-        return Promise.reject(new Error('Storage não inicializado. Recarrega a página.'));
-      }
       const safeSlug = (clientSlug || 'unknown').trim();
       if (!safeSlug) {
         return Promise.reject(new Error('Cliente inválido pra upload de logo.'));
       }
       const ts = Date.now();
       const ext = ((file.name || '').includes('.') ? file.name.split('.').pop() : 'png').toLowerCase();
-      const path = 'logos/' + safeSlug + '/logo-' + ts + '.' + ext;
-      const ref = storage.ref(path);
-      const task = ref.put(file, { contentType: file.type || 'image/png' });
-      return new Promise((resolve, reject) => {
-        task.on('state_changed',
-          function (snapshot) {
-            if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
-              const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              onProgress(pct);
-            }
-          },
-          function (error) {
-            console.warn('[uploadLogoToStorage] erro:', error);
-            reject(error);
-          },
-          function () {
-            task.snapshot.ref.getDownloadURL()
-              .then(function (url) { resolve(url); })
-              .catch(function (e) { reject(e); });
-          }
-        );
-      });
+      const key = 'logos/' + safeSlug + '/logo-' + ts + '.' + ext;
+      return r2Upload(file, key, function (pct) { if (typeof onProgress === 'function') onProgress(pct); });
     }
 
     // Gera ícone de cliente — retorna data URL (PNG) 512x512.
