@@ -907,6 +907,13 @@
       color: var(--white);
     }
 
+    /* Vídeo tem barra de controle nativa no rodapé — sobe o hint pro topo
+       pra não cobrir play / scrub / tempo. (R2, 29/06) */
+    .card-hero.is-video .card-hero-overlay-hint {
+      top: 12px;
+      bottom: auto;
+    }
+
     .card-heart {
       position: absolute;
       top: 50%;
@@ -9563,7 +9570,7 @@
           </div>
 
           <div class="card-view-body">
-            <div class="card-hero is-state-${effective} ${canVote ? 'is-armed' : ''} ${isPublished ? 'is-completed' : ''}" id="card-hero" ${(c.videoUrl || c.referenceImage) ? 'data-has-image="1"' : ''}>
+            <div class="card-hero is-state-${effective} ${canVote ? 'is-armed' : ''} ${isPublished ? 'is-completed' : ''} ${c.videoUrl ? 'is-video' : ''}" id="card-hero" ${(c.videoUrl || c.referenceImage) ? 'data-has-image="1"' : ''}>
               ${c.videoUrl
                 ? `<video src="${escapeHtml(c.videoUrl)}" controls preload="metadata" playsinline style="width: 100%; height: 100%; object-fit: cover; display: block; background: #000;"></video>`
                 : (c.referenceImage
