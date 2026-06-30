@@ -6581,7 +6581,7 @@
     const ROOT_PATH = 'celulose-app';
 
     let db = null;
-    let auth = null;          // firebase.auth() — Blindagem Fase 1 (e-mail+senha)
+    let fbAuth = null;        // firebase.auth() — Blindagem Fase 1 (e-mail+senha). Nome fbAuth pra não colidir com o `const auth` (PIN) interno do route().
     let storage = null;       // firebase.storage()  — setado no init (S2.6)
     let masterRef = null;     // db.ref('celulose-app/_master')  — setado no init
     let clientRef = null;     // db.ref('celulose-app/clients/{slug}')  — setado no route()
@@ -6591,7 +6591,7 @@
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.database();
-      auth = firebase.auth();
+      fbAuth = firebase.auth();
       storage = firebase.storage();
       masterRef = db.ref(ROOT_PATH + '/_master');
       // Storage ativado em S2.6 — Blaze + bucket us-central1 (Always Free 5GB).
@@ -6868,20 +6868,33 @@
       if (!firebaseReady) { renderError('Firebase não carregou.'); return; }
 
       const params = getQueryParams();
-      const urlVazia = !params.cliente && !params.master;
-      if (urlVazia) {
-        const cached = loadAuthLocal();
-        if (cached) {
-          const qs = authLocalToQueryString(cached);
-          if (qs) {
-            window.history.replaceState({}, '', '?' + qs);
-          }
+      const routeErr = e => {
+        console.error('[Bootstrap/route falhou]', e);
+        renderError('Não consegui inicializar. ' + (e && e.message ? e.message : ''));
+      };
+
+      // Fluxo legado por PIN: URL com cliente/master segue EXATAMENTE como antes.
+      if (params.cliente || params.master) {
+        route().catch(routeErr);
+        return;
+      }
+
+      // Sem params: recupera o último login por PIN (PWA), comportamento atual.
+      const cached = loadAuthLocal();
+      if (cached) {
+        const qs = authLocalToQueryString(cached);
+        if (qs) {
+          window.history.replaceState({}, '', '?' + qs);
+          route().catch(routeErr);
+          return;
         }
       }
 
-      route().catch(e => {
-        console.error('[Bootstrap/route falhou]', e);
-        renderError('Não consegui inicializar. ' + (e && e.message ? e.message : ''));
+      // Modo duplo (Blindagem Fase 1): porta da frente = login. Reage ao estado de auth.
+      // Login obrigatório só vale aqui (URL sem PIN); o PIN continua funcionando acima.
+      fbAuth.onAuthStateChanged((user) => {
+        if (user) { routeAuthedUser(user).catch(routeErr); }
+        else { renderLoginScreen(); }
       });
     }
 
@@ -10843,7 +10856,7 @@
       } catch (e) { return null; }
     }
     function authSignOut() {
-      return auth ? auth.signOut() : Promise.resolve();
+      return fbAuth ? fbAuth.signOut() : Promise.resolve();
     }
 
     // Traduz erro do Firebase Auth pra mensagem leiga.
@@ -10867,18 +10880,37 @@
         <div class="welcome">
           <div class="welcome-logo">${escapeHtml(opts.brandName || 'Sinapse')}</div>
           <div class="welcome-title">Entrar</div>
-          <div class="welcome-tagline">Acesse com seu e-mail e senha.</div>
-          <form id="login-form" style="display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; margin:20px auto 0;">
-            <input id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" class="form-input" required />
-            <input id="login-pw" type="password" autocomplete="current-password" placeholder="senha" class="form-input" required />
-            <div id="login-error" style="display:none; color:#C0392B; font-size:13px;"></div>
-            <button type="submit" id="login-submit" class="welcome-cta" style="border:none; cursor:pointer;">Entrar</button>
-          </form>
+          <div class="welcome-tagline">Acesse com sua conta.</div>
+          <div style="display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; margin:20px auto 0;">
+            <button type="button" id="login-google" class="welcome-cta" style="background:var(--white); color:var(--deep); border:1px solid var(--border-soft); cursor:pointer;">Entrar com Google</button>
+            <div style="display:flex; align-items:center; gap:8px; color:var(--gray, #A0A0A0); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-soft, rgba(0,0,0,0.1));"></span>ou<span style="flex:1; height:1px; background:var(--border-soft, rgba(0,0,0,0.1));"></span></div>
+            <form id="login-form" style="display:flex; flex-direction:column; gap:12px;">
+              <input id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" class="form-input" required />
+              <input id="login-pw" type="password" autocomplete="current-password" placeholder="senha" class="form-input" required />
+              <div id="login-error" style="display:none; color:#C0392B; font-size:13px;"></div>
+              <button type="submit" id="login-submit" class="welcome-cta" style="border:none; cursor:pointer;">Entrar</button>
+            </form>
+          </div>
         </div>
       `;
       const form = document.getElementById('login-form');
       const errEl = document.getElementById('login-error');
       const btn = document.getElementById('login-submit');
+      const gbtn = document.getElementById('login-google');
+      if (gbtn) {
+        gbtn.addEventListener('click', async () => {
+          errEl.style.display = 'none';
+          gbtn.disabled = true; gbtn.textContent = 'Abrindo o Google…';
+          try {
+            await fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+            if (typeof opts.onSuccess === 'function') opts.onSuccess();
+          } catch (err) {
+            errEl.textContent = authErrorMsg(err);
+            errEl.style.display = 'block';
+            gbtn.disabled = false; gbtn.textContent = 'Entrar com Google';
+          }
+        });
+      }
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value.trim();
@@ -10886,7 +10918,7 @@
         errEl.style.display = 'none';
         btn.disabled = true; btn.textContent = 'Entrando…';
         try {
-          await auth.signInWithEmailAndPassword(email, pw);
+          await fbAuth.signInWithEmailAndPassword(email, pw);
           if (typeof opts.onSuccess === 'function') opts.onSuccess();
         } catch (err) {
           errEl.textContent = authErrorMsg(err);
@@ -10894,6 +10926,50 @@
           btn.disabled = false; btn.textContent = 'Entrar';
         }
       });
+    }
+
+    // Roteia um usuário LOGADO (modo duplo). Admin → painel master.
+    // Membro de cliente → roteamento por persona entra no próximo incremento.
+    async function routeAuthedUser(user) {
+      const admin = await authIsAdmin(user.uid);
+      if (admin) {
+        state.mode = 'master';
+        state.authValidated = true;
+        document.body.classList.remove('editor-mode');
+        document.body.classList.remove('executora-mode');
+        document.body.classList.add('master-mode');
+        setFavicon();
+        updatePageTitle();
+        await loadJanelasAprovacao();
+        await loadMasterDashboard();
+        return;
+      }
+      const clients = await authUserClients(user.uid);
+      const slugs = Object.keys(clients || {});
+      renderNoAccess(user, slugs);
+    }
+
+    // Usuário logado sem acesso configurado (ou aguardando roteamento de membro).
+    function renderNoAccess(user, slugs) {
+      const app = document.getElementById('app');
+      app.classList.remove('editor-view');
+      setFavicon();
+      updatePageTitle();
+      const email = (user && user.email) || '';
+      const temClientes = slugs && slugs.length > 0;
+      app.innerHTML = `
+        <div class="welcome">
+          <div class="welcome-logo">Sinapse</div>
+          <div class="welcome-title">${temClientes ? 'Quase lá' : 'Sem acesso ainda'}</div>
+          <div class="welcome-tagline">
+            Você entrou como <strong>${escapeHtml(email)}</strong>.
+            ${temClientes ? 'Seu acesso aos projetos está sendo configurado.' : 'Sua conta ainda não foi liberada pra nenhum projeto. Fale com a Celulose Digital.'}
+          </div>
+          <button id="logout-btn" class="welcome-cta" style="border:none; cursor:pointer; margin-top:16px;">Sair</button>
+        </div>
+      `;
+      const lb = document.getElementById('logout-btn');
+      if (lb) lb.addEventListener('click', () => { authSignOut(); });
     }
 
     // ============================================================
