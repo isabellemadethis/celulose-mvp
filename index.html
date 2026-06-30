@@ -173,6 +173,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
   <style>
     /* ============================================================ */
@@ -6580,6 +6581,7 @@
     const ROOT_PATH = 'celulose-app';
 
     let db = null;
+    let auth = null;          // firebase.auth() — Blindagem Fase 1 (e-mail+senha)
     let storage = null;       // firebase.storage()  — setado no init (S2.6)
     let masterRef = null;     // db.ref('celulose-app/_master')  — setado no init
     let clientRef = null;     // db.ref('celulose-app/clients/{slug}')  — setado no route()
@@ -6589,6 +6591,7 @@
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.database();
+      auth = firebase.auth();
       storage = firebase.storage();
       masterRef = db.ref(ROOT_PATH + '/_master');
       // Storage ativado em S2.6 — Blaze + bucket us-central1 (Always Free 5GB).
@@ -10807,6 +10810,90 @@
           <div class="welcome-tagline">PIN inválido. Confira o link enviado pela Celulose Digital.</div>
         </div>
       `;
+    }
+
+    // ============================================================
+    // BLINDAGEM Fase 1 — Autenticação real (Firebase Auth, e-mail+senha)
+    // Aditivo: convive com o fluxo de PIN até o cutover (Fase 3). Nada aqui
+    // é chamado por route() ainda — o wiring dual-mode entra no próximo passo.
+    // ============================================================
+
+    // É admin global? (lê /celulose-app/admins/{uid})
+    async function authIsAdmin(uid) {
+      if (!uid) return false;
+      try {
+        const s = await db.ref(ROOT_PATH + '/admins/' + uid).once('value');
+        return s.val() === true;
+      } catch (e) { return false; }
+    }
+    // De quais clientes a pessoa é membro? Retorna { slug: papel }.
+    async function authUserClients(uid) {
+      if (!uid) return {};
+      try {
+        const s = await db.ref(ROOT_PATH + '/userClients/' + uid).once('value');
+        return s.val() || {};
+      } catch (e) { return {}; }
+    }
+    // Papel da pessoa num cliente específico ('owner'|'editor'|'viewer'|null).
+    async function authUserRole(slug, uid) {
+      if (!slug || !uid) return null;
+      try {
+        const s = await db.ref(ROOT_PATH + '/members/' + slug + '/' + uid).once('value');
+        return s.val() || null;
+      } catch (e) { return null; }
+    }
+    function authSignOut() {
+      return auth ? auth.signOut() : Promise.resolve();
+    }
+
+    // Traduz erro do Firebase Auth pra mensagem leiga.
+    function authErrorMsg(err) {
+      const code = (err && err.code) || '';
+      if (code.includes('wrong-password') || code.includes('invalid-credential')) return 'E-mail ou senha incorretos.';
+      if (code.includes('user-not-found')) return 'Não encontrei uma conta com esse e-mail.';
+      if (code.includes('too-many-requests')) return 'Muitas tentativas. Tente de novo em alguns minutos.';
+      if (code.includes('invalid-email')) return 'E-mail inválido.';
+      return 'Não consegui entrar. Tente de novo.';
+    }
+
+    // Tela de login (e-mail + senha). opts.brandName / opts.onSuccess opcionais.
+    function renderLoginScreen(opts) {
+      opts = opts || {};
+      const app = document.getElementById('app');
+      app.classList.remove('editor-view');
+      setFavicon();
+      updatePageTitle();
+      app.innerHTML = `
+        <div class="welcome">
+          <div class="welcome-logo">${escapeHtml(opts.brandName || 'Sinapse')}</div>
+          <div class="welcome-title">Entrar</div>
+          <div class="welcome-tagline">Acesse com seu e-mail e senha.</div>
+          <form id="login-form" style="display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; margin:20px auto 0;">
+            <input id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" class="form-input" required />
+            <input id="login-pw" type="password" autocomplete="current-password" placeholder="senha" class="form-input" required />
+            <div id="login-error" style="display:none; color:#C0392B; font-size:13px;"></div>
+            <button type="submit" id="login-submit" class="welcome-cta" style="border:none; cursor:pointer;">Entrar</button>
+          </form>
+        </div>
+      `;
+      const form = document.getElementById('login-form');
+      const errEl = document.getElementById('login-error');
+      const btn = document.getElementById('login-submit');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const pw = document.getElementById('login-pw').value;
+        errEl.style.display = 'none';
+        btn.disabled = true; btn.textContent = 'Entrando…';
+        try {
+          await auth.signInWithEmailAndPassword(email, pw);
+          if (typeof opts.onSuccess === 'function') opts.onSuccess();
+        } catch (err) {
+          errEl.textContent = authErrorMsg(err);
+          errEl.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Entrar';
+        }
+      });
     }
 
     // ============================================================
