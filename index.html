@@ -940,6 +940,32 @@
     .card-hero-approve-pill:hover { opacity: 0.94; }
     .card-hero-approve-pill:active { transform: translateX(-50%) scale(0.96); }
 
+    /* Tela de login / acesso — identidade Celulose (escuro editorial), independente
+       da paleta do cliente. Front door do Sinapse. */
+    .sinapse-auth {
+      position: fixed; inset: 0;
+      background: #060606; color: #F2F2F2;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; text-align: center;
+    }
+    .sinapse-auth-eyebrow { color: #07D379; font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; }
+    .sinapse-auth-title { color: #F2F2F2; font-size: 34px; font-weight: 600; letter-spacing: -0.01em; margin: 14px 0 8px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif; }
+    .sinapse-auth-sub { color: #A0A0A0; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+    .sinapse-auth-box { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+    .sinapse-auth-input { background: #1A1A1A; border: 1px solid #2A2A2A; color: #F2F2F2; border-radius: 12px; padding: 14px 16px; font-size: 15px; font-family: inherit; outline: none; }
+    .sinapse-auth-input::placeholder { color: #6E6E6E; }
+    .sinapse-auth-input:focus { border-color: #07D379; }
+    .sinapse-auth-btn { border-radius: 100px; padding: 14px 20px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; border: none; transition: opacity 0.15s ease, transform 0.15s ease; }
+    .sinapse-auth-btn:active { transform: scale(0.98); }
+    .sinapse-auth-btn-primary { background: #07D379; color: #060606; }
+    .sinapse-auth-btn-primary:hover { opacity: 0.92; }
+    .sinapse-auth-btn-google { background: #1A1A1A; color: #F2F2F2; border: 1px solid #2A2A2A; }
+    .sinapse-auth-btn-google:hover { border-color: #3A3A3A; }
+    .sinapse-auth-divider { display: flex; align-items: center; gap: 10px; color: #6E6E6E; font-size: 12px; }
+    .sinapse-auth-divider span { flex: 1; height: 1px; background: #222; }
+    .sinapse-auth-error { display: none; color: #FF6B6B; font-size: 13px; }
+
     .card-heart {
       position: absolute;
       top: 50%;
@@ -10877,18 +10903,18 @@
       setFavicon();
       updatePageTitle();
       app.innerHTML = `
-        <div class="welcome">
-          <div class="welcome-logo">${escapeHtml(opts.brandName || 'Sinapse')}</div>
-          <div class="welcome-title">Entrar</div>
-          <div class="welcome-tagline">Acesse com sua conta.</div>
-          <div style="display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; margin:20px auto 0;">
-            <button type="button" id="login-google" class="welcome-cta" style="background:var(--white); color:var(--deep); border:1px solid var(--border-soft); cursor:pointer;">Entrar com Google</button>
-            <div style="display:flex; align-items:center; gap:8px; color:var(--gray, #A0A0A0); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-soft, rgba(0,0,0,0.1));"></span>ou<span style="flex:1; height:1px; background:var(--border-soft, rgba(0,0,0,0.1));"></span></div>
+        <div class="sinapse-auth">
+          <div class="sinapse-auth-eyebrow">${escapeHtml(opts.brandName || 'Sinapse')}</div>
+          <div class="sinapse-auth-title">Entrar</div>
+          <div class="sinapse-auth-sub">Acesse com sua conta.</div>
+          <div class="sinapse-auth-box">
+            <button type="button" id="login-google" class="sinapse-auth-btn sinapse-auth-btn-google">Entrar com Google</button>
+            <div class="sinapse-auth-divider"><span></span>ou<span></span></div>
             <form id="login-form" style="display:flex; flex-direction:column; gap:12px;">
-              <input id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" class="form-input" required />
-              <input id="login-pw" type="password" autocomplete="current-password" placeholder="senha" class="form-input" required />
-              <div id="login-error" style="display:none; color:#C0392B; font-size:13px;"></div>
-              <button type="submit" id="login-submit" class="welcome-cta" style="border:none; cursor:pointer;">Entrar</button>
+              <input id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" class="sinapse-auth-input" required />
+              <input id="login-pw" type="password" autocomplete="current-password" placeholder="senha" class="sinapse-auth-input" required />
+              <div id="login-error" class="sinapse-auth-error"></div>
+              <button type="submit" id="login-submit" class="sinapse-auth-btn sinapse-auth-btn-primary">Entrar</button>
             </form>
           </div>
         </div>
@@ -10958,14 +10984,14 @@
       const email = (user && user.email) || '';
       const temClientes = slugs && slugs.length > 0;
       app.innerHTML = `
-        <div class="welcome">
-          <div class="welcome-logo">Sinapse</div>
-          <div class="welcome-title">${temClientes ? 'Quase lá' : 'Sem acesso ainda'}</div>
-          <div class="welcome-tagline">
-            Você entrou como <strong>${escapeHtml(email)}</strong>.
+        <div class="sinapse-auth">
+          <div class="sinapse-auth-eyebrow">Sinapse</div>
+          <div class="sinapse-auth-title">${temClientes ? 'Quase lá' : 'Sem acesso ainda'}</div>
+          <div class="sinapse-auth-sub" style="max-width:360px;">
+            Você entrou como <strong style="color:#F2F2F2;">${escapeHtml(email)}</strong>.
             ${temClientes ? 'Seu acesso aos projetos está sendo configurado.' : 'Sua conta ainda não foi liberada pra nenhum projeto. Fale com a Celulose Digital.'}
           </div>
-          <button id="logout-btn" class="welcome-cta" style="border:none; cursor:pointer; margin-top:16px;">Sair</button>
+          <button id="logout-btn" class="sinapse-auth-btn sinapse-auth-btn-google" style="max-width:320px;">Sair</button>
         </div>
       `;
       const lb = document.getElementById('logout-btn');
