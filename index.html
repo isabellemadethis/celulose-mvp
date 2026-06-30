@@ -10972,7 +10972,89 @@
       }
       const clients = await authUserClients(user.uid);
       const slugs = Object.keys(clients || {});
-      renderNoAccess(user, slugs);
+      if (slugs.length === 0) { renderNoAccess(user, []); return; }
+      if (slugs.length === 1) {
+        const slug = slugs[0];
+        const member = await authMember(slug, user.uid);
+        if (!member || !member.persona) { renderNoAccess(user, slugs); return; }
+        await enterClientAsMember(slug, user.uid, member);
+        return;
+      }
+      renderClientPicker(user, slugs);
+    }
+
+    // Lê members/{slug}/{uid} → { role, persona } (ou null).
+    async function authMember(slug, uid) {
+      if (!slug || !uid) return null;
+      try {
+        const s = await db.ref(ROOT_PATH + '/members/' + slug + '/' + uid).once('value');
+        return s.val() || null;
+      } catch (e) { return null; }
+    }
+
+    // Entra no projeto como a persona vinculada ao usuário (sem PIN — login já validou).
+    async function enterClientAsMember(slug, uid, member) {
+      state.clientSlug = slug;
+      clientRef = db.ref(ROOT_PATH + '/clients/' + slug);
+      const snap = await clientRef.once('value');
+      if (!snap.exists()) { renderError('Projeto não encontrado.'); return; }
+      const raw = snap.val();
+      if (raw && raw.cards) raw.cards = applyV151DefaultsBulk(raw.cards);
+      state.clientData = raw;
+      state.data = raw;
+      state.clientPersonasInternas = await loadClientPersonasInternas(slug);
+      await loadJanelasAprovacao();
+      const personas = state.clientData.personas || {};
+      if (!personas[member.persona]) {
+        renderNoAccess({ email: (fbAuth.currentUser && fbAuth.currentUser.email) || '' }, [slug]);
+        return;
+      }
+      state.mode = 'viewer';
+      state.authValidated = true;
+      state.currentPersonaId = member.persona;
+      state.memberRole = member.role || 'viewer';
+      state.currentDayId = inferCurrentDayId();
+      document.body.classList.remove('editor-mode');
+      document.body.classList.remove('master-mode');
+      document.body.classList.remove('is-manage-mode');
+      document.body.classList.remove('executora-mode');
+      applyBranding(state.clientData.branding);
+      attachClientListener();
+      swapClientIconsOnly(state.clientData);
+      renderHome();
+      applyBranding(state.clientData.branding);
+    }
+
+    // Seletor de projeto pra quem é membro de mais de um cliente (ex: Caíque).
+    async function renderClientPicker(user, slugs) {
+      const app = document.getElementById('app');
+      const items = [];
+      for (const slug of slugs) {
+        let name = slug;
+        try { const s = await db.ref(ROOT_PATH + '/clients/' + slug + '/meta/name').once('value'); name = s.val() || slug; } catch (e) {}
+        items.push({ slug, name });
+      }
+      app.innerHTML = `
+        <div class="sinapse-auth">
+          <div class="sinapse-auth-eyebrow">Sinapse</div>
+          <div class="sinapse-auth-title">Seus projetos</div>
+          <div class="sinapse-auth-sub">Escolha onde entrar.</div>
+          <div class="sinapse-auth-box">
+            ${items.map(i => `<button type="button" class="sinapse-auth-btn sinapse-auth-btn-google client-pick-btn" data-slug="${escapeHtml(i.slug)}">${escapeHtml(i.name)}</button>`).join('')}
+            <button id="logout-btn" style="background:none;border:none;color:#A0A0A0;font-size:13px;text-decoration:underline;cursor:pointer;margin-top:8px;font-family:inherit;">Sair</button>
+          </div>
+        </div>
+      `;
+      app.querySelectorAll('.client-pick-btn').forEach(b => {
+        b.addEventListener('click', async () => {
+          const slug = b.getAttribute('data-slug');
+          const member = await authMember(slug, user.uid);
+          if (member && member.persona) enterClientAsMember(slug, user.uid, member);
+          else renderNoAccess(user, slugs);
+        });
+      });
+      const lb = document.getElementById('logout-btn');
+      if (lb) lb.addEventListener('click', () => authSignOut());
     }
 
     // Usuário logado sem acesso configurado (ou aguardando roteamento de membro).
