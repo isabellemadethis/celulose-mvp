@@ -9599,7 +9599,7 @@
               ${c.videoUrl
                 ? `<video src="${escapeHtml(c.videoUrl)}" controls preload="metadata" playsinline style="width: 100%; height: 100%; object-fit: cover; display: block; background: #000;"></video>`
                 : (c.referenceImage
-                    ? `<img src="${c.referenceImage}" alt="referência">`
+                    ? `<img src="${escapeHtml(c.referenceImage)}" alt="referência">`
                     : `<div class="card-hero-empty">Sem referência visual</div>`)
               }
               ${heroHint ? `<div class="card-hero-overlay-hint">${escapeHtml(heroHint)}</div>` : ''}
@@ -9608,7 +9608,7 @@
             </div>
             ${c.videoUrl && c.referenceImage
               ? `<div style="margin: 12px 0 0; padding: 12px; background: var(--card-bg, #1A1A1A); border-radius: 12px; display: flex; align-items: center; gap: 12px;">
-                   <img src="${c.referenceImage}" alt="referência" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" />
+                   <img src="${escapeHtml(c.referenceImage)}" alt="referência" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" />
                    <div style="font-size: 13px; color: var(--text-secondary, #A0A0A0);">Imagem de referência</div>
                  </div>`
               : ''
@@ -10104,7 +10104,7 @@
       overlay.className = 'card-fullscreen';
       overlay.innerHTML = `
         <button class="card-fullscreen-close">×</button>
-        <img src="${card.referenceImage}" alt="referência">
+        <img src="${escapeHtml(card.referenceImage)}" alt="referência">
       `;
       overlay.addEventListener('click', () => overlay.remove());
       document.body.appendChild(overlay);
@@ -14549,7 +14549,7 @@
               ecPwaProgressBar.style.width = pct.toFixed(0) + '%';
             });
             ecPwaUrlInput.value = url;
-            ecPwaPreview.innerHTML = '<img src="' + url + '" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo PWA" />';
+            ecPwaPreview.innerHTML = '<img src="' + escapeHtml(url) + '" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo PWA" />';
             const kb = Math.round(file.size / 1024);
             ecPwaStatus.textContent = '✓ ' + file.name + ' (' + kb + ' KB) — salvo no Storage';
             ecPwaProgress.style.display = 'none';
@@ -15671,7 +15671,7 @@
               <label class="form-label">Referência visual</label>
               <div class="image-upload">
                 <div class="image-preview ${d.referenceImage ? 'has-image' : ''}" id="image-preview">
-                  ${d.referenceImage ? `<img src="${d.referenceImage}" alt="referência">` : ''}
+                  ${d.referenceImage ? `<img src="${escapeHtml(d.referenceImage)}" alt="referência">` : ''}
                 </div>
                 <div class="image-upload-actions">
                   <label class="image-upload-btn" for="f-image">${d.referenceImage ? 'Trocar imagem' : 'Anexar imagem'}</label>
